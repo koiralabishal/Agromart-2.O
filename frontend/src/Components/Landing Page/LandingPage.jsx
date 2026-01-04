@@ -20,7 +20,7 @@ import LoginPopup from "./LoginPopup";
 import SignupModal from "./SignupModal";
 
 const LandingPage = () => {
-  const [activeSections, setActiveSections] = useState(["home"]);
+  const [activeSection, setActiveSection] = useState("home");
   const [clickedSection, setClickedSection] = useState(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
@@ -106,46 +106,43 @@ const LandingPage = () => {
 
       const sections = ["home", "about", "services", "contact"];
       const navbarHeight = 120;
-      const viewportTop = window.scrollY + navbarHeight;
-      const viewportBottom = window.scrollY + window.innerHeight - 100;
-
-      const visible = [];
+      
+      // Find the section that covers the most visible area or is at the top
+      let currentSection = "home";
+      let maxVisibility = 0;
 
       sections.forEach((section) => {
         const element = document.getElementById(section);
         if (element) {
-          const offsetTop = element.offsetTop;
-          const offsetBottom = offsetTop + element.offsetHeight;
-
-          if (
-            (offsetTop >= viewportTop && offsetTop <= viewportBottom) ||
-            (offsetBottom >= viewportTop && offsetBottom <= viewportBottom) ||
-            (offsetTop <= viewportTop && offsetBottom >= viewportBottom)
-          ) {
-            visible.push(section);
+          const rect = element.getBoundingClientRect();
+          const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, navbarHeight);
+          
+          if (visibleHeight > maxVisibility) {
+            maxVisibility = visibleHeight;
+            currentSection = section;
           }
         }
       });
 
       if (window.scrollY < 100) {
-        setActiveSections(["home"]);
-      } else if (visible.length > 0) {
-        setActiveSections(visible);
+        setActiveSection("home");
+      } else {
+        setActiveSection(currentSection);
       }
     };
 
-    handleScroll();
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, [clickedSection]);
 
   const handleLinkClick = (section) => {
     setClickedSection(section);
-    setActiveSections([section]);
+    setActiveSection(section);
     setIsMenuOpen(false);
     setTimeout(() => {
       setClickedSection(null);
-    }, 1500);
+    }, 2000);
   };
 
   const toggleMobileMenu = () => {
@@ -168,7 +165,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#home"
-              className={activeSections.includes("home") ? "active" : ""}
+              className={activeSection === "home" ? "active" : ""}
               onClick={() => handleLinkClick("home")}
             >
               Home
@@ -177,7 +174,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#about"
-              className={activeSections.includes("about") ? "active" : ""}
+              className={activeSection === "about" ? "active" : ""}
               onClick={() => handleLinkClick("about")}
             >
               About
@@ -186,7 +183,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#services"
-              className={activeSections.includes("services") ? "active" : ""}
+              className={activeSection === "services" ? "active" : ""}
               onClick={() => handleLinkClick("services")}
             >
               Services
@@ -195,7 +192,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#contact"
-              className={activeSections.includes("contact") ? "active" : ""}
+              className={activeSection === "contact" ? "active" : ""}
               onClick={() => handleLinkClick("contact")}
             >
               Contact
@@ -228,7 +225,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#home"
-              className={activeSections.includes("home") ? "active" : ""}
+              className={activeSection === "home" ? "active" : ""}
               onClick={() => handleLinkClick("home")}
             >
               Home
@@ -237,7 +234,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#about"
-              className={activeSections.includes("about") ? "active" : ""}
+              className={activeSection === "about" ? "active" : ""}
               onClick={() => handleLinkClick("about")}
             >
               About
@@ -246,7 +243,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#services"
-              className={activeSections.includes("services") ? "active" : ""}
+              className={activeSection === "services" ? "active" : ""}
               onClick={() => handleLinkClick("services")}
             >
               Services
@@ -255,7 +252,7 @@ const LandingPage = () => {
           <li>
             <a
               href="#contact"
-              className={activeSections.includes("contact") ? "active" : ""}
+              className={activeSection === "contact" ? "active" : ""}
               onClick={() => handleLinkClick("contact")}
             >
               Contact
@@ -297,7 +294,7 @@ const LandingPage = () => {
       {/* About Section */}
       <section className="about-section" id="about">
         <div className="about-header">
-          <h2>About Agromart</h2>
+          <h2 >About Agromart</h2>
           <p>
             Our Vision for a Smarter, More Efficient Agricultural Supply Chain
           </p>
@@ -334,7 +331,7 @@ const LandingPage = () => {
 
       {/* Services Section */}
       <section className="services-section" id="services">
-        <div className="services-header">
+        <div className="services-header" >
           <h2>Our Premium Services</h2>
           <p>Empowering agricultural trade with cutting-edge technology</p>
         </div>
