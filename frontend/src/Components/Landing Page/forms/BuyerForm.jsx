@@ -1,11 +1,123 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaLeaf, FaChevronDown } from "react-icons/fa";
+import OTPPopup from "../OTPPopup";
+import SuccessPopup from "../SuccessPopup";
 
 const BuyerForm = ({
   selectedPaymentMethod,
   setSelectedPaymentMethod,
   getPaymentPlaceholder,
 }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    companyName: "",
+    deliveryAddress: "",
+    phone: "",
+    email: "",
+    gatewayId: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to send OTP");
+      }
+
+      setShowOTP(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (otp) => {
+    setLoading(true);
+    setOtpError("");
+
+    try {
+      const data = new FormData();
+      Object.keys(formData).forEach((key) => {
+        data.append(key, formData[key]);
+      });
+      data.append("role", "buyer");
+      data.append("address", formData.deliveryAddress);
+      data.append("paymentMethod", selectedPaymentMethod);
+      data.append("otp", otp);
+
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Registration failed");
+      }
+
+      setSuccess(true);
+      setShowOTP(false);
+      localStorage.setItem("user", JSON.stringify(result));
+    } catch (err) {
+      setOtpError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      await fetch("http://localhost:5000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+    } catch (err) {
+      setOtpError("Failed to resend OTP");
+    }
+  };
+
+  if (success) {
+    return (
+      <SuccessPopup 
+        name={formData.name} 
+        role="buyer" 
+        onClose={() => window.location.reload()} 
+      />
+    );
+  }
+
   return (
     <div className="farmer-registration">
       <div className="login-logo">
@@ -16,17 +128,31 @@ const BuyerForm = ({
       </div>
       <h2>Create Buyer Registration</h2>
 
-      <form className="registration-form">
+      <form className="registration-form" onSubmit={handleSubmit}>
         {/* Basic Details */}
         <div className="form-section">
           <div className="form-grid">
             <div className="form-group">
               <label>Full Name</label>
-              <input type="text" placeholder="John Doe" required />
+              <input
+                type="text"
+                name="name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="form-group">
-              <label>Company/Buyer Name (Optional)</label>
-              <input type="text" placeholder="AgroSupply Co." />
+              <label>Company/Buyer Name</label>
+              <input
+                type="text"
+                name="companyName"
+                placeholder="AgroSupply Co."
+                value={formData.companyName}
+                onChange={handleChange}
+                required
+              />
             </div>
           </div>
           <div
@@ -36,26 +162,57 @@ const BuyerForm = ({
             <label>Delivery Address</label>
             <input
               type="text"
+              name="deliveryAddress"
               placeholder="123 Green Valley Rd, Farmville"
+              value={formData.deliveryAddress}
+              onChange={handleChange}
               required
             />
           </div>
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
             <div className="form-group">
               <label>Phone</label>
-              <input type="tel" placeholder="555-123-4567" required />
+              <input
+                type="tel"
+                name="phone"
+                placeholder="555-123-4567"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="form-group">
               <label>Email</label>
-              <input type="email" placeholder="john.doe@example.com" required />
+              <input
+                type="email"
+                name="email"
+                placeholder="john.doe@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" placeholder="••••••••" required />
+              <input
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
-              <input type="password" placeholder="••••••••" required />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
             </div>
           </div>
         </div>
@@ -85,7 +242,10 @@ const BuyerForm = ({
                 <label>Gateway Details</label>
                 <input
                   type="text"
+                  name="gatewayId"
                   placeholder={getPaymentPlaceholder(selectedPaymentMethod)}
+                  value={formData.gatewayId}
+                  onChange={handleChange}
                   required
                 />
               </div>
@@ -93,10 +253,27 @@ const BuyerForm = ({
           </div>
         </div>
 
-        <button type="submit" className="register-submit-btn">
-          Create Buyer Account
+        {error && <p className="error-message">{error}</p>}
+
+        <button
+          type="submit"
+          className="register-submit-btn"
+          disabled={loading}
+        >
+          {loading ? "Processing..." : "Create Buyer Account"}
         </button>
       </form>
+
+      {showOTP && (
+        <OTPPopup 
+          email={formData.email}
+          onVerify={handleVerifyAndRegister}
+          onClose={() => setShowOTP(false)}
+          onResend={handleResendOTP}
+          loading={loading}
+          error={otpError}
+        />
+      )}
     </div>
   );
 };

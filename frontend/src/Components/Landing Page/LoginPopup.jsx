@@ -1,7 +1,58 @@
-import React from "react";
-import { FaArrowLeft, FaLeaf } from "react-icons/fa";
+import React, { useState } from "react";
+import { FaArrowLeft, FaLeaf, FaSyncAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // Store user data and token
+      localStorage.setItem("user", JSON.stringify(data));
+      
+      // Close popup
+      toggleLoginPopup();
+
+      // Redirect to role-specific dashboard
+      navigate(`/${data.role}-dashboard`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-overlay">
       <div className="login-card">
@@ -19,21 +70,46 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
           Log in to your secure, AI powered agricultural marketplace.
         </p>
 
-        <form className="login-form">
+        <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
-            <input type="email" placeholder="Enter your email" required />
+            <input 
+              type="email" 
+              name="email"
+              placeholder="Enter your email" 
+              value={formData.email}
+              onChange={handleChange}
+              required 
+            />
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input type="password" placeholder="Enter your password" required />
+            <input 
+              type="password" 
+              name="password"
+              placeholder="Enter your password" 
+              value={formData.password}
+              onChange={handleChange}
+              required 
+            />
           </div>
+          
+          {error && <p className="error-message" style={{ color: "#ff4444", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center", width: "100%" }}>{error}</p>}
+          
           <a href="#" className="forgot-password">
             Forgot password?
           </a>
-          <button type="submit" className="login-submit-btn">
-            Login
+          
+          <button type="submit" className="login-submit-btn" disabled={loading}>
+            {loading ? (
+              <span className="btn-content">
+                <FaSyncAlt className="spin-icon" style={{ animation: "spin 1s linear infinite", marginRight: "8px" }} /> Logging in...
+              </span>
+            ) : (
+              "Login"
+            )}
           </button>
+          
           <button
             type="button"
             className="login-signup-btn"

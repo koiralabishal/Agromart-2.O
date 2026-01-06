@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaLeaf, FaUpload, FaChevronDown, FaTimes } from "react-icons/fa";
+import OTPPopup from "../OTPPopup";
+import SuccessPopup from "../SuccessPopup";
 
 const FarmerForm = ({
   selectedPaymentMethod,
@@ -9,6 +11,122 @@ const FarmerForm = ({
   handleFileChange,
   removeFile,
 }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+    farmName: "",
+    farmRegistrationNumber: "",
+    gatewayId: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Step 1: Send OTP
+      const response = await fetch("http://localhost:5000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to send OTP");
+      }
+
+      setShowOTP(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (otp) => {
+    setLoading(true);
+    setOtpError("");
+
+    try {
+      const data = new FormData();
+      Object.keys(formData).forEach((key) => {
+        data.append(key, formData[key]);
+      });
+      data.append("role", "farmer");
+      data.append("paymentMethod", selectedPaymentMethod);
+      data.append("otp", otp);
+
+      const fileInput = document.getElementById("farmer-license");
+      if (fileInput.files[0]) {
+        data.append("license", fileInput.files[0]);
+      }
+
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Registration failed");
+      }
+
+      setSuccess(true);
+      setShowOTP(false);
+      localStorage.setItem("user", JSON.stringify(result));
+    } catch (err) {
+      setOtpError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      await fetch("http://localhost:5000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+    } catch (err) {
+      setOtpError("Failed to resend OTP");
+    }
+  };
+
+  if (success) {
+    return (
+      <SuccessPopup 
+        name={formData.name} 
+        role="farmer" 
+        onClose={() => window.location.reload()} 
+      />
+    );
+  }
+
   return (
     <div className="farmer-registration">
       <div className="login-logo">
@@ -19,26 +137,54 @@ const FarmerForm = ({
       </div>
       <h2>Create Farmer Account</h2>
 
-      <form className="registration-form">
+      <form className="registration-form" onSubmit={handleSubmit}>
         {/* Personal Information */}
         <div className="form-section">
           <h3>Personal Information</h3>
           <div className="form-grid">
             <div className="form-group">
               <label>Full Name</label>
-              <input type="text" placeholder="John Doe" required />
+              <input 
+                type="text" 
+                name="name"
+                placeholder="John Doe" 
+                value={formData.name}
+                onChange={handleChange}
+                required 
+              />
             </div>
             <div className="form-group">
               <label>Phone Number</label>
-              <input type="tel" placeholder="+1 (555) 123-4567" required />
+              <input 
+                type="tel" 
+                name="phone"
+                placeholder="+1 (555) 123-4567" 
+                value={formData.phone}
+                onChange={handleChange}
+                required 
+              />
             </div>
             <div className="form-group">
               <label>Email</label>
-              <input type="email" placeholder="john.doe@example.com" required />
+              <input 
+                type="email" 
+                name="email"
+                placeholder="john.doe@example.com" 
+                value={formData.email}
+                onChange={handleChange}
+                required 
+              />
             </div>
             <div className="form-group">
               <label>Address</label>
-              <input type="text" placeholder="Lamachaur-16, GCES" required />
+              <input 
+                type="text" 
+                name="address"
+                placeholder="Lamachaur-16, GCES" 
+                value={formData.address}
+                onChange={handleChange}
+                required 
+              />
             </div>
           </div>
         </div>
@@ -49,11 +195,25 @@ const FarmerForm = ({
           <div className="form-grid">
             <div className="form-group">
               <label>Farm Name</label>
-              <input type="text" placeholder="AgroSupply Inc." required />
+              <input 
+                type="text" 
+                name="farmName"
+                placeholder="AgroSupply Inc." 
+                value={formData.farmName}
+                onChange={handleChange}
+                required 
+              />
             </div>
             <div className="form-group">
               <label>Farm Registration Number</label>
-              <input type="text" placeholder="BRN-123456789" required />
+              <input 
+                type="text" 
+                name="farmRegistrationNumber"
+                placeholder="BRN-123456789" 
+                value={formData.farmRegistrationNumber}
+                onChange={handleChange}
+                required 
+              />
             </div>
           </div>
           <div className="form-group full-width">
@@ -85,6 +245,7 @@ const FarmerForm = ({
                 hidden
                 onChange={(e) => handleFileChange(e, "farmer")}
                 accept="image/*"
+                required
               />
             </label>
           </div>
@@ -115,7 +276,10 @@ const FarmerForm = ({
                 <label>Gateway Details</label>
                 <input
                   type="text"
+                  name="gatewayId"
                   placeholder={getPaymentPlaceholder(selectedPaymentMethod)}
+                  value={formData.gatewayId}
+                  onChange={handleChange}
                   required
                 />
               </div>
@@ -129,19 +293,46 @@ const FarmerForm = ({
           <div className="form-grid">
             <div className="form-group">
               <label>Password</label>
-              <input type="password" placeholder="••••••••" required />
+              <input 
+                type="password" 
+                name="password"
+                placeholder="••••••••" 
+                value={formData.password}
+                onChange={handleChange}
+                required 
+              />
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
-              <input type="password" placeholder="••••••••" required />
+              <input 
+                type="password" 
+                name="confirmPassword"
+                placeholder="••••••••" 
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required 
+              />
             </div>
           </div>
         </div>
 
-        <button type="submit" className="register-submit-btn">
-          Create Farmer Account
+        {error && <p className="error-message">{error}</p>}
+
+        <button type="submit" className="register-submit-btn" disabled={loading}>
+          {loading ? "Processing..." : "Create Farmer Account"}
         </button>
       </form>
+
+      {showOTP && (
+        <OTPPopup 
+          email={formData.email}
+          onVerify={handleVerifyAndRegister}
+          onClose={() => setShowOTP(false)}
+          onResend={handleResendOTP}
+          loading={loading}
+          error={otpError}
+        />
+      )}
     </div>
   );
 };
