@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaLeaf,
   FaFacebookF,
@@ -19,7 +20,22 @@ import FarmImage from "../../assets/farming.jpg";
 import LoginPopup from "./LoginPopup";
 import SignupModal from "./SignupModal";
 
+
+
 const LandingPage = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.token) {
+      navigate(`/${user.role}-dashboard`);
+    }
+  }, [navigate]);
+
+
+
+
+
   const [activeSection, setActiveSection] = useState("home");
   const [clickedSection, setClickedSection] = useState(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);

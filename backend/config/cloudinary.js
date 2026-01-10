@@ -15,9 +15,39 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "documents",
-    allowed_formats: ["jpg", "png", "jpeg", "pdf"],
+    resource_type: "auto",
+    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
+
+// const storage = new CloudinaryStorage({
+//   cloudinary,
+//   params: async (req, file) => {
+//     return {
+//       folder: "documents",
+//       resource_type: "auto",
+//       public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+//     };
+//   },
+// });
+
+// const upload = multer({
+//   storage,
+//   fileFilter: (req, file, cb) => {
+//     const allowed = [
+//       "image/jpeg",
+//       "image/png",
+//       "image/jpg",
+//       "application/pdf",
+//     ];
+
+//     if (!allowed.includes(file.mimetype)) {
+//       return cb(new Error("Only images and PDFs are allowed"));
+//     }
+//     cb(null, true);
+//   },
+// });
+
 
 const upload = multer({ storage: storage });
 

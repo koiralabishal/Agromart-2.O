@@ -1,0 +1,269 @@
+/* RecommendedPricePopup.css */
+.rpp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.rpp-container {
+  background: white;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 95vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.rpp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.rpp-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rpp-logo-icon {
+  font-size: 1.5rem;
+  background: #1dc956;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.rpp-logo-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.rpp-back-btn {
+  background: #1dc956;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+}
+
+.rpp-back-btn:hover {
+  background: #18b049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(29, 201, 86, 0.3);
+}
+
+.rpp-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4b5563;
+  text-align: left;
+  padding: 2rem 2rem 1rem 2rem;
+  margin: 0;
+}
+
+.rpp-products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  padding: 1rem 2rem 2rem 2rem;
+}
+
+@media (max-width: 900px) {
+  .rpp-products-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rpp-product-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.rpp-product-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 1rem 0;
+}
+
+.rpp-price-badge {
+  background: linear-gradient(135deg, #d1f4e0 0%, #a7e9c5 100%);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.rpp-price-badge {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #065f46;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rpp-price-subtitle {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #047857;
+  margin-top: 0.25rem;
+}
+
+.rpp-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.rpp-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rpp-option input[type="radio"] {
+  margin-right: 0.5rem;
+  accent-color: #1dc956;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.rpp-option label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.rpp-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  background: #f9fafb;
+}
+
+.rpp-input:focus {
+  outline: none;
+  border-color: #1dc956;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(29, 201, 86, 0.1);
+}
+
+.rpp-input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.rpp-confirm-btn {
+  width: 100%;
+  background: #4b7c5e;
+  color: white;
+  border: none;
+  padding: 0.875rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.rpp-confirm-btn:hover {
+  background: #3d6a4e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(75, 124, 94, 0.3);
+}
+
+.rpp-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  position: sticky;
+  bottom: 0;
+}
+
+.rpp-footer-text {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.rpp-footer-socials {
+  display: flex;
+  gap: 1rem;
+}
+
+.rpp-footer-socials span {
+  width: 32px;
+  height: 32px;
+  background: #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.rpp-footer-socials span:hover {
+  background: #1dc956;
+  color: white;
+}
+
+/* Scrollbar styling */
+.rpp-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rpp-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.rpp-container::-webkit-scrollbar-thumb {
+  background: #1dc956;
+  border-radius: 4px;
+}
+
+.rpp-container::-webkit-scrollbar-thumb:hover {
+  background: #18b049;
+}

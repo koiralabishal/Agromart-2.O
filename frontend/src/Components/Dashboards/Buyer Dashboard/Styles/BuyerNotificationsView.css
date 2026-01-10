@@ -1,0 +1,276 @@
+/* BuyerNotificationsView.css */
+
+.notifications-view {
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  position: relative;
+  min-height: 80vh;
+}
+
+.nv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.nv-header-info h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.nv-header-info p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.nv-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.nv-btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nv-btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.nv-btn-outline.red:hover {
+  border-color: #fca5a5;
+  color: #dc2626;
+  background: #fff1f1;
+}
+
+/* List Patterns */
+.nv-group {
+  margin-bottom: 2.5rem;
+}
+
+.nv-group-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.nv-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nv-card:hover {
+  border-color: #1dc956;
+  box-shadow: 0 4px 12px rgba(29, 201, 86, 0.05);
+}
+
+/* Unread glow style to support the JSX modification */
+.nv-card.unread-glow {
+  background-color: #f0fdf4; /* Light green tint */
+  border-color: #bbf7d0;
+}
+
+.nv-card-icon-section {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0.25rem;
+}
+
+.nv-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.nv-icon.order {
+  background: #effaf3;
+  color: #1dc956;
+}
+
+.nv-icon.payment {
+  background: #fffbeb;
+  color: #f59e0b;
+}
+
+.nv-icon.delivery {
+  background: #f0fdf4;
+  color: #22c55e;
+}
+
+.nv-card-content {
+  flex: 1;
+}
+
+.nv-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.nv-card-header h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.nv-card-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.nv-action-btn {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.nv-action-btn.mark {
+  color: #1dc956;
+}
+
+.nv-action-btn.mark:hover {
+  color: #16a34a;
+  text-decoration: underline;
+}
+
+.nv-action-btn.clear:hover {
+  color: #ef4444;
+}
+
+.nv-card-body {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.nv-card-body p {
+  margin: 0 0 0.25rem 0;
+}
+
+.nv-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0;
+}
+
+.nv-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nv-time {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nv-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.nv-badge.unread {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.nv-badge.read {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.nv-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.nv-btn-load {
+  padding: 0.8rem 2.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nv-btn-load:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.nv-empty {
+  text-align: center;
+  padding: 5rem 0;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+  .nv-header {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .nv-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nv-card-actions {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+}

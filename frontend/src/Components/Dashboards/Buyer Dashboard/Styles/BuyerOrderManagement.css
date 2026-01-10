@@ -1,0 +1,277 @@
+/* BuyerOrderManagement.css */
+
+.order-management {
+  padding: 1rem 0;
+}
+
+.om-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.om-header p {
+  color: #64748b;
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.order-section {
+  margin-bottom: 3rem;
+}
+
+.os-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.os-title-row h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.om-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.om-search {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.om-search .search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.om-search input {
+  width: 100%;
+  padding: 0.7rem 1rem 0.7rem 2.8rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.om-search input:focus {
+  outline: none;
+  border-color: #1dc956;
+  box-shadow: 0 0 0 4px rgba(29, 201, 86, 0.05);
+}
+
+.om-filters {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+  background: #f9fafb;
+}
+
+.filter-btn.active {
+  background: #1dc956;
+  color: white;
+  border-color: #1dc956;
+}
+
+.om-table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.om-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.om-table th {
+  text-align: left;
+  background: #f9fafb;
+  padding: 1rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.om-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.om-table tr:last-child td {
+  border-bottom: none;
+}
+
+.party-name {
+  font-weight: 600;
+  color: #111827 !important;
+}
+
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.item-tag {
+  background: #f3f4f6;
+  color: #4b5563;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.item-tag.more {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.status-text {
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-processing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-delivered,
+.status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.om-action-btn {
+  border: none;
+  background: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.om-action-btn.view {
+  background: #1dc956;
+  border: 1px solid #1dc956;
+  color: white;
+  padding: 0.4rem 1rem;
+}
+
+.om-action-btn.view:hover {
+  background: #159f42;
+  border-color: #159f42;
+  color: white;
+}
+
+.om-action-btn.text-action {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.om-action-btn.reject {
+  color: #ef4444;
+}
+
+.om-action-btn.reject:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.no-actions {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.no-orders {
+  text-align: center;
+  padding: 4rem 2rem !important;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+@media (max-width: 1024px) {
+  .om-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .om-search {
+    max-width: 100%;
+  }
+
+  .om-filters {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .os-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+}

@@ -1,0 +1,202 @@
+/* OrderManagement.css */
+.order-management {
+  padding: 1rem 0;
+}
+
+.om-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.om-header p {
+  color: var(--text-grey);
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.om-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.om-search {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.om-search .search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.om-search input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.om-search input:focus {
+  outline: none;
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 4px rgba(29, 201, 86, 0.05);
+}
+
+.om-filters {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap; /* Added for overflow prevention */
+}
+
+.filter-btn {
+  padding: 0.6rem 1.4rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.filter-btn:hover {
+  background: #f8f8f8;
+}
+
+.filter-btn.active {
+  background: var(--primary-green);
+  color: white;
+  border-color: var(--primary-green);
+}
+
+.om-table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  overflow-x: auto; /* Changed from hidden to auto */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.om-table {
+  width: 100%;
+  min-width: 800px; /* Added min-width for the table to ensure horizontal scroll */
+  border-collapse: collapse;
+}
+
+.om-table th {
+  text-align: left;
+  background: #f8f9fa;
+  padding: 1.2rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.om-table td {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.collector-name {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.item-tag {
+  background: #f0f2f5;
+  color: #4a5568;
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-text {
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+}
+
+.status-pending {
+  color: #2d3748; /* Dark grey for Pending items in the image */
+}
+
+.status-accepted {
+  color: #2d3748;
+}
+
+.status-completed {
+  background: #e6fffa;
+  color: #38b2ac;
+}
+
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.om-action-btn {
+  border: none;
+  background: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.om-action-btn.view {
+  background: var(--primary-green);
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+}
+
+.om-action-btn.view:hover {
+  background: var(--dark-green);
+}
+
+.om-action-btn.text-action {
+  color: #333;
+}
+
+.om-action-btn.reject {
+  color: #e53e3e;
+}
+
+.no-actions {
+  color: #a0aec0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .om-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .om-search {
+    width: 100%;
+  }
+}
