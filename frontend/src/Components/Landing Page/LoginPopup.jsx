@@ -132,16 +132,7 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
 
           <button type="submit" className="login-submit-btn" disabled={loading}>
             {loading ? (
-              <span className="btn-content">
-                <FaSyncAlt
-                  className="spin-icon"
-                  style={{
-                    animation: "spin 1s linear infinite",
-                    marginRight: "8px",
-                  }}
-                />{" "}
-                Logging in...
-              </span>
+              "Logging..."
             ) : (
               "Login"
             )}

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const productSchema = new mongoose.Schema(
+const inventorySchema = new mongoose.Schema(
   {
     productName: {
       type: String,
@@ -40,10 +40,10 @@ const productSchema = new mongoose.Schema(
         "Vegetable",
         "Fruit",
         "Other",
-      ], // Aligning with frontend options
+      ],
     },
     productImage: {
-      type: String, // URL or reference
+      type: String,
     },
     availableStatus: {
       type: String,
@@ -53,14 +53,13 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    // Ensure the fields are saved in the preferred order (conceptually)
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
 
 // Business Rule: Automatically update availableStatus based on quantity
-productSchema.pre("save", function () {
+inventorySchema.pre("save", function () {
   if (this.quantity === 0) {
     this.availableStatus = "Out of Stock";
   } else {
@@ -68,6 +67,6 @@ productSchema.pre("save", function () {
   }
 });
 
-export { productSchema };
-const Product = mongoose.model("Product", productSchema);
-export default Product;
+export { inventorySchema };
+const Inventory = mongoose.model("Inventory", inventorySchema);
+export default Inventory;

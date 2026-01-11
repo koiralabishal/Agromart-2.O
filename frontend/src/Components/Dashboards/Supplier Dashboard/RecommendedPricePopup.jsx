@@ -7,34 +7,82 @@ const RecommendedPricePopup = ({ isOpen, onClose, onConfirm }) => {
     1: { option: "recommended", customPrice: "", rangePrice: "" },
     2: { option: "recommended", customPrice: "", rangePrice: "" },
     3: { option: "recommended", customPrice: "", rangePrice: "" },
-    4: { option: "recommended", customPrice: "", rangePrice: "" }
+    4: { option: "recommended", customPrice: "", rangePrice: "" },
   });
+  const [errors, setErrors] = useState({});
 
   const products = [
     { id: 1, name: "Tomato", priceMin: 58, priceMax: 65 },
     { id: 2, name: "Potato", priceMin: 42, priceMax: 48 },
     { id: 3, name: "Onion", priceMin: 50, priceMax: 56 },
-    { id: 4, name: "Cabbage", priceMin: 30, priceMax: 35 }
+    { id: 4, name: "Cabbage", priceMin: 30, priceMax: 35 },
   ];
 
   const handleOptionChange = (productId, option) => {
-    setProductPrices(prev => ({
+    setProductPrices((prev) => ({
       ...prev,
-      [productId]: { ...prev[productId], option }
+      [productId]: { ...prev[productId], option },
     }));
+    // Clear error for this product when option changes
+    if (errors[productId]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[productId];
+        return newErrors;
+      });
+    }
   };
 
   const handleInputChange = (productId, field, value) => {
-    setProductPrices(prev => ({
+    setProductPrices((prev) => ({
       ...prev,
-      [productId]: { ...prev[productId], [field]: value }
+      [productId]: { ...prev[productId], [field]: value },
     }));
+    // Clear error for this product when input changes
+    if (errors[productId]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[productId];
+        return newErrors;
+      });
+    }
   };
 
   const handleConfirmPrice = (product) => {
     const priceData = productPrices[product.id];
-    console.log(`Confirmed price for ${product.name}:`, priceData);
-    alert(`Price confirmed for ${product.name}!`);
+    let finalPrice;
+
+    if (priceData.option === "recommended") {
+      finalPrice =
+        priceData.rangePrice ||
+        ((product.priceMin + product.priceMax) / 2).toString();
+
+      // Validation: Must be within range
+      const numericPrice = parseFloat(finalPrice);
+      if (
+        isNaN(numericPrice) ||
+        numericPrice < product.priceMin ||
+        numericPrice > product.priceMax
+      ) {
+        setErrors((prev) => ({
+          ...prev,
+          [product.id]: `Price must be between NPR ${product.priceMin} - ${product.priceMax}`,
+        }));
+        return;
+      }
+    } else {
+      finalPrice = priceData.customPrice;
+      const numericPrice = parseFloat(finalPrice);
+      if (isNaN(numericPrice) || numericPrice <= 0) {
+        setErrors((prev) => ({
+          ...prev,
+          [product.id]: "Please enter a valid custom price",
+        }));
+        return;
+      }
+    }
+
+    onConfirm(finalPrice);
   };
 
   if (!isOpen) return null;
@@ -55,13 +103,15 @@ const RecommendedPricePopup = ({ isOpen, onClose, onConfirm }) => {
         <h2 className="rpp-title">Recommended Price</h2>
 
         <div className="rpp-products-grid">
-          {products.map(product => (
+          {products.map((product) => (
             <div key={product.id} className="rpp-product-card">
               <h3 className="rpp-product-name">{product.name}</h3>
-              
+
               <div className="rpp-price-badge">
                 NPR {product.priceMin} – {product.priceMax} / kg
-                <span className="rpp-price-subtitle">Based on market demand & trends</span>
+                <span className="rpp-price-subtitle">
+                  Based on market demand & trends
+                </span>
               </div>
 
               <div className="rpp-options">
@@ -71,18 +121,28 @@ const RecommendedPricePopup = ({ isOpen, onClose, onConfirm }) => {
                     id={`recommended-${product.id}`}
                     name={`price-option-${product.id}`}
                     checked={productPrices[product.id].option === "recommended"}
-                    onChange={() => handleOptionChange(product.id, "recommended")}
+                    onChange={() =>
+                      handleOptionChange(product.id, "recommended")
+                    }
                   />
                   <label htmlFor={`recommended-${product.id}`}>
                     Accept Recommended Price
                   </label>
                   <input
                     type="text"
-                    className="rpp-input"
+                    className={`rpp-input ${errors[product.id] && productPrices[product.id].option === "recommended" ? "invalid" : ""}`}
                     placeholder="Enter price within a range"
-                    disabled={productPrices[product.id].option !== "recommended"}
+                    disabled={
+                      productPrices[product.id].option !== "recommended"
+                    }
                     value={productPrices[product.id].rangePrice}
-                    onChange={(e) => handleInputChange(product.id, "rangePrice", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        product.id,
+                        "rangePrice",
+                        e.target.value
+                      )
+                    }
                   />
                 </div>
 
@@ -99,16 +159,26 @@ const RecommendedPricePopup = ({ isOpen, onClose, onConfirm }) => {
                   </label>
                   <input
                     type="text"
-                    className="rpp-input"
+                    className={`rpp-input ${errors[product.id] && productPrices[product.id].option === "custom" ? "invalid" : ""}`}
                     placeholder="Enter your own price"
                     disabled={productPrices[product.id].option !== "custom"}
                     value={productPrices[product.id].customPrice}
-                    onChange={(e) => handleInputChange(product.id, "customPrice", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        product.id,
+                        "customPrice",
+                        e.target.value
+                      )
+                    }
                   />
                 </div>
+                
+                {errors[product.id] && (
+                  <span className="rpp-field-error">{errors[product.id]}</span>
+                )}
               </div>
 
-              <button 
+              <button
                 className="rpp-confirm-btn"
                 onClick={() => handleConfirmPrice(product)}
               >

@@ -22,7 +22,6 @@
   width: 300px;
 }
 
-
 .fv-search input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
@@ -35,6 +34,15 @@
 
 .fv-search input:focus {
   border-color: #1dc956;
+}
+
+.fv-search .search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
 }
 
 /* 3x3 Grid as requested */
@@ -51,6 +59,22 @@
 }
 
 @media (max-width: 768px) {
+  .fv-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .fv-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .fv-search {
+    width: 100%;
+  }
+
   .farmers-grid {
     grid-template-columns: 1fr;
   }
@@ -158,4 +182,84 @@
 .view-btn:hover {
   background: #1dc956;
   color: white;
+}
+
+/* Status and Empty States */
+.fv-status-message {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #64748b;
+  gap: 1rem;
+}
+
+.fv-status-message.error {
+  color: #ef4444;
+}
+
+.spin-icon {
+  font-size: 2.5rem;
+  color: #1dc956;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retry-btn {
+  padding: 0.6rem 2rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.retry-btn:hover {
+  background: #dc2626;
+}
+
+.fv-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  background: white;
+  border-radius: 20px;
+  border: 2px dashed #e5e7eb;
+  text-align: center;
+  gap: 1.5rem;
+  color: #64748b;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+}
+
+.fv-empty h3 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin: 0;
+}
+
+.fv-empty p {
+  max-width: 450px;
+  line-height: 1.6;
+  margin: 0;
 }

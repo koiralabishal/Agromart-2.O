@@ -7,45 +7,58 @@ import {
   FaSearch,
   FaSyncAlt,
   FaExclamationTriangle,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
+import api from "../../../api/axiosConfig";
 import "./Styles/ProductManagement.css";
 
-const ProductManagement = ({ onAddProduct }) => {
+const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userID = user?._id || user?.id;
+
+  // Immediate data: use pre-fetched data if available, otherwise check local storage cache
+  const [products, setProducts] = useState(() => {
+    if (preFetchedProducts) return preFetchedProducts;
+    const cached = localStorage.getItem(`cached_farmer_products_${userID}`);
+    return cached ? JSON.parse(cached) : null;
+  });
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedProducts, setExpandedProducts] = useState({});
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const userID = user?._id || user?.id;
+  const toggleDescription = (id) => {
+    setExpandedProducts((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(
-        `http://localhost:5000/api/products?userID=${userID}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-      const data = await response.json();
-      setProducts(data);
+      const response = await api.get(`/products?userID=${userID}`);
+      setProducts(response.data);
+      localStorage.setItem(`cached_farmer_products_${userID}`, JSON.stringify(response.data));
+      setError(null);
     } catch (err) {
       console.error("Error fetching products:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || err.message || "Failed to fetch products");
+      setProducts((prev) => prev || []); // Fallback to empty if no cache
     }
   };
 
   useEffect(() => {
+    if (preFetchedProducts) {
+      setProducts(preFetchedProducts);
+    }
     if (userID) {
       fetchProducts();
     }
-  }, [userID]);
+  }, [userID, preFetchedProducts]);
 
   const confirmDelete = (product) => {
     setProductToDelete(product);
@@ -57,16 +70,7 @@ const ProductManagement = ({ onAddProduct }) => {
 
     try {
       setIsDeleting(true);
-      const response = await fetch(
-        `http://localhost:5000/api/products/${productToDelete._id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
-      }
+      await api.delete(`/products/${productToDelete._id}`);
 
       // Success
       setShowDeleteModal(false);
@@ -74,13 +78,13 @@ const ProductManagement = ({ onAddProduct }) => {
       fetchProducts(); // Refresh list
     } catch (err) {
       console.error("Error deleting product:", err);
-      alert("Error deleting product: " + err.message);
+      alert("Error deleting product: " + (err.response?.data?.message || err.message));
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const filteredProducts = products.filter((product) =>
+  const filteredProducts = (products || []).filter((product) =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -105,7 +109,11 @@ const ProductManagement = ({ onAddProduct }) => {
         </div>
       </div>
 
-      {!loading && products.length === 0 ? (
+      {products === null ? (
+        <div className="pm-empty">
+          {/* Subtle space while fetching */}
+        </div>
+      ) : products.length === 0 ? (
         <div className="pm-empty">
           <FaBox className="empty-icon" />
           <p>
@@ -146,6 +154,21 @@ const ProductManagement = ({ onAddProduct }) => {
                       <FaTrashAlt />
                     </button>
                   </div>
+                </div>
+
+                <div className="product-description-container">
+                  <p className={`product-card-description ${expandedProducts[product._id] ? 'expanded' : ''}`}>
+                    {product.productDescription}
+                  </p>
+                  {product.productDescription && product.productDescription.split(/\s+/).length > 20 && (
+                    <button
+                      className="description-toggle-btn"
+                      onClick={() => toggleDescription(product._id)}
+                      title={expandedProducts[product._id] ? "Show Less" : "Show More"}
+                    >
+                      {expandedProducts[product._id] ? <FaChevronUp /> : <FaChevronDown />}
+                    </button>
+                  )}
                 </div>
 
                 <div className="product-details">

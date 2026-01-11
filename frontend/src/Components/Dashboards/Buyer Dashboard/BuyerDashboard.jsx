@@ -17,6 +17,7 @@ import {
   FaTruck,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import api from "../../../api/axiosConfig";
 import DistributorsView from "./DistributorsView";
 import DistributorProductView from "./DistributorProductView";
 import BuyerOrderManagement from "./BuyerOrderManagement";
@@ -76,6 +77,25 @@ const BuyerDashboard = () => {
     }
   });
   const [spendingPeriod, setSpendingPeriod] = useState("monthly");
+  const [preFetchedDistributors, setPreFetchedDistributors] = useState(null);
+
+  useEffect(() => {
+    // Pre-fetch active distributors eagerly to make the UI feel immediate
+    const preFetchData = async () => {
+      try {
+        const response = await api.get("/users/active-distributors");
+        setPreFetchedDistributors(response.data);
+        // Cache in localStorage for even faster subsequent loads
+        localStorage.setItem(
+          "cached_active_distributors",
+          JSON.stringify(response.data)
+        );
+      } catch (err) {
+        console.error("Failed to pre-fetch distributors:", err);
+      }
+    };
+    preFetchData();
+  }, []);
 
   useEffect(() => {
     sessionStorage.setItem("buyerActiveView", activeView);
@@ -97,34 +117,74 @@ const BuyerDashboard = () => {
     }
   }, [activeView, selectedDistributor, selectedOrder, cartItems]);
 
-  const handleAddToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+  const handleAddToCart = async (product) => {
+    const productId = product._id || product.id;
+    try {
+      // 1. Update database inventory quantity (decrease by 1)
+      await api.patch(`/inventory/${productId}/quantity`, { delta: -1 });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => {
+        const existingItem = prevItems.find(
+          (item) => (item._id || item.id) === productId
         );
-      } else {
-        return [...prevItems, { ...product, quantity: 1 }];
-      }
-    });
-    setHasViewedCart(false);
+        if (existingItem) {
+          return prevItems.map((item) =>
+            (item._id || item.id) === productId
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        } else {
+          return [...prevItems, { ...product, quantity: 1 }];
+        }
+      });
+      setHasViewedCart(false);
+      console.log(`>>> Inventory updated: ${product.productName} quantity decreased by 1`);
+    } catch (err) {
+      console.error("Failed to update inventory quantity on add:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
   };
 
-  const handleUpdateQuantity = (id, delta) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
+  const handleUpdateQuantity = async (id, delta) => {
+    try {
+      // 1. Update database inventory quantity (delta is what changes for the cart, so inverse for DB)
+      // If cart increases (+1), DB decreases (-1). If cart decreases (-1), DB increases (+1).
+      await api.patch(`/inventory/${id}/quantity`, { delta: -delta });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          (item.id === id || item._id === id)
+            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+            : item
+        )
+      );
+      console.log(`>>> Inventory updated: ID ${id} quantity changed by ${-delta}`);
+    } catch (err) {
+      console.error("Failed to update inventory quantity on change:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
   };
 
-  const handleRemoveItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  const handleRemoveItem = async (id) => {
+    try {
+      // 1. Find the item in cart to get its quantity
+      const itemToRemove = cartItems.find((item) => (item.id === id || item._id === id));
+      if (!itemToRemove) return;
+
+      // 2. Return total quantity back to inventory
+      await api.patch(`/inventory/${id}/quantity`, {
+        delta: itemToRemove.quantity,
+      });
+
+      // 3. Update local cart state
+      setCartItems((prevItems) => prevItems.filter((item) => (item.id !== id && item._id !== id)));
+      console.log(`>>> Inventory updated: ID ${id} restored ${itemToRemove.quantity} units`);
+    } catch (err) {
+      console.error("Failed to update inventory quantity on remove:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
   };
 
   const cartCount = cartItems.length;
@@ -460,7 +520,10 @@ const BuyerDashboard = () => {
 
         {activeView === "distributors" && (
           <div className="distributors-view-wrapper">
-            <DistributorsView onViewProfile={handleViewProfile} />
+            <DistributorsView 
+              onViewProfile={handleViewProfile} 
+              preFetchedDistributors={preFetchedDistributors}
+            />
           </div>
         )}
         {activeView === "distributorProduct" && selectedDistributor && (

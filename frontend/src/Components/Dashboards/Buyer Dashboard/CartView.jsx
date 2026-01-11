@@ -47,35 +47,41 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
         {/* Left Side: Items */}
         <div className="cart-items-section">
           <div className="cart-items-list">
-            {cartItems.map((item) => (
-              <div key={item.id} className="cart-item-card">
-                <div className="item-image">
-                  <img src={item.image} alt={item.name} />
-                </div>
-                <div className="item-info">
-                  <div className="info-main">
-                    <h3>{item.name}</h3>
-                    <p>{item.category}</p>
+            {cartItems.map((item) => {
+              const itemId = item._id || item.id;
+              const itemName = item.productName || item.name;
+              const itemImg = item.productImage || item.image;
+              
+              return (
+                <div key={itemId} className="cart-item-card">
+                  <div className="item-image">
+                    <img src={itemImg || "https://via.placeholder.com/100?text=Product"} alt={itemName} />
                   </div>
-                  <div className="info-price">Rs. {(item.price * item.quantity).toFixed(2)}</div>
-                </div>
-                <div className="item-controls">
-                  <button onClick={() => onUpdateQuantity(item.id, -1)}>
-                    <FaMinus />
+                  <div className="item-info">
+                    <div className="info-main">
+                      <h3>{itemName}</h3>
+                      <p>{item.category}</p>
+                    </div>
+                    <div className="info-price">Rs. {(item.price * item.quantity).toFixed(2)}</div>
+                  </div>
+                  <div className="item-controls">
+                    <button onClick={() => onUpdateQuantity(itemId, -1)}>
+                      <FaMinus />
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => onUpdateQuantity(itemId, 1)}>
+                      <FaPlus />
+                    </button>
+                  </div>
+                  <button
+                    className="remove-btn"
+                    onClick={() => onRemoveItem(itemId)}
+                  >
+                    <FaTrash />
                   </button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => onUpdateQuantity(item.id, 1)}>
-                    <FaPlus />
-                  </button>
                 </div>
-                <button
-                  className="remove-btn"
-                  onClick={() => onRemoveItem(item.id)}
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

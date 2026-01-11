@@ -18,6 +18,7 @@ import {
   FaBoxes,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
+import api from "../../../api/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import CollectorsView from "./CollectorsView";
 import CollectorProductView from "./CollectorProductView";
@@ -74,13 +75,52 @@ const SupplierDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderType, setOrderType] = useState("received");
   const [inventorySubView, setInventorySubView] = useState("list");
+  const [inventoryState, setInventoryState] = useState(null);
+  const [preFetchedCollectors, setPreFetchedCollectors] = useState(null);
+
+  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
+  const navigate = useNavigate();
+
+  // Background data fetching for high performance
+  const fetchDashboardData = async () => {
+    try {
+      // Parallel fetch for speed
+      const [invRes, collRes] = await Promise.all([
+        api.get(`/inventory?userID=${user._id || user.id}`),
+        api.get("/users/active-collectors"),
+      ]);
+
+      setInventoryState(invRes.data);
+      localStorage.setItem(
+        "supplierInventory_cache",
+        JSON.stringify(invRes.data)
+      );
+
+      setPreFetchedCollectors(collRes.data);
+      localStorage.setItem(
+        "cached_active_collectors",
+        JSON.stringify(collRes.data)
+      );
+
+      console.log(">>> Supplier Dashboard data pre-fetched and cached");
+    } catch (err) {
+      console.error("Error pre-fetching supplier data:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [user._id, user.id]);
 
   useEffect(() => {
     sessionStorage.setItem("supplierActiveView", activeView);
     sessionStorage.setItem("supplierCartItems", JSON.stringify(cartItems));
     sessionStorage.setItem("supplierHasViewedCart", hasViewedCart);
     if (selectedCollector) {
-      sessionStorage.setItem("selectedCollector", JSON.stringify(selectedCollector));
+      sessionStorage.setItem(
+        "selectedCollector",
+        JSON.stringify(selectedCollector)
+      );
     } else {
       sessionStorage.removeItem("selectedCollector");
     }
@@ -117,9 +157,6 @@ const SupplierDashboard = () => {
   };
 
   const cartCount = cartItems.length;
-
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -270,8 +307,8 @@ const SupplierDashboard = () => {
             {isSidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
 
-          <div 
-            className="sd-icon-btn cart-icon-wrapper" 
+          <div
+            className="sd-icon-btn cart-icon-wrapper"
             onClick={() => {
               setActiveView("cart");
               setHasViewedCart(true);
@@ -280,7 +317,7 @@ const SupplierDashboard = () => {
             style={{
               cursor: "pointer",
               color: activeView === "cart" ? "#1dc956" : "inherit",
-              position: "relative"
+              position: "relative",
             }}
           >
             <FaShoppingCart />
@@ -438,7 +475,10 @@ const SupplierDashboard = () => {
 
         {activeView === "collectors" && (
           <div className="collectors-view-wrapper">
-            <CollectorsView onViewProfile={handleViewProfile} />
+            <CollectorsView 
+              onViewProfile={handleViewProfile} 
+              preFetchedCollectors={preFetchedCollectors}
+            />
           </div>
         )}
         {activeView === "collectorProduct" && selectedCollector && (
@@ -452,9 +492,14 @@ const SupplierDashboard = () => {
           (inventorySubView === "list" ? (
             <InventoryManagement
               onAddInventory={() => setInventorySubView("add")}
+              initialData={inventoryState}
+              onRefresh={fetchDashboardData}
             />
           ) : (
-            <SupplierAddInventoryView onBack={() => setInventorySubView("list")} />
+            <SupplierAddInventoryView
+              onBack={() => setInventorySubView("list")}
+              onItemAdded={fetchDashboardData}
+            />
           ))}
         {activeView === "orders" && (
           <OrderManagement onViewOrder={handleViewOrder} />

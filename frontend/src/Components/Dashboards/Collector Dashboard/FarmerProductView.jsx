@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaPlus,
@@ -6,228 +6,166 @@ import {
   FaCheckCircle,
   FaSearch,
   FaLayerGroup,
+  FaSyncAlt,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import "./Styles/FarmerProductView.css";
 
-// Import local assets
-// ... (imports remain the same)
-import appleImg from "../../../assets/products/apple-fruit.jpg";
-import bananaImg from "../../../assets/products/banana.jpeg";
-import broccoliImg from "../../../assets/products/broccoli.jpeg";
-import cabbageImg from "../../../assets/products/cabbage.jpeg";
-import cauliflowerImg from "../../../assets/products/cauliflower.jpeg";
-import orangeImg from "../../../assets/products/orange.jpeg";
+import api from "../../../api/axiosConfig";
 
 const FarmerProductView = ({ farmer, onBack, onAddToCart }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [addedItem, setAddedItem] = useState("");
+  // Immediate data: Use local storage cache for this specific farmer
+  const [products, setProducts] = useState(() => {
+    if (!farmer?._id) return null;
+    const cached = localStorage.getItem(`cached_products_${farmer._id}`);
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [error, setError] = useState(null);
+  const [addedItem, setAddedItem] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  // Hard safety check
+  const [expandedProducts, setExpandedProducts] = useState({});
+
+  useEffect(() => {
+    if (farmer?._id) {
+      // Re-fetch to ensure data is fresh, while the cached data is already visible
+      fetchProducts();
+    }
+  }, [farmer]);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get(`/products?userID=${farmer._id}`);
+      setProducts(response.data);
+      // Cache the result for this specific farmer
+      localStorage.setItem(`cached_products_${farmer._id}`, JSON.stringify(response.data));
+      setError(null);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch products"
+      );
+      setProducts((prev) => prev || []); // Fallback to empty if no cache
+    }
+  };
+
+  const toggleDescription = (id) => {
+    setExpandedProducts((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   if (!farmer) return null;
 
-  // Mock products with local assets
-  const products = [
-    {
-      id: 101,
-      name: "Fresh Red Tomatoes",
-      category: "Vegetables",
-      price: 120,
-      unit: "kg",
-      stock: "500 kg",
-      image: cauliflowerImg,
-    },
-    {
-      id: 102,
-      name: "Organic Potatoes",
-      category: "Vegetables",
-      price: 60,
-      unit: "kg",
-      stock: "1000 kg",
-      image: broccoliImg,
-    },
-    {
-      id: 103,
-      name: "Green Spinach",
-      category: "Leafy Greens",
-      price: 40,
-      unit: "bundle",
-      stock: "0 bundles",
-      image: cabbageImg,
-    },
-    {
-      id: 104,
-      name: "Sweet Apples",
-      category: "Fruits",
-      price: 250,
-      unit: "kg",
-      stock: "300 kg",
-      image: appleImg,
-    },
-    {
-      id: 105,
-      name: "Juicy Oranges",
-      category: "Fruits",
-      price: 180,
-      unit: "kg",
-      stock: "450 kg",
-      image: orangeImg,
-    },
-    {
-      id: 106,
-      name: "Fresh Bananas",
-      category: "Fruits",
-      price: 100,
-      unit: "dozen",
-      stock: "150 dozen",
-      image: bananaImg,
-    },
-    {
-      id: 107,
-      name: "Green Broccoli",
-      category: "Vegetables",
-      price: 150,
-      unit: "kg",
-      stock: "100 kg",
-      image: broccoliImg,
-    },
-    {
-      id: 108,
-      name: "White Cauliflower",
-      category: "Vegetables",
-      price: 90,
-      unit: "piece",
-      stock: "300 pieces",
-      image: cauliflowerImg,
-    },
-    {
-      id: 109,
-      name: "Crisp Cabbage",
-      category: "Vegetables",
-      price: 50,
-      unit: "kg",
-      stock: "400 kg",
-      image: cabbageImg,
-    },
-    {
-      id: 110,
-      name: "Red Apples",
-      category: "Fruits",
-      price: 260,
-      unit: "kg",
-      stock: "200 kg",
-      image: appleImg,
-    },
-    {
-      id: 111,
-      name: "Organic Tomatoes",
-      category: "Vegetables",
-      price: 130,
-      unit: "kg",
-      stock: "350 kg",
-      image: cauliflowerImg,
-    },
-    {
-      id: 112,
-      name: "Baby Potatoes",
-      category: "Vegetables",
-      price: 70,
-      unit: "kg",
-      stock: "600 kg",
-      image: broccoliImg,
-    },
-    {
-      id: 113,
-      name: "Fresh Lettuce",
-      category: "Leafy Greens",
-      price: 80,
-      unit: "kg",
-      stock: "100 kg",
-      image: cabbageImg,
-    },
-    {
-      id: 114,
-      name: "Sunshine Oranges",
-      category: "Fruits",
-      price: 190,
-      unit: "kg",
-      stock: "250 kg",
-      image: orangeImg,
-    },
-    {
-      id: 115,
-      name: "Sweet Bananas",
-      category: "Fruits",
-      price: 110,
-      unit: "dozen",
-      stock: "0 dozen",
-      image: bananaImg,
-    },
-    {
-      id: 116,
-      name: "Seasonal Mangoes",
-      category: "Fruits",
-      price: 150,
-      unit: "kg",
-      stock: "0 kg",
-      image: appleImg,
-    },
-  ];
+  const filteredProducts = (products || []).filter((p) =>
+    p.productName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="inventory-management">
       <div className="im-header">
-        <h2>Products from {farmer.name}</h2>
+        <div className="im-title-area">
+          <h2>{farmer.name}'s Products</h2>
+        </div>
+
         <div className="im-header-actions">
           <div className="search-bar-container">
             <FaSearch className="search-icon" />
             <input
               type="text"
               placeholder="Search products..."
+              className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
             />
           </div>
-          <button className="add-inventory-btn" onClick={onBack}>
+          <button className="back-to-farmers" onClick={onBack}>
             <FaArrowLeft /> Back to Farmers
           </button>
         </div>
       </div>
 
       <div className="inventory-grid">
-        {products
-          .filter((p) =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map((product) => {
-            const stockVal = parseInt(product.stock);
-            const isOutOfStock = stockVal === 0;
+        {error ? (
+          <div className="im-empty error">
+            <p>Error: {error}</p>
+            <button onClick={fetchProducts} className="retry-btn">
+              Retry
+            </button>
+          </div>
+        ) : products === null ? (
+          <div className="im-empty">
+            {/* Subtle empty space while loading */}
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => {
+            const isOutOfStock = product.quantity === 0;
 
             return (
-              <div key={product.id} className="inventory-card">
+              <div key={product._id} className="inventory-card">
                 <img
-                  src={product.image}
-                  alt={product.name}
+                  src={
+                    product.productImage ||
+                    "https://via.placeholder.com/200?text=Product"
+                  }
+                  alt={product.productName}
                   className="inventory-image"
                 />
                 <div className="inventory-info">
                   <div className="inventory-info-header">
                     <div className="inventory-name-area">
-                      <h3>{product.name}</h3>
+                      <h3>{product.productName}</h3>
                       <p className="inventory-category">{product.category}</p>
                     </div>
                     <button
                       className="add-cart-btn-small"
                       disabled={isOutOfStock}
-                      onClick={() => {
-                        onAddToCart(product);
-                        setAddedItem(product.name);
+                      onClick={async () => {
+                        await onAddToCart(product);
+                        setAddedItem(product);
                         setShowPopup(true);
+                        // Update local state for immediate feedback
+                        setProducts((prevProducts) =>
+                          prevProducts.map((p) =>
+                            p._id === product._id
+                              ? { ...p, quantity: Math.max(0, p.quantity - 1) }
+                              : p
+                          )
+                        );
                       }}
                       title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
                     >
                       <FaPlus /> {isOutOfStock ? "No Stock" : "Add"}
                     </button>
+                  </div>
+
+                  <div className="item-description-container">
+                    <p
+                      className={`item-description ${
+                        expandedProducts[product._id] ? "expanded" : ""
+                      }`}
+                    >
+                      {product.productDescription}
+                    </p>
+                    {product.productDescription &&
+                      product.productDescription.split(/\s+/).length > 20 && (
+                        <button
+                          className="description-toggle-btn"
+                          onClick={() => toggleDescription(product._id)}
+                          title={
+                            expandedProducts[product._id]
+                              ? "Show Less"
+                              : "Show More"
+                          }
+                        >
+                          {expandedProducts[product._id] ? (
+                            <FaChevronUp />
+                          ) : (
+                            <FaChevronDown />
+                          )}
+                        </button>
+                      )}
                   </div>
 
                   <div className="inventory-details">
@@ -236,7 +174,9 @@ const FarmerProductView = ({ farmer, onBack, onAddToCart }) => {
                     </span>
                     <div className="qty-wrapper">
                       <FaBox className="im-detail-icon" />
-                      <span>{product.stock}</span>
+                      <span>
+                        {product.quantity} {product.unit}
+                      </span>
                     </div>
                     <span
                       className={`im-status-tag ${
@@ -251,21 +191,30 @@ const FarmerProductView = ({ farmer, onBack, onAddToCart }) => {
                 </div>
               </div>
             );
-          })}
+          })
+        ) : (
+          <div className="im-empty">
+            <FaLayerGroup className="empty-icon" />
+            <p>No products found for {farmer.name} at the moment.</p>
+          </div>
+        )}
       </div>
 
-      {showPopup && (
+      {showPopup && addedItem && (
         <div className="cart-popup-overlay" onClick={() => setShowPopup(false)}>
           <div
             className="cart-popup-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="cart-popup-icon">
-              <FaCheckCircle />
+            <div className="cart-popup-img-wrapper">
+               <img src={addedItem.productImage || "https://via.placeholder.com/200?text=Product"} alt={addedItem.productName} className="cart-popup-product-img" />
+               <div className="cart-popup-check-badge">
+                 <FaCheckCircle />
+               </div>
             </div>
             <h3>Added to Cart!</h3>
             <p>
-              <strong>{addedItem}</strong> has been successfully added to your
+              <strong>{addedItem.productName}</strong> has been successfully added to your
               cart.
             </p>
             <button

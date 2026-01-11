@@ -3,6 +3,7 @@ import {
   createProduct,
   getProducts,
   deleteProduct,
+  updateProductQuantity,
 } from "../controllers/productController.js";
 import { upload } from "../config/cloudinary.js";
 
@@ -12,5 +13,6 @@ const router = express.Router();
 router.post("/", upload.single("productImage"), createProduct);
 router.get("/", getProducts);
 router.delete("/:id", deleteProduct);
+router.patch("/:id/quantity", updateProductQuantity);
 
 export default router;

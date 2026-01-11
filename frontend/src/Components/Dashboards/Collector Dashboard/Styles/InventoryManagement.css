@@ -1,8 +1,11 @@
-/* InventoryManagement.css - Mirrored from FarmerProductView.css */
+/* InventoryManagement.css - Mirrored from ProductManagement.css */
 .inventory-management {
   padding: 1rem 0;
   width: 100%;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 250px);
 }
 
 .im-header {
@@ -25,7 +28,6 @@
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  border-radius: 8px;
   padding: 0.5rem 1rem;
   width: 300px;
   flex-shrink: 0;
@@ -37,10 +39,6 @@
   box-shadow: 0 0 0 3px rgba(29, 201, 86, 0.1);
 }
 
-
-  
-  
-
 .search-input {
   border: none;
   background: transparent;
@@ -48,46 +46,17 @@
   font-size: 0.95rem;
   color: #2c3e50;
   width: 100%;
+  margin-left: 0.5rem;
 }
 
 .search-input::placeholder {
   color: #aaa;
-  position: absolute;
-  left: 1.3rem;
 }
 
 .im-header h2 {
   font-size: 1.8rem;
   font-weight: 700;
   color: #111827;
-}
-
-@media (max-width: 768px) {
-  .im-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-
-  .im-header h2 {
-    text-align: center;
-    font-size: 1.5rem;
-  }
-
-  .im-header-actions {
-    flex-direction: column;
-    width: 100%;
-    gap: 1rem;
-  }
-
-  .search-bar-container {
-    width: 100%;
-  }
-
-  .add-inventory-btn {
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 .add-inventory-btn {
@@ -101,7 +70,6 @@
   gap: 0.5rem;
   font-weight: 600;
   cursor: pointer;
-  cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
@@ -112,11 +80,12 @@
   box-shadow: 0 4px 12px rgba(29, 201, 86, 0.2);
 }
 
-/* Products Grid */
+/* Inventory Grid */
 .inventory-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
+  align-items: start;
 }
 
 @media (max-width: 1200px) {
@@ -176,9 +145,56 @@
 .inventory-category {
   font-size: 0.85rem;
   color: #64748b;
+  margin-bottom: 0.5rem;
 }
 
-/* Action Buttons (Edit/Delete) */
+.item-description {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+}
+
+.item-description.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+}
+
+.item-description-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.description-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #1dc956;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  margin-top: 0.3rem;
+  align-self: flex-start;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.description-toggle-btn:hover {
+  background: rgba(29, 201, 86, 0.1);
+  transform: translateY(2px);
+}
+
 .inventory-actions {
   display: flex;
   gap: 0.8rem;
@@ -212,7 +228,7 @@
   box-shadow: 0 4px 10px rgba(255, 77, 79, 0.3);
 }
 
-.im-action-btn:hover {
+.im-action-btn:hover:not(.delete-btn) {
   background: #f0f0f0;
 }
 
@@ -254,11 +270,177 @@
 
 .status-available {
   color: #1dc956;
-  background: transparent;
 }
 
 .status-out-of-stock {
-  background: transparent;
   color: #ff4d4f;
-  padding: 0;
+}
+
+/* Empty State Styles */
+.im-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  flex: 1;
+}
+
+.im-empty p {
+  color: #64748b;
+  font-size: 1.1rem;
+  max-width: 400px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.im-empty-add-btn {
+  background: #1dc956;
+  color: white;
+  border: none;
+  padding: 0.9rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+}
+
+.im-empty-add-btn:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(29, 201, 86, 0.25);
+}
+
+/* Delete Confirmation Modal */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+.delete-modal-content {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  animation: slideUp 0.3s ease;
+}
+
+.delete-modal-icon {
+  font-size: 3.5rem;
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.delete-modal-content h2 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.delete-modal-content p {
+  color: #64748b;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+  font-size: 1rem;
+}
+
+.cancel-btn {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.confirm-delete-btn {
+  background: #ef4444;
+  color: white;
+  flex: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .im-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .im-header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-bar-container {
+    width: 100%;
+  }
+
+  .add-inventory-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

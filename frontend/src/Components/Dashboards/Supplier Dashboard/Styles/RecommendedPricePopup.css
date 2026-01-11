@@ -191,6 +191,24 @@
   cursor: not-allowed;
 }
 
+.rpp-input.invalid {
+  border-color: #ff4d4f;
+  background-color: #fff1f0;
+}
+
+.rpp-field-error {
+  color: #ff4d4f;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: -0.25rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .rpp-confirm-btn {
   width: 100%;
   background: #4b7c5e;

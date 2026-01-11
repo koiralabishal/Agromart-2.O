@@ -44,6 +44,8 @@ import {
 } from "recharts";
 import "./Styles/CollectorDashboard.css";
 
+import api from "../../../api/axiosConfig";
+
 const CollectorDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState(
@@ -74,6 +76,25 @@ const CollectorDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderType, setOrderType] = useState("received");
   const [inventorySubView, setInventorySubView] = useState("list");
+  const [preFetchedFarmers, setPreFetchedFarmers] = useState(null);
+
+  useEffect(() => {
+    // Pre-fetch active farmers eagerly to make the UI feel immediate
+    const preFetchData = async () => {
+      try {
+        const response = await api.get("/users/active-farmers");
+        setPreFetchedFarmers(response.data);
+        // Cache in localStorage for even faster subsequent loads
+        localStorage.setItem(
+          "cached_active_farmers",
+          JSON.stringify(response.data)
+        );
+      } catch (err) {
+        console.error("Failed to pre-fetch farmers:", err);
+      }
+    };
+    preFetchData();
+  }, []);
 
   useEffect(() => {
     sessionStorage.setItem("collectorActiveView", activeView);
@@ -86,34 +107,72 @@ const CollectorDashboard = () => {
     }
   }, [activeView, selectedFarmer, cartItems]);
 
-  const handleAddToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+  const handleAddToCart = async (product) => {
+    const productId = product._id || product.id;
+    try {
+      // 1. Update database quantity (decrease by 1)
+      await api.patch(`/products/${productId}/quantity`, { delta: -1 });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => {
+        const existingItem = prevItems.find(
+          (item) => (item._id || item.id) === productId
         );
-      } else {
-        return [...prevItems, { ...product, quantity: 1 }];
-      }
-    });
-    setHasViewedCart(false);
+        if (existingItem) {
+          return prevItems.map((item) =>
+            (item._id || item.id) === productId
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        } else {
+          return [...prevItems, { ...product, quantity: 1 }];
+        }
+      });
+      setHasViewedCart(false);
+      console.log(`>>> Database updated: ${product.productName} quantity decreased by 1`);
+    } catch (err) {
+      console.error("Failed to update database quantity on add:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
   };
 
-  const handleUpdateQuantity = (id, delta) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
+  const handleUpdateQuantity = async (id, delta) => {
+    try {
+      // 1. Update database quantity (delta is what changes for the cart, so inverse for DB)
+      // If cart increases (+1), DB decreases (-1). If cart decreases (-1), DB increases (+1).
+      await api.patch(`/products/${id}/quantity`, { delta: -delta });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          (item.id === id || item._id === id)
+            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+            : item
+        )
+      );
+      console.log(`>>> Database updated: product ${id} quantity changed by ${-delta}`);
+    } catch (err) {
+      console.error("Failed to update database quantity on update:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
   };
 
-  const handleRemoveItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  const handleRemoveItem = async (id) => {
+    const itemToRemove = cartItems.find(item => (item._id || item.id) === id);
+    if (!itemToRemove) return;
+
+    try {
+      // 1. Update database quantity (increase by the total amount that was in cart)
+      await api.patch(`/products/${id}/quantity`, { delta: itemToRemove.quantity });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => prevItems.filter((item) => (item._id || item.id) !== id));
+      console.log(`>>> Database updated: ${itemToRemove.productName || itemToRemove.name} quantity restored by ${itemToRemove.quantity}`);
+    } catch (err) {
+      console.error("Failed to update database quantity on remove:", err);
+      // We still remove it from cart locally to avoid blocking user, but log error
+      setCartItems((prevItems) => prevItems.filter((item) => (item._id || item.id) !== id));
+    }
   };
 
   const cartCount = cartItems.length;
@@ -125,7 +184,7 @@ const CollectorDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/api/auth/logout", { method: "POST" });
+      await api.post("/auth/logout");
       localStorage.removeItem("user");
       sessionStorage.removeItem("collectorActiveView");
       navigate("/");
@@ -270,8 +329,8 @@ const CollectorDashboard = () => {
             {isSidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
 
-          <div 
-            className="cd-icon-btn cart-icon-wrapper" 
+          <div
+            className="cd-icon-btn cart-icon-wrapper"
             onClick={() => {
               setActiveView("cart");
               setHasViewedCart(true);
@@ -280,7 +339,7 @@ const CollectorDashboard = () => {
             style={{
               cursor: "pointer",
               color: activeView === "cart" ? "#1dc956" : "inherit",
-              position: "relative"
+              position: "relative",
             }}
           >
             <FaShoppingCart />
@@ -438,7 +497,10 @@ const CollectorDashboard = () => {
 
         {activeView === "farmers" && (
           <div className="farmers-view-wrapper">
-            <FarmersView onViewProfile={handleViewProfile} />
+            <FarmersView
+              onViewProfile={handleViewProfile}
+              preFetchedFarmers={preFetchedFarmers}
+            />
           </div>
         )}
         {activeView === "farmerProduct" && selectedFarmer && (

@@ -1,97 +1,48 @@
-import React, { useState } from "react";
-import { FaSearch, FaMapMarkerAlt, FaHome, FaPhone, FaTruck } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaMapMarkerAlt, FaHome, FaPhone, FaTruck, FaEnvelope } from "react-icons/fa";
+import api from "../../../api/axiosConfig";
 import "./Styles/DistributorsView.css";
 
-const DistributorsView = ({ onViewProfile }) => {
+const DistributorsView = ({ onViewProfile, preFetchedDistributors }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Immediate data: use pre-fetched data if available, otherwise check local storage cache
+  const [distributors, setDistributors] = useState(() => {
+    if (preFetchedDistributors) return preFetchedDistributors;
+    const cached = localStorage.getItem("cached_active_distributors");
+    return cached ? JSON.parse(cached) : null;
+  });
+  
+  const [error, setError] = useState(null);
 
-  const distributors = [
-    {
-      id: 1,
-      name: "Prime Distribution Co.",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=PrimeDist",
-      location: "Kathmandu, Nepal",
-      centerAddress: "123 Distribution Hub, Kathmandu 44600",
-      centerName: "Prime Distribution Center",
-      contact: "+977 1-4987654",
-      status: "online"
-    },
-    {
-      id: 2,
-      name: "Swift Logistics",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Swift",
-      location: "Pokhara, Nepal",
-      centerAddress: "456 Logistics Park, Pokhara 33700",
-      centerName: "Swift Distribution Hub",
-      contact: "+977 61-567890",
-      status: "online"
-    },
-    {
-      id: 3,
-      name: "Valley Distributors",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Valley",
-      location: "Lalitpur, Nepal",
-      centerAddress: "789 Supply Chain Rd, Lalitpur 44700",
-      centerName: "Valley Distribution Point",
-      contact: "+977 1-5987654",
-      status: "online"
-    },
-    {
-      id: 4,
-      name: "Express Distribution",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Express",
-      location: "Bhaktapur, Nepal",
-      centerAddress: "101 Warehouse Ave, Bhaktapur 44800",
-      centerName: "Express Distribution Hub",
-      contact: "+977 1-6987654",
-      status: "online"
-    },
-    {
-      id: 5,
-      name: "Metro Distributors Ltd",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Metro",
-      location: "Chitwan, Nepal",
-      centerAddress: "202 Distribution Plaza, Chitwan 44200",
-      centerName: "Metro Distribution Center",
-      contact: "+977 56-987654",
-      status: "online"
-    },
-    {
-      id: 6,
-      name: "Nationwide Distribution",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Nationwide",
-      location: "Biratnagar, Nepal",
-      centerAddress: "303 Supply Hub, Biratnagar 56600",
-      centerName: "Nationwide Distribution Point",
-      contact: "+977 21-567890",
-      status: "online"
-    },
-    {
-      id: 7,
-      name: "Rapid Distributors",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rapid",
-      location: "Butwal, Nepal",
-      centerAddress: "404 Logistics Center, Butwal 32900",
-      centerName: "Rapid Distribution Hub",
-      contact: "+977 71-987654",
-      status: "online"
-    },
-    {
-      id: 8,
-      name: "Elite Distribution Co.",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elite",
-      location: "Dharan, Nepal",
-      centerAddress: "505 Distribution St, Dharan 56700",
-      centerName: "Elite Distribution Center",
-      contact: "+977 25-987654",
-      status: "online"
+  useEffect(() => {
+    // If we have pre-fetched data, sync it immediately
+    if (preFetchedDistributors) {
+      setDistributors(preFetchedDistributors);
     }
-  ];
+    // Always perform a background fetch to ensure fresh data
+    fetchActiveDistributors();
+  }, [preFetchedDistributors]);
 
-  const filteredDistributors = distributors.filter(d => 
-    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.centerName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchActiveDistributors = async () => {
+    try {
+      const response = await api.get("/users/active-distributors");
+      setDistributors(response.data);
+      localStorage.setItem("cached_active_distributors", JSON.stringify(response.data));
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching active distributors:", err);
+      setError(err.response?.data?.message || err.message || "Failed to fetch active distributors");
+      setDistributors((prev) => prev || []); // Fallback to empty if no cache
+    }
+  };
+
+  const filteredDistributors = (distributors || []).filter(d => {
+    const nameMatch = d.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const companyMatch = d.supplierDetails?.companyName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const emailMatch = d.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatch || companyMatch || emailMatch;
+  });
 
   return (
     <div className="distributors-view-container">
@@ -109,32 +60,61 @@ const DistributorsView = ({ onViewProfile }) => {
       </div>
 
       <div className="distributors-grid">
-        {filteredDistributors.map(distributor => (
-          <div key={distributor.id} className="distributor-card">
-            <div className="card-top">
-              <div className="image-wrapper">
-                <img src={distributor.image} alt={distributor.name} />
-                {distributor.status === "online" && <span className="status-dot"></span>}
-              </div>
-              <h3>{distributor.name}</h3>
-            </div>
-            <div className="card-details">
-              <div className="detail-item">
-                <FaMapMarkerAlt /> <span>Location: <strong>{distributor.location}</strong></span>
-              </div>
-              <div className="detail-item">
-                <FaHome /> <span>Center Address: {distributor.centerAddress}</span>
-              </div>
-              <div className="detail-item">
-                <FaTruck /> <span>Center Name: {distributor.centerName}</span>
-              </div>
-              <div className="detail-item">
-                <FaPhone /> <span>Contact: {distributor.contact}</span>
-              </div>
-            </div>
-            <button className="view-btn" onClick={() => onViewProfile(distributor)}>View Products</button>
+        {error ? (
+          <div className="dv-status-message error">
+            <p>Oops! Something went wrong: {error}</p>
+            <button onClick={fetchActiveDistributors} className="retry-btn">Try Again</button>
           </div>
-        ))}
+        ) : distributors === null ? (
+          <div className="dv-status-message">
+            {/* Subtle loading state */}
+          </div>
+        ) : filteredDistributors.length > 0 ? (
+          filteredDistributors.map(distributor => (
+            <div key={distributor._id} className="distributor-card">
+              <div className="card-top">
+                <div className="image-wrapper">
+                  <img 
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${distributor.supplierDetails?.name || distributor.name}`} 
+                    alt={distributor.name} 
+                  />
+                  <span className="status-dot"></span>
+                </div>
+                <h3 className="distributor-owner">{distributor.name}</h3>
+                {/* <p className="distributor-owner">Proprietor: {distributor.name}</p> */}
+              </div>
+              <div className="card-details">
+                <div className="detail-item">
+                  <FaMapMarkerAlt /> <span>Location: <strong>{distributor.supplierDetails?.location || "N/A"}</strong></span>
+                </div>
+                <div className="detail-item">
+                  <FaEnvelope /> <span>Email: {distributor.email}</span>
+                </div>
+                <div className="detail-item">
+                  <FaPhone /> <span>Contact: {distributor.phone}</span>
+                </div>
+                <div className="detail-item">
+                  <FaTruck /> <span>Company: {distributor.supplierDetails?.companyName || "N/A"}</span>
+                </div>
+              </div>
+              <button 
+                className="view-btn" 
+                onClick={() => onViewProfile(distributor)}
+              >
+                View Products
+              </button>
+            </div>
+          ))
+        ) : (
+          <div className="dv-empty">
+            <FaTruck className="empty-icon" />
+            <h3>No Active Distributors Found</h3>
+            <p>
+              It looks like there are no distributors with available inventory at
+              the moment. Check back later to see new stock items!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

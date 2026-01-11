@@ -1,107 +1,48 @@
-import React, { useState } from "react";
-import { FaSearch, FaMapMarkerAlt, FaHome, FaPhone, FaWarehouse } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaMapMarkerAlt, FaHome, FaPhone, FaWarehouse, FaEnvelope } from "react-icons/fa";
+import api from "../../../api/axiosConfig";
 import "./Styles/CollectorsView.css";
 
-const CollectorsView = ({ onViewProfile }) => {
+const CollectorsView = ({ onViewProfile, preFetchedCollectors }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Immediate data: use pre-fetched data if available, otherwise check local storage cache
+  const [collectors, setCollectors] = useState(() => {
+    if (preFetchedCollectors) return preFetchedCollectors;
+    const cached = localStorage.getItem("cached_active_collectors");
+    return cached ? JSON.parse(cached) : null;
+  });
+  
+  const [error, setError] = useState(null);
 
-  const collectors = [
-    {
-      id: 1,
-      name: "Green Valley Collectors",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=GreenValley",
-      location: "Kathmandu, Nepal",
-      centerAddress: "123 Collection Center Rd, Kathmandu 44600",
-      centerName: "Green Valley Collection Hub",
-      contact: "+977 1-4123456",
-      status: "online"
-    },
-    {
-      id: 2,
-      name: "Fresh Harvest Co.",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=FreshHarvest",
-      location: "Pokhara, Nepal",
-      centerAddress: "456 Market St, Pokhara 33700",
-      centerName: "Fresh Harvest Center",
-      contact: "+977 61-234567",
-      status: "online"
-    },
-    {
-      id: 3,
-      name: "Mountain Produce",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mountain",
-      location: "Lalitpur, Nepal",
-      centerAddress: "789 Agro Lane, Lalitpur 44700",
-      centerName: "Mountain Collection Point",
-      contact: "+977 1-5123456",
-      status: "online"
-    },
-    {
-      id: 4,
-      name: "Valley Fresh Collectors",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=ValleyFresh",
-      location: "Bhaktapur, Nepal",
-      centerAddress: "101 Farm Road, Bhaktapur 44800",
-      centerName: "Valley Fresh Hub",
-      contact: "+977 1-6123456",
-      status: "online"
-    },
-    {
-      id: 5,
-      name: "Organic Collectors Ltd",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Organic",
-      location: "Chitwan, Nepal",
-      centerAddress: "202 Agro Park, Chitwan 44200",
-      centerName: "Organic Collection Center",
-      contact: "+977 56-123456",
-      status: "online"
-    },
-    {
-      id: 6,
-      name: "Himalayan Harvest",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Himalayan",
-      location: "Biratnagar, Nepal",
-      centerAddress: "303 Produce Ave, Biratnagar 56600",
-      centerName: "Himalayan Collection Hub",
-      contact: "+977 21-234567",
-      status: "online"
-    },
-    {
-      id: 7,
-      name: "Everest Collectors",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Everest",
-      location: "Butwal, Nepal",
-      centerAddress: "404 Market Plaza, Butwal 32900",
-      centerName: "Everest Collection Point",
-      contact: "+977 71-123456",
-      status: "online"
-    },
-    {
-      id: 8,
-      name: "Nepal Fresh Co.",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=NepalFresh",
-      location: "Dharan, Nepal",
-      centerAddress: "505 Agro Street, Dharan 56700",
-      centerName: "Nepal Fresh Center",
-      contact: "+977 25-123456",
-      status: "online"
-    },
-    {
-      id: 9,
-      name: "Prime Collectors",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Prime",
-      location: "Hetauda, Nepal",
-      centerAddress: "606 Collection Blvd, Hetauda 44100",
-      centerName: "Prime Collection Hub",
-      contact: "+977 57-123456",
-      status: "online"
+  useEffect(() => {
+    // If we have pre-fetched data, sync it immediately
+    if (preFetchedCollectors) {
+      setCollectors(preFetchedCollectors);
     }
-  ];
+    // Always perform a background fetch to ensure fresh data
+    fetchActiveCollectors();
+  }, [preFetchedCollectors]);
 
-  const filteredCollectors = collectors.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.centerName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchActiveCollectors = async () => {
+    try {
+      const response = await api.get("/users/active-collectors");
+      setCollectors(response.data);
+      localStorage.setItem("cached_active_collectors", JSON.stringify(response.data));
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching active collectors:", err);
+      setError(err.response?.data?.message || err.message || "Failed to fetch active collectors");
+      setCollectors((prev) => prev || []); // Fallback to empty if no cache
+    }
+  };
+
+  const filteredCollectors = (collectors || []).filter(c => {
+    const nameMatch = c.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const companyMatch = c.collectorDetails?.companyName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const emailMatch = c.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatch || companyMatch || emailMatch;
+  });
 
   return (
     <div className="collectors-view-container">
@@ -119,32 +60,61 @@ const CollectorsView = ({ onViewProfile }) => {
       </div>
 
       <div className="collectors-grid">
-        {filteredCollectors.map(collector => (
-          <div key={collector.id} className="collector-card">
-            <div className="card-top">
-              <div className="image-wrapper">
-                <img src={collector.image} alt={collector.name} />
-                {collector.status === "online" && <span className="status-dot"></span>}
-              </div>
-              <h3>{collector.name}</h3>
-            </div>
-            <div className="card-details">
-              <div className="detail-item">
-                <FaMapMarkerAlt /> <span>Location: <strong>{collector.location}</strong></span>
-              </div>
-              <div className="detail-item">
-                <FaHome /> <span>Center Address: {collector.centerAddress}</span>
-              </div>
-              <div className="detail-item">
-                <FaWarehouse /> <span>Center Name: {collector.centerName}</span>
-              </div>
-              <div className="detail-item">
-                <FaPhone /> <span>Contact: {collector.contact}</span>
-              </div>
-            </div>
-            <button className="view-btn" onClick={() => onViewProfile(collector)}>View Products</button>
+        {error ? (
+          <div className="cv-status-message error">
+            <p>Oops! Something went wrong: {error}</p>
+            <button onClick={fetchActiveCollectors} className="retry-btn">Try Again</button>
           </div>
-        ))}
+        ) : collectors === null ? (
+          <div className="cv-status-message">
+            {/* Subtle loading state */}
+          </div>
+        ) : filteredCollectors.length > 0 ? (
+          filteredCollectors.map(collector => (
+            <div key={collector._id} className="collector-card">
+              <div className="card-top">
+                <div className="image-wrapper">
+                  <img 
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${collector.collectorDetails?.companyName || collector.name}`} 
+                    alt={collector.name} 
+                  />
+                  <span className="status-dot"></span>
+                </div>
+                <h3>{collector.collectorDetails?.companyName || collector.name}</h3>
+                <p className="collector-owner">Proprietor: {collector.name}</p>
+              </div>
+              <div className="card-details">
+                <div className="detail-item">
+                  <FaMapMarkerAlt /> <span>Location: <strong>{collector.collectorDetails?.location || "N/A"}</strong></span>
+                </div>
+                <div className="detail-item">
+                  <FaEnvelope /> <span>Email: {collector.email}</span>
+                </div>
+                <div className="detail-item">
+                  <FaPhone /> <span>Contact: {collector.phone}</span>
+                </div>
+                <div className="detail-item">
+                  <FaWarehouse /> <span>Company: {collector.collectorDetails?.companyName || "N/A"}</span>
+                </div>
+              </div>
+              <button 
+                className="view-btn" 
+                onClick={() => onViewProfile(collector)}
+              >
+                View Products
+              </button>
+            </div>
+          ))
+        ) : (
+          <div className="cv-empty">
+            <FaWarehouse className="empty-icon" />
+            <h3>No Active Collectors Found</h3>
+            <p>
+              It looks like there are no collectors with available inventory at
+              the moment. Check back later to see new stock items!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

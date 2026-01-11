@@ -40,22 +40,43 @@ import {
 } from "recharts";
 import "./Styles/FarmerDashboard.css";
 
+import api from "../../../api/axiosConfig";
+
 const FarmerDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState(sessionStorage.getItem("farmerActiveView") || "dashboard");
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
+  const [preFetchedProducts, setPreFetchedProducts] = useState(null);
+
+  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
+  const userID = user?._id || user?.id;
 
   useEffect(() => {
     sessionStorage.setItem("farmerActiveView", activeView);
   }, [activeView]);
+
+  useEffect(() => {
+    if (userID) {
+      const preFetch = async () => {
+        try {
+          const response = await api.get(`/products?userID=${userID}`);
+          setPreFetchedProducts(response.data);
+          localStorage.setItem(`cached_farmer_products_${userID}`, JSON.stringify(response.data));
+        } catch (err) {
+          console.error("Pre-fetch failed", err);
+        }
+      };
+      preFetch();
+    }
+  }, [userID]);
+
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/api/auth/logout", { method: "POST" });
+      await api.post("/auth/logout");
       localStorage.removeItem("user");
       sessionStorage.removeItem("farmerActiveView");
       navigate("/");
@@ -394,7 +415,10 @@ const FarmerDashboard = () => {
         )}
 
         {activeView === "products" && (
-          <ProductManagement onAddProduct={() => setActiveView("addProduct")} />
+          <ProductManagement 
+            onAddProduct={() => setActiveView("addProduct")} 
+            preFetchedProducts={preFetchedProducts}
+          />
         )}
 
         {activeView === "addProduct" && (

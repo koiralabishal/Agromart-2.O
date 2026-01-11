@@ -119,3 +119,33 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Update product quantity
+// @route   PATCH /api/products/:id/quantity
+// @access  Private
+export const updateProductQuantity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { delta } = req.body; // positive to increase, negative to decrease
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const newQuantity = product.quantity + delta;
+    if (newQuantity < 0) {
+      return res.status(400).json({ message: "Insufficient stock" });
+    }
+
+    product.quantity = newQuantity;
+    await product.save();
+
+    console.log(
+      `>>> Product ${product.productName} quantity updated by ${delta}. New quantity: ${product.quantity}`
+    );
+    res.json(product);
+  } catch (error) {
+    console.error("Error updating product quantity:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
