@@ -1,34 +1,145 @@
 import React, { useState, useRef } from "react";
-import { FaCloudUploadAlt, FaTimes } from "react-icons/fa";
+import { FaCloudUploadAlt, FaTimes, FaCheckCircle } from "react-icons/fa";
 import "./Styles/AddProductView.css";
 
 const AddProductView = ({ onBack }) => {
+  const [formData, setFormData] = useState({
+    productName: "",
+    category: "",
+    quantity: "",
+    unit: "",
+    price: "",
+    productDescription: "",
+  });
+  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [fileName, setFileName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [successPopup, setSuccessPopup] = useState(false);
+  const [addedProductName, setAddedProductName] = useState("");
+  
   const fileInputRef = useRef(null);
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleFocus = (e) => {
+    const { name } = e.target;
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageFile(file);
       setFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+      if (errors.productImage) {
+        setErrors((prev) => ({ ...prev, productImage: "" }));
+      }
     }
   };
 
   const triggerFileInput = () => {
+    if (errors.productImage) {
+      setErrors((prev) => ({ ...prev, productImage: "" }));
+    }
     fileInputRef.current.click();
   };
 
   const removeImage = (e) => {
     e.stopPropagation();
+    setImageFile(null);
     setImagePreview(null);
     setFileName("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.productName.trim()) newErrors.productName = "Product name is required";
+    if (!formData.category) newErrors.category = "Category is required";
+    if (!formData.quantity) {
+      newErrors.quantity = "Quantity is required";
+    } else if (parseFloat(formData.quantity) < 0) {
+      newErrors.quantity = "Quantity cannot be negative";
+    }
+    if (!formData.unit) newErrors.unit = "Unit is required";
+    if (!formData.price) {
+      newErrors.price = "Price is required";
+    } else if (parseFloat(formData.price) < 0) {
+      newErrors.price = "Price cannot be negative";
+    }
+    
+    if (!formData.productDescription.trim()) {
+      newErrors.productDescription = "Description is required";
+    } else {
+      const wordCount = formData.productDescription.trim().split(/\s+/).length;
+      if (wordCount < 25) {
+        newErrors.productDescription = `Description must be at least 25 words. Current: ${wordCount}`;
+      }
+    }
+    
+    if (!imageFile) newErrors.productImage = "Product image is required";
+    
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const data = new FormData();
+      data.append("productName", formData.productName);
+      data.append("category", formData.category);
+      data.append("quantity", formData.quantity);
+      data.append("unit", formData.unit);
+      data.append("price", formData.price);
+      data.append("productDescription", formData.productDescription);
+      data.append("userID", user._id || user.id);
+      data.append("productImage", imageFile);
+
+      const response = await fetch("http://localhost:5000/api/products", {
+        method: "POST",
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setAddedProductName(formData.productName);
+        setSuccessPopup(true);
+      } else {
+        setErrors({ submit: result.message || "Failed to add product" });
+      }
+    } catch (err) {
+      setErrors({ submit: "Network error. Please try again." });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,46 +155,127 @@ const AddProductView = ({ onBack }) => {
           <p>Enter the details for your new agricultural product.</p>
         </div>
 
-        <form className="ap-form">
+        {errors.submit && <div className="ap-error-message">{errors.submit}</div>}
+
+        <form className="ap-form" onSubmit={handleSubmit} noValidate>
           <div className="ap-form-grid">
-            {/* ... form fields ... */}
             <div className="ap-form-group">
               <label>Product Name</label>
-              <input type="text" placeholder="e.g., Organic Tomatoes" required />
+              <input 
+                type="text" 
+                name="productName"
+                placeholder="e.g., Organic Tomatoes" 
+                value={formData.productName}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                className={errors.productName ? "invalid" : ""}
+                required 
+              />
+              {errors.productName && <span className="ap-field-error">{errors.productName}</span>}
             </div>
 
             <div className="ap-form-group">
               <label>Category</label>
-              <select required>
+              <select 
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                className={errors.category ? "invalid" : ""}
+                required
+              >
                 <option value="">Select a category</option>
                 <option value="Vegetable">Vegetable</option>
                 <option value="Fruit">Fruit</option>
                 <option value="Grains">Grains</option>
+                <option value="Dairy">Dairy</option>
                 <option value="Other">Other</option>
               </select>
+              {errors.category && <span className="ap-field-error">{errors.category}</span>}
             </div>
 
             <div className="ap-form-group">
-              <label>Quantity (e.g., in kg, pieces)</label>
-              <input type="text" placeholder="e.g., 500" required />
+              <label>Quantity</label>
+              <input 
+                type="number" 
+                name="quantity"
+                placeholder="e.g., 500" 
+                value={formData.quantity}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                className={errors.quantity ? "invalid" : ""}
+                required 
+              />
+              {errors.quantity && <span className="ap-field-error">{errors.quantity}</span>}
+            </div>
+
+            <div className="ap-form-group">
+              <label>Unit</label>
+              <select 
+                name="unit"
+                value={formData.unit}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                className={errors.unit ? "invalid" : ""}
+                required
+              >
+                <option value="">Select unit</option>
+                <option value="kg">Kilogram (kg)</option>
+                <option value="g">Gram (g)</option>
+                <option value="tonne">Metric Ton (Tonne)</option>
+                <option value="quintal">Quintal</option>
+                <option value="liter">Liter (L)</option>
+                <option value="ml">Milliliter (ml)</option>
+                <option value="piece">Piece</option>
+                <option value="dozen">Dozen</option>
+                <option value="bundle">Bundle</option>
+                <option value="box">Box</option>
+                <option value="bag">Bag</option>
+                <option value="crate">Crate</option>
+                <option value="sack">Sack</option>
+              </select>
+              {errors.unit && <span className="ap-field-error">{errors.unit}</span>}
             </div>
 
             <div className="ap-form-group">
               <label>Expected Price (per unit)</label>
-              <input type="text" placeholder="e.g., 2.50" required />
+              <input 
+                type="number" 
+                name="price"
+                placeholder="e.g., 2.50" 
+                value={formData.price}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                className={errors.price ? "invalid" : ""}
+                required 
+              />
+              {errors.price && <span className="ap-field-error">{errors.price}</span>}
             </div>
 
             <div className="ap-form-group full-width">
-              <label>Availability Date</label>
-              <div className="date-input-wrapper">
-                 <input type="date" required />
+              <label>Product Description (min 25 words)</label>
+              <textarea 
+                name="productDescription"
+                placeholder="Describe your product (e.g., organic, fresh harvest, storage conditions...)" 
+                value={formData.productDescription}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                className={errors.productDescription ? "invalid" : ""}
+                required 
+                rows="4"
+              ></textarea>
+              <div className="ap-description-footer">
+                {errors.productDescription && <span className="ap-field-error">{errors.productDescription}</span>}
+                <small className="ap-word-count">
+                  Word count: {formData.productDescription.trim() === "" ? 0 : formData.productDescription.trim().split(/\s+/).length} / 25
+                </small>
               </div>
             </div>
 
             <div className="ap-form-group full-width">
               <label>Product Image</label>
               <div 
-                className={`ap-upload-area ${imagePreview ? 'has-preview' : ''}`} 
+                className={`ap-upload-area ${imagePreview ? 'has-preview' : ''} ${errors.productImage ? 'invalid' : ''}`} 
                 onClick={triggerFileInput}
               >
                 {imagePreview ? (
@@ -112,22 +304,34 @@ const AddProductView = ({ onBack }) => {
                   onChange={handleImageChange}
                 />
               </div>
+              {errors.productImage && <span className="ap-field-error">{errors.productImage}</span>}
             </div>
           </div>
 
           <div className="ap-form-footer">
-            <button type="button" className="ap-cancel-btn" onClick={onBack}>
+            <button type="button" className="ap-cancel-btn" onClick={onBack} disabled={loading}>
               Cancel
             </button>
-            <button type="submit" className="ap-submit-btn" onClick={(e) => {
-              e.preventDefault();
-              onBack();
-            }}>
-              Add Product
+            <button type="submit" className="ap-submit-btn" disabled={loading}>
+              {loading ? "Adding..." : "Add Product"}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Success Popup */}
+      {successPopup && (
+        <div className="ap-success-overlay">
+          <div className="ap-success-popup">
+            <FaCheckCircle className="ap-success-icon" />
+            <h3>Success!</h3>
+            <p>Your product <strong>{addedProductName}</strong> has been added successfully.</p>
+            <button className="ap-success-btn" onClick={onBack}>
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

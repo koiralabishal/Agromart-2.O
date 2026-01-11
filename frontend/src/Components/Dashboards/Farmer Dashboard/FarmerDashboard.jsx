@@ -419,14 +419,16 @@ const FarmerDashboard = () => {
       </main>
 
       {/* Footer */}
-      <footer className="fd-main-content fd-footer">
-        <div className="fd-footer-text">
-          &copy; {new Date().getFullYear()} AgroMart. All rights reserved.
-        </div>
-        <div className="fd-socials">
-          <FaFacebookF />
-          <FaTwitter />
-          <FaLinkedinIn />
+      <footer className="footer-area">
+        <div className="fd-footer">
+          <div className="fd-footer-text">
+            &copy; {new Date().getFullYear()} AgroMart. All rights reserved.
+          </div>
+          <div className="fd-socials">
+            <FaFacebookF />
+            <FaTwitter />
+            <FaLinkedinIn />
+          </div>
         </div>
       </footer>
 
@@ -438,7 +440,7 @@ const FarmerDashboard = () => {
         </div>
       )}
 
-      <div className="chat-fab" onClick={() => setIsChatPopupOpen(!isChatPopupOpen)} style={{ cursor: "pointer" }}>
+      <div className="chat-fab-fixed" onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}>
         <FaCommentDots />
       </div>
     </div>

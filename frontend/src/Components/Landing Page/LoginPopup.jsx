@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { FaArrowLeft, FaLeaf, FaSyncAlt } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaLeaf,
+  FaSyncAlt,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
@@ -9,6 +15,7 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -40,7 +47,7 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
 
       // Store user data and token
       localStorage.setItem("user", JSON.stringify(data));
-      
+
       // Close popup
       toggleLoginPopup();
 
@@ -73,43 +80,73 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               name="email"
-              placeholder="Enter your email" 
+              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
-              required 
+              required
             />
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              name="password"
-              placeholder="Enter your password" 
-              value={formData.password}
-              onChange={handleChange}
-              required 
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
-          
-          {error && <p className="error-message" style={{ color: "#ff4444", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center", width: "100%" }}>{error}</p>}
-          
+
+          {error && (
+            <p
+              className="error-message"
+              style={{
+                color: "#ff4444",
+                fontSize: "0.85rem",
+                marginBottom: "1rem",
+                textAlign: "center",
+                width: "100%",
+              }}
+            >
+              {error}
+            </p>
+          )}
+
           <a href="#" className="forgot-password">
             Forgot password?
           </a>
-          
+
           <button type="submit" className="login-submit-btn" disabled={loading}>
             {loading ? (
               <span className="btn-content">
-                <FaSyncAlt className="spin-icon" style={{ animation: "spin 1s linear infinite", marginRight: "8px" }} /> Logging in...
+                <FaSyncAlt
+                  className="spin-icon"
+                  style={{
+                    animation: "spin 1s linear infinite",
+                    marginRight: "8px",
+                  }}
+                />{" "}
+                Logging in...
               </span>
             ) : (
               "Login"
             )}
           </button>
-          
+
           <button
             type="button"
             className="login-signup-btn"

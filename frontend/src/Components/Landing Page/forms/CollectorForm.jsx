@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaLeaf, FaUpload, FaChevronDown, FaTimes } from "react-icons/fa";
+import { FaLeaf, FaUpload, FaChevronDown, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import OTPPopup from "../OTPPopup";
 import SuccessPopup from "../SuccessPopup";
 
@@ -27,6 +27,8 @@ const CollectorForm = ({
   const [success, setSuccess] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -202,25 +204,45 @@ const CollectorForm = ({
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input 
-                type="password" 
-                name="password"
-                placeholder="••••••••" 
-                value={formData.password}
-                onChange={handleChange}
-                required 
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  name="password"
+                  placeholder="••••••••" 
+                  value={formData.password}
+                  onChange={handleChange}
+                  required 
+                />
+                <button 
+                  type="button" 
+                  className="password-toggle-btn" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
-              <input 
-                type="password" 
-                name="confirmPassword"
-                placeholder="••••••••" 
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required 
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  name="confirmPassword"
+                  placeholder="••••••••" 
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required 
+                />
+                <button 
+                  type="button" 
+                  className="password-toggle-btn" 
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
