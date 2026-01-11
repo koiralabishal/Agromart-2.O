@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaEdit, FaTrashAlt, FaBox, FaSearch, FaSyncAlt } from "react-icons/fa";
+import {
+  FaPlus,
+  FaEdit,
+  FaTrashAlt,
+  FaBox,
+  FaSearch,
+  FaSyncAlt,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import "./Styles/ProductManagement.css";
 
 const ProductManagement = ({ onAddProduct }) => {
@@ -7,32 +15,70 @@ const ProductManagement = ({ onAddProduct }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/products?userID=${userID}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        const data = await response.json();
-        setProducts(data);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:5000/api/products?userID=${userID}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
       }
-    };
+      const data = await response.json();
+      setProducts(data);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (userID) {
       fetchProducts();
     }
   }, [userID]);
+
+  const confirmDelete = (product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await fetch(
+        `http://localhost:5000/api/products/${productToDelete._id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete product");
+      }
+
+      // Success
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+      fetchProducts(); // Refresh list
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      alert("Error deleting product: " + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const filteredProducts = products.filter((product) =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -62,7 +108,10 @@ const ProductManagement = ({ onAddProduct }) => {
       {!loading && products.length === 0 ? (
         <div className="pm-empty">
           <FaBox className="empty-icon" />
-          <p>No products added yet! Start listing your harvest to reach more buyers.</p>
+          <p>
+            No products added yet! Start listing your harvest to reach more
+            buyers.
+          </p>
           <button onClick={onAddProduct} className="pm-empty-add-btn">
             <FaPlus /> Add Your First Product
           </button>
@@ -72,7 +121,10 @@ const ProductManagement = ({ onAddProduct }) => {
           {filteredProducts.map((product) => (
             <div key={product._id} className="product-card">
               <img
-                src={product.productImage || "https://via.placeholder.com/300x200?text=No+Image"}
+                src={
+                  product.productImage ||
+                  "https://via.placeholder.com/300x200?text=No+Image"
+                }
                 alt={product.productName}
                 className="product-image"
               />
@@ -86,7 +138,11 @@ const ProductManagement = ({ onAddProduct }) => {
                     <button className="pm-action-btn edit-btn" title="Edit">
                       <FaEdit />
                     </button>
-                    <button className="pm-action-btn delete-btn" title="Delete">
+                    <button
+                      className="pm-action-btn delete-btn"
+                      title="Delete"
+                      onClick={() => confirmDelete(product)}
+                    >
                       <FaTrashAlt />
                     </button>
                   </div>
@@ -98,7 +154,9 @@ const ProductManagement = ({ onAddProduct }) => {
                   </span>
                   <div className="qty-wrapper">
                     <FaBox className="pm-detail-icon" />
-                    <span>{product.quantity} {product.unit}</span>
+                    <span>
+                      {product.quantity} {product.unit}
+                    </span>
                   </div>
                   <span
                     className={`pm-status-tag ${
@@ -113,6 +171,39 @@ const ProductManagement = ({ onAddProduct }) => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal-content">
+            <div className="delete-modal-icon">
+              <FaExclamationTriangle />
+            </div>
+            <h2>Confirm Delete</h2>
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>{productToDelete?.productName}</strong>? This action is
+              irreversible.
+            </p>
+            <div className="delete-modal-actions">
+              <button
+                className="modal-btn cancel-btn"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="modal-btn confirm-delete-btn"
+                onClick={handleExecuteDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete Product"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
