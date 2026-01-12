@@ -3,7 +3,8 @@ import {
   createInventory, 
   getInventory, 
   deleteInventory, 
-  updateInventoryQuantity 
+  updateInventoryQuantity,
+  updateInventory
 } from "../controllers/inventoryController.js";
 import { upload } from "../config/cloudinary.js";
 
@@ -13,5 +14,6 @@ router.post("/", upload.single("productImage"), createInventory);
 router.get("/", getInventory);
 router.delete("/:id", deleteInventory);
 router.patch("/:id/quantity", updateInventoryQuantity);
+router.put("/:id", upload.single("productImage"), updateInventory);
 
 export default router;

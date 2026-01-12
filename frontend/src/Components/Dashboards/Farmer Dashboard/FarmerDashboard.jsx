@@ -48,8 +48,61 @@ const FarmerDashboard = () => {
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [preFetchedProducts, setPreFetchedProducts] = useState(null);
 
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
   const userID = user?._id || user?.id;
+
+  // Sync user from localStorage if it changes (e.g., from SettingsView)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('userUpdated', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userUpdated', handleStorageChange);
+    };
+  }, []);
+
+  // Sync user state when activeView changes to catch local updates
+  useEffect(() => {
+    setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+  }, [activeView]);
+
+  // Fetch latest profile and products from database on mount (Zero-Loading Pattern)
+  useEffect(() => {
+    const preFetchDashboardData = async () => {
+      if (!userID || userID === 'admin-id') return;
+      
+      try {
+        // Parallel fetch for high performance
+        const [profileRes, productsRes] = await Promise.all([
+          api.get(`/users/profile/${userID}`),
+          api.get(`/products?userID=${userID}`)
+        ]);
+
+        // 1. Handle Profile Data
+        const updatedUser = { ...user, ...profileRes.data };
+        if (updatedUser.profileImage) {
+          const img = new Image();
+          img.src = updatedUser.profileImage;
+        }
+        if (JSON.stringify(updatedUser) !== JSON.stringify(user)) {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+
+        // 2. Handle Product Data
+        setPreFetchedProducts(productsRes.data);
+        localStorage.setItem(`cached_farmer_products_${userID}`, JSON.stringify(productsRes.data));
+        
+        console.log(">>> Farmer Dashboard data synced and cached");
+      } catch (err) {
+        console.error("Dashboard pre-fetch failed:", err);
+      }
+    };
+    preFetchDashboardData();
+  }, [userID]);
 
   useEffect(() => {
     sessionStorage.setItem("farmerActiveView", activeView);
@@ -206,7 +259,7 @@ const FarmerDashboard = () => {
             <FaBell />
           </div>
           <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+            src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
             alt="Profile"
             className="fd-profile-pic"
           />

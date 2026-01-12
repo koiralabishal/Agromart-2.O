@@ -75,13 +75,13 @@ const CollectorsView = ({ onViewProfile, preFetchedCollectors }) => {
               <div className="card-top">
                 <div className="image-wrapper">
                   <img 
-                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${collector.collectorDetails?.companyName || collector.name}`} 
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${collector.name}`} 
                     alt={collector.name} 
                   />
                   <span className="status-dot"></span>
                 </div>
-                <h3>{collector.collectorDetails?.companyName || collector.name}</h3>
-                <p className="collector-owner">Proprietor: {collector.name}</p>
+                {/* <h3>{collector.collectorDetails?.companyName || collector.name}</h3> */}
+                <h3 className="collector-owner">{collector.name}</h3>
               </div>
               <div className="card-details">
                 <div className="detail-item">

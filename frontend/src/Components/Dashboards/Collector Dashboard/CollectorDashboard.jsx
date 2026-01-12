@@ -77,24 +77,59 @@ const CollectorDashboard = () => {
   const [orderType, setOrderType] = useState("received");
   const [inventorySubView, setInventorySubView] = useState("list");
   const [preFetchedFarmers, setPreFetchedFarmers] = useState(null);
+  
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+  const userID = user?._id || user?.id;
+  const navigate = useNavigate();
 
+  // Sync user state from localStorage and background fetch
   useEffect(() => {
-    // Pre-fetch active farmers eagerly to make the UI feel immediate
-    const preFetchData = async () => {
+    const handleSync = () => {
+      setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('userUpdated', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('userUpdated', handleSync);
+    };
+  }, []);
+
+  // Background data fetching for high performance (Zero-Loading feel)
+  useEffect(() => {
+    const preFetchDashboardData = async () => {
+      if (!userID || userID === 'admin-id') return;
+      
       try {
-        const response = await api.get("/users/active-farmers");
-        setPreFetchedFarmers(response.data);
-        // Cache in localStorage for even faster subsequent loads
-        localStorage.setItem(
-          "cached_active_farmers",
-          JSON.stringify(response.data)
-        );
+        // Parallel fetch for speed
+        const [farmersRes, profileRes] = await Promise.all([
+          api.get("/users/active-farmers"),
+          api.get(`/users/profile/${userID}`)
+        ]);
+
+        // 1. Handle Farmers Data
+        setPreFetchedFarmers(farmersRes.data);
+        localStorage.setItem("cached_active_farmers", JSON.stringify(farmersRes.data));
+
+        // 2. Handle Profile Sync
+        const updatedUser = { ...user, ...profileRes.data };
+        if (updatedUser.profileImage) {
+          const img = new Image();
+          img.src = updatedUser.profileImage;
+        }
+        if (JSON.stringify(updatedUser) !== JSON.stringify(user)) {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+
+        console.log(">>> Collector Dashboard data pre-fetched and cached");
       } catch (err) {
-        console.error("Failed to pre-fetch farmers:", err);
+        console.error("Error pre-fetching collector data:", err);
       }
     };
-    preFetchData();
-  }, []);
+    
+    preFetchDashboardData();
+  }, [userID]);
 
   useEffect(() => {
     sessionStorage.setItem("collectorActiveView", activeView);
@@ -177,8 +212,6 @@ const CollectorDashboard = () => {
 
   const cartCount = cartItems.length;
 
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -362,7 +395,7 @@ const CollectorDashboard = () => {
             <span className="notif-counter">2</span>
           </div>
           <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+            src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
             alt="Profile"
             className="cd-profile-pic"
           />

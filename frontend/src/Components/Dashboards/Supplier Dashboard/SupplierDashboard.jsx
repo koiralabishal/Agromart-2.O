@@ -78,39 +78,63 @@ const SupplierDashboard = () => {
   const [inventoryState, setInventoryState] = useState(null);
   const [preFetchedCollectors, setPreFetchedCollectors] = useState(null);
 
-  const user = JSON.parse(localStorage.getItem("user")) || { name: "John Doe" };
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+  const userID = user?._id || user?.id;
   const navigate = useNavigate();
 
-  // Background data fetching for high performance
-  const fetchDashboardData = async () => {
-    try {
-      // Parallel fetch for speed
-      const [invRes, collRes] = await Promise.all([
-        api.get(`/inventory?userID=${user._id || user.id}`),
-        api.get("/users/active-collectors"),
-      ]);
-
-      setInventoryState(invRes.data);
-      localStorage.setItem(
-        "supplierInventory_cache",
-        JSON.stringify(invRes.data)
-      );
-
-      setPreFetchedCollectors(collRes.data);
-      localStorage.setItem(
-        "cached_active_collectors",
-        JSON.stringify(collRes.data)
-      );
-
-      console.log(">>> Supplier Dashboard data pre-fetched and cached");
-    } catch (err) {
-      console.error("Error pre-fetching supplier data:", err);
-    }
-  };
-
+  // Sync user state from localStorage and background fetch
   useEffect(() => {
-    fetchDashboardData();
-  }, [user._id, user.id]);
+    const handleSync = () => {
+      setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('userUpdated', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('userUpdated', handleSync);
+    };
+  }, []);
+
+  // Background data fetching for high performance (Zero-Loading feel)
+  useEffect(() => {
+    const preFetchDashboardData = async () => {
+      if (!userID || userID === 'admin-id') return;
+      
+      try {
+        // Parallel fetch for speed
+        const [invRes, collRes, profileRes] = await Promise.all([
+          api.get(`/inventory?userID=${userID}`),
+          api.get("/users/active-collectors"),
+          api.get(`/users/profile/${userID}`)
+        ]);
+
+        // 1. Handle Inventory Data
+        setInventoryState(invRes.data);
+        localStorage.setItem("supplierInventory_cache", JSON.stringify(invRes.data));
+
+        // 2. Handle Collectors Data
+        setPreFetchedCollectors(collRes.data);
+        localStorage.setItem("cached_active_collectors", JSON.stringify(collRes.data));
+
+        // 3. Handle Profile Sync
+        const updatedUser = { ...user, ...profileRes.data };
+        if (updatedUser.profileImage) {
+          const img = new Image();
+          img.src = updatedUser.profileImage;
+        }
+        if (JSON.stringify(updatedUser) !== JSON.stringify(user)) {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+
+        console.log(">>> Supplier Dashboard data pre-fetched and cached");
+      } catch (err) {
+        console.error("Error pre-fetching supplier data:", err);
+      }
+    };
+    
+    preFetchDashboardData();
+  }, [userID]);
 
   useEffect(() => {
     sessionStorage.setItem("supplierActiveView", activeView);
@@ -126,34 +150,70 @@ const SupplierDashboard = () => {
     }
   }, [activeView, selectedCollector, cartItems]);
 
-  const handleAddToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+  const handleAddToCart = async (product) => {
+    const productId = product._id;
+    try {
+      // 1. Update database quantity (decrease by 1)
+      // Since it's from collector's inventory, we use /api/inventory
+      await api.patch(`/inventory/${productId}/quantity`, { delta: -1 });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => {
+        const existingItem = prevItems.find((item) => item._id === productId);
+        if (existingItem) {
+          return prevItems.map((item) =>
+            item._id === productId
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        } else {
+          return [...prevItems, { ...product, quantity: 1 }];
+        }
+      });
+      setHasViewedCart(false);
+      console.log(`>>> Database updated: ${product.productName} quantity decreased by 1 in inventory`);
+    } catch (err) {
+      console.error("Failed to update database quantity on add:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
+  };
+
+  const handleUpdateQuantity = async (id, delta) => {
+    try {
+      // 1. Update database quantity (inverse of cart delta)
+      await api.patch(`/inventory/${id}/quantity`, { delta: -delta });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === id
+            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
             : item
-        );
-      } else {
-        return [...prevItems, { ...product, quantity: 1 }];
-      }
-    });
-    setHasViewedCart(false);
+        )
+      );
+      console.log(`>>> Database updated: inventory item ${id} quantity changed by ${-delta}`);
+    } catch (err) {
+      console.error("Failed to update database quantity on update:", err);
+      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+    }
   };
 
-  const handleUpdateQuantity = (id, delta) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
-  };
+  const handleRemoveItem = async (id) => {
+    const itemToRemove = cartItems.find(item => item._id === id);
+    if (!itemToRemove) return;
 
-  const handleRemoveItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    try {
+      // 1. Restore database quantity
+      await api.patch(`/inventory/${id}/quantity`, { delta: itemToRemove.quantity });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
+      console.log(`>>> Database restored: ${itemToRemove.productName} quantity restored by ${itemToRemove.quantity}`);
+    } catch (err) {
+      console.error("Failed to update database quantity on remove:", err);
+      // Fallback: still remove locally to not block user
+      setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
+    }
   };
 
   const cartCount = cartItems.length;
@@ -340,7 +400,7 @@ const SupplierDashboard = () => {
             <span className="notif-counter">2</span>
           </div>
           <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+            src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
             alt="Profile"
             className="sd-profile-pic"
           />
@@ -493,12 +553,18 @@ const SupplierDashboard = () => {
             <InventoryManagement
               onAddInventory={() => setInventorySubView("add")}
               initialData={inventoryState}
-              onRefresh={fetchDashboardData}
+              onRefresh={() => {
+                // Background refresh
+                api.get(`/inventory?userID=${userID}`).then(res => setInventoryState(res.data));
+              }}
             />
           ) : (
             <SupplierAddInventoryView
               onBack={() => setInventorySubView("list")}
-              onItemAdded={fetchDashboardData}
+              onItemAdded={() => {
+                // Background refresh
+                api.get(`/inventory?userID=${userID}`).then(res => setInventoryState(res.data));
+              }}
             />
           ))}
         {activeView === "orders" && (

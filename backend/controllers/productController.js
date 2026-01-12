@@ -149,3 +149,48 @@ export const updateProductQuantity = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Update a product
+// @route   PUT /api/products/:id
+// @access  Private (Farmer)
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      productName,
+      quantity,
+      unit,
+      price,
+      productDescription,
+      category,
+    } = req.body;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Update fields if provided
+    if (productName) product.productName = productName;
+    if (quantity !== undefined) product.quantity = Number(quantity);
+    if (unit) product.unit = unit;
+    if (price !== undefined) product.price = Number(price);
+    if (productDescription) product.productDescription = productDescription;
+    if (category) product.category = category;
+
+    // Handle image update if a new file is uploaded
+    if (req.file) {
+      product.productImage = req.file.path;
+    } else if (req.body.productImage) {
+      product.productImage = req.body.productImage;
+    }
+
+    const updatedProduct = await product.save();
+    console.log(`>>> Product updated successfully: ${updatedProduct.productName}`);
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(400).json({ message: error.message });
+  }
+};

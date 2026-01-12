@@ -3,6 +3,12 @@
   padding: 1rem 0;
   width: 100%;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.inventory-management::-webkit-scrollbar {
+  display: none;
 }
 
 .im-header {

@@ -140,10 +140,77 @@ export const getActiveDistributors = async (req, res) => {
         }
       }
     ]);
-
     res.status(200).json(activeDistributors);
   } catch (error) {
     console.error("Error in getActiveDistributors:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { userID, name, email, currentPassword, newPassword } = req.body;
+    console.log("Update profile request:", { userID, name, email, hasFile: !!req.file });
+
+    if (!userID) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findById(userID);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // If updating password, verify current password first
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required to set a new one" });
+      }
+      const isMatch = await user.matchPassword(currentPassword);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid current password" });
+      }
+      
+      if (currentPassword === newPassword) {
+        return res.status(400).json({ message: "New password cannot be same as current password" });
+      }
+
+      user.password = newPassword;
+    }
+
+    if (name) user.name = name;
+    
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      user.email = email;
+    }
+
+    if (req.file) {
+      console.log("Saving new profile image path:", req.file.path);
+      user.profileImage = req.file.path;
+    } else if (req.body.profileImage && typeof req.body.profileImage === 'string') {
+      user.profileImage = req.body.profileImage;
+    }
+
+    const updatedUser = await user.save();
+    console.log("User updated successfully");
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      profileImage: updatedUser.profileImage,
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

@@ -201,7 +201,7 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.8rem;
+  padding: 0.75rem 3rem 0.75rem 2.8rem;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -251,6 +251,39 @@
   background: #16a34a;
 }
 
+.save-btn.disabled {
+  background: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.8;
+  box-shadow: none;
+}
+
+.save-btn.disabled:hover {
+  background: #cbd5e1;
+  box-shadow: none;
+  transform: none;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  transition: color 0.2s ease;
+  z-index: 5;
+}
+
+.password-toggle-btn:hover {
+  color: #1dc956;
+}
+
 /* Account Management Section */
 .account-mgmt-content {
   display: flex;
@@ -297,12 +330,12 @@
   .form-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .account-mgmt-content {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .delete-btn {
     width: 100%;
   }
@@ -310,4 +343,82 @@
   .save-btn {
     width: 100%;
   }
+}
+
+/* Success Popup */
+.settings-success-popup {
+  position: fixed;
+  top: 100px;
+  right: 2rem;
+  background: #1dc956;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(29, 201, 86, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 600;
+  z-index: 2000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Error Styles */
+.error-text-inline {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin: 0.3rem 0 0 0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.input-wrapper.has-error input {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.input-wrapper.has-error .input-icon {
+  color: #ef4444;
+}
+
+.input-wrapper.has-error input:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+/* Loading State */
+.settings-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1.5rem;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #1dc956;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

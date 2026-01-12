@@ -1,37 +1,47 @@
-import User from '../models/User.js';
-import Farmer from '../models/Farmer.js';
-import Collector from '../models/Collector.js';
-import Supplier from '../models/Supplier.js';
-import Buyer from '../models/Buyer.js';
-import OTP from '../models/OTP.js';
-import jwt from 'jsonwebtoken';
-import { sendEmail } from '../utils/sendEmail.js';
+import User from "../models/User.js";
+import Farmer from "../models/Farmer.js";
+import Collector from "../models/Collector.js";
+import Supplier from "../models/Supplier.js";
+import Buyer from "../models/Buyer.js";
+import OTP from "../models/OTP.js";
+import jwt from "jsonwebtoken";
+import { sendEmail } from "../utils/sendEmail.js";
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
 
 export const registerUser = async (req, res) => {
   try {
-    const { 
-      name, email, phone, address, password, role, otp,
+    const {
+      name,
+      email,
+      phone,
+      address,
+      password,
+      role,
+      otp,
       // Role specific fields
-      farmName, farmRegistrationNumber,
-      companyName, businessRegistrationNumber, location,
+      farmName,
+      farmRegistrationNumber,
+      companyName,
+      businessRegistrationNumber,
+      location,
       deliveryAddress,
-      paymentMethod, gatewayId
+      paymentMethod,
+      gatewayId,
     } = req.body;
 
     // Verify OTP
     const otpRecord = await OTP.findOne({ email, otp });
     if (!otpRecord) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+      return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // Get license URL from cloudinary (multer storage)
@@ -39,57 +49,62 @@ export const registerUser = async (req, res) => {
 
     // Create Base User
     const user = await User.create({
-      name, email, phone, address, password, role
+      name,
+      email,
+      phone,
+      address,
+      password,
+      role,
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid user data' });
+      return res.status(400).json({ message: "Invalid user data" });
     }
 
     // Create Role Specific Data
     let roleData;
     const commonRoleProps = {
       userId: user._id,
-      paymentDetails: { method: paymentMethod, gatewayId }
+      paymentDetails: { method: paymentMethod, gatewayId },
     };
 
     switch (role) {
-      case 'farmer':
+      case "farmer":
         roleData = await Farmer.create({
           ...commonRoleProps,
           farmName,
           farmRegistrationNumber,
-          licenseUrl
+          licenseUrl,
         });
         break;
-      case 'collector':
+      case "collector":
         roleData = await Collector.create({
           ...commonRoleProps,
           companyName,
           location,
-          licenseUrl
+          licenseUrl,
         });
         break;
-      case 'supplier':
+      case "supplier":
         roleData = await Supplier.create({
           ...commonRoleProps,
           companyName,
           businessRegistrationNumber,
           location,
-          licenseUrl
+          licenseUrl,
         });
         break;
-      case 'buyer':
+      case "buyer":
         roleData = await Buyer.create({
           ...commonRoleProps,
           companyName,
-          deliveryAddress
+          deliveryAddress,
         });
         break;
       default:
         // If role is invalid, we should probably delete the User created above
         await User.findByIdAndDelete(user._id);
-        return res.status(400).json({ message: 'Invalid role' });
+        return res.status(400).json({ message: "Invalid role" });
     }
 
     // Delete OTP after successful registration
@@ -100,9 +115,9 @@ export const registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id)
+      profileImage: user.profileImage,
+      token: generateToken(user._id),
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -117,17 +132,17 @@ export const loginUser = async (req, res) => {
     console.log("Login Attempt:", email);
     console.log("Env Email:", process.env.ADMIN_EMAIL);
     console.log("Env Pass Match:", password === process.env.ADMIN_PASSWORD);
-    
+
     if (
       email === process.env.ADMIN_EMAIL &&
       password === process.env.ADMIN_PASSWORD
     ) {
       return res.json({
-        _id: 'admin-id',
-        name: 'Admin',
+        _id: "admin-id",
+        name: "Admin",
         email: email,
-        role: 'admin',
-        token: generateToken('admin-id')
+        role: "admin",
+        token: generateToken("admin-id"),
       });
     }
 
@@ -139,10 +154,11 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id)
+        profileImage: user.profileImage,
+        token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -150,7 +166,7 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = async (req, res) => {
-  res.json({ message: 'Logged out successfully' });
+  res.json({ message: "Logged out successfully" });
 };
 
 export const sendOTP = async (req, res) => {
@@ -160,7 +176,7 @@ export const sendOTP = async (req, res) => {
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // Generate 6-digit OTP
@@ -212,15 +228,15 @@ export const sendOTP = async (req, res) => {
 
     const emailSent = await sendEmail(
       email,
-      'Agromart - Your Verification Code',
+      "Agromart - Your Verification Code",
       `Your verification code is: ${otp}`,
       htmlTemplate
     );
 
     if (emailSent) {
-      res.json({ message: 'OTP sent successfully to your email' });
+      res.json({ message: "OTP sent successfully to your email" });
     } else {
-      res.status(500).json({ message: 'Failed to send verification email' });
+      res.status(500).json({ message: "Failed to send verification email" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

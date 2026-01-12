@@ -147,3 +147,48 @@ export const updateInventoryQuantity = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Update an inventory item
+// @route   PUT /api/inventory/:id
+// @access  Private (Collector/Supplier)
+export const updateInventory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      productName,
+      quantity,
+      unit,
+      price,
+      productDescription,
+      category,
+    } = req.body;
+
+    const inventory = await Inventory.findById(id);
+
+    if (!inventory) {
+      return res.status(404).json({ message: "Inventory item not found" });
+    }
+
+    // Update fields if provided
+    if (productName) inventory.productName = productName;
+    if (quantity !== undefined) inventory.quantity = Number(quantity);
+    if (unit) inventory.unit = unit;
+    if (price !== undefined) inventory.price = Number(price);
+    if (productDescription) inventory.productDescription = productDescription;
+    if (category) inventory.category = category;
+
+    // Handle image update if a new file is uploaded
+    if (req.file) {
+      inventory.productImage = req.file.path;
+    } else if (req.body.productImage) {
+      inventory.productImage = req.body.productImage;
+    }
+
+    const updatedInventory = await inventory.save();
+    console.log(`>>> Inventory updated successfully: ${updatedInventory.productName}`);
+    res.json(updatedInventory);
+  } catch (error) {
+    console.error("Error updating inventory:", error);
+    res.status(400).json({ message: error.message });
+  }
+};

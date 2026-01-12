@@ -6,6 +6,12 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 250px);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.inventory-management::-webkit-scrollbar {
+  display: none;
 }
 
 .im-header {

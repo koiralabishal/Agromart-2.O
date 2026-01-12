@@ -4,6 +4,7 @@ import {
   getProducts,
   deleteProduct,
   updateProductQuantity,
+  updateProduct,
 } from "../controllers/productController.js";
 import { upload } from "../config/cloudinary.js";
 
@@ -14,5 +15,6 @@ router.post("/", upload.single("productImage"), createProduct);
 router.get("/", getProducts);
 router.delete("/:id", deleteProduct);
 router.patch("/:id/quantity", updateProductQuantity);
+router.put("/:id", upload.single("productImage"), updateProduct);
 
 export default router;

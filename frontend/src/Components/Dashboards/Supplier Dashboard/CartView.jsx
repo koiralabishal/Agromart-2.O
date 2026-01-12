@@ -48,29 +48,37 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
         <div className="cart-items-section">
           <div className="cart-items-list">
             {cartItems.map((item) => (
-              <div key={item.id} className="cart-item-card">
+              <div key={item._id} className="cart-item-card">
                 <div className="item-image">
-                  <img src={item.image} alt={item.name} />
+                  <img
+                    src={
+                      item.productImage ||
+                      "https://via.placeholder.com/200?text=Product"
+                    }
+                    alt={item.productName}
+                  />
                 </div>
                 <div className="item-info">
                   <div className="info-main">
-                    <h3>{item.name}</h3>
+                    <h3>{item.productName}</h3>
                     <p>{item.category}</p>
                   </div>
-                  <div className="info-price">Rs. {(item.price * item.quantity).toFixed(2)}</div>
+                  <div className="info-price">
+                    Rs. {(item.price * item.quantity).toFixed(2)}
+                  </div>
                 </div>
                 <div className="item-controls">
-                  <button onClick={() => onUpdateQuantity(item.id, -1)}>
+                  <button onClick={() => onUpdateQuantity(item._id, -1)}>
                     <FaMinus />
                   </button>
                   <span>{item.quantity}</span>
-                  <button onClick={() => onUpdateQuantity(item.id, 1)}>
+                  <button onClick={() => onUpdateQuantity(item._id, 1)}>
                     <FaPlus />
                   </button>
                 </div>
                 <button
                   className="remove-btn"
-                  onClick={() => onRemoveItem(item.id)}
+                  onClick={() => onRemoveItem(item._id)}
                 >
                   <FaTrash />
                 </button>

@@ -9,9 +9,14 @@ import {
   FaExclamationTriangle,
   FaChevronDown,
   FaChevronUp,
+  FaCloudUploadAlt,
+  FaTimes,
+  FaCheckCircle,
 } from "react-icons/fa";
 import api from "../../../api/axiosConfig";
 import "./Styles/ProductManagement.css";
+import "./Styles/EditProductModal.css";
+import "./Styles/AddProductView.css"; // Reuse some styles
 
 const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,6 +35,37 @@ const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [expandedProducts, setExpandedProducts] = useState({});
+
+  // Edit State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [productToEdit, setProductToEdit] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    productName: "",
+    category: "",
+    quantity: "",
+    unit: "",
+    price: "",
+    productDescription: "",
+  });
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editErrors, setEditErrors] = useState({});
+  const [editSuccessPopup, setEditSuccessPopup] = useState(false);
+  
+  const editFileInputRef = React.useRef(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showEditModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showEditModal]);
 
   const toggleDescription = (id) => {
     setExpandedProducts((prev) => ({
@@ -81,6 +117,85 @@ const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
       alert("Error deleting product: " + (err.response?.data?.message || err.message));
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleEditClick = (product) => {
+    setProductToEdit(product);
+    setEditFormData({
+      productName: product.productName,
+      category: product.category,
+      quantity: product.quantity,
+      unit: product.unit,
+      price: product.price,
+      productDescription: product.productDescription,
+    });
+    setEditImagePreview(product.productImage);
+    setEditImageFile(null);
+    setEditErrors({});
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({ ...prev, [name]: value }));
+    if (editErrors[name]) {
+      setEditErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeEditImagePreview = (e) => {
+    e.stopPropagation();
+    setEditImageFile(null);
+    setEditImagePreview(null); // Fully remove preview
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = "";
+    }
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditErrors({});
+
+    try {
+      const data = new FormData();
+      data.append("productName", editFormData.productName);
+      data.append("category", editFormData.category);
+      data.append("quantity", editFormData.quantity);
+      data.append("unit", editFormData.unit);
+      data.append("price", editFormData.price);
+      data.append("productDescription", editFormData.productDescription);
+      if (editImageFile) {
+        data.append("productImage", editImageFile);
+      }
+
+      await api.put(`/products/${productToEdit._id}`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setEditSuccessPopup(true);
+    } catch (err) {
+      console.error("Error updating product:", err);
+      setEditErrors({
+        submit: err.response?.data?.message || "Failed to update product",
+      });
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -143,7 +258,11 @@ const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
                     <p className="product-category">{product.category}</p>
                   </div>
                   <div className="product-actions">
-                    <button className="pm-action-btn edit-btn" title="Edit">
+                    <button 
+                      className="pm-action-btn edit-btn" 
+                      title="Edit"
+                      onClick={() => handleEditClick(product)}
+                    >
                       <FaEdit />
                     </button>
                     <button
@@ -226,6 +345,191 @@ const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
                 {isDeleting ? "Deleting..." : "Delete Product"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditModal && (
+        <div className="edit-modal-overlay">
+          <div className="edit-modal-content ap-form"> {/* Reuse ap-form styles */}
+            <div className="edit-modal-header">
+              <h2>Edit Product</h2>
+              <button className="close-modal-btn" onClick={() => setShowEditModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
+
+            {editErrors.submit && (
+              <div className="ap-error-message">{editErrors.submit}</div>
+            )}
+
+            <form className="ap-form" onSubmit={handleUpdateSubmit} noValidate>
+              <div className="ap-form-grid">
+                <div className="ap-form-group">
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    name="productName"
+                    value={editFormData.productName}
+                    onChange={handleEditChange}
+                    placeholder="e.g., Organic Tomatoes"
+                  />
+                </div>
+
+                <div className="ap-form-group">
+                  <label>Category</label>
+                  <select
+                    name="category"
+                    value={editFormData.category}
+                    onChange={handleEditChange}
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Vegetable">Vegetable</option>
+                    <option value="Fruit">Fruit</option>
+                    <option value="Grains">Grains</option>
+                    <option value="Dairy">Dairy</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div className="ap-form-group">
+                  <label>Quantity</label>
+                  <input
+                    type="number"
+                    name="quantity"
+                    value={editFormData.quantity}
+                    onChange={handleEditChange}
+                    placeholder="e.g., 500"
+                  />
+                </div>
+
+                <div className="ap-form-group">
+                  <label>Unit</label>
+                  <select
+                    name="unit"
+                    value={editFormData.unit}
+                    onChange={handleEditChange}
+                  >
+                    <option value="">Select unit</option>
+                    <option value="kg">Kilogram (kg)</option>
+                    <option value="g">Gram (g)</option>
+                    <option value="tonne">Metric Ton (Tonne)</option>
+                    <option value="quintal">Quintal</option>
+                    <option value="liter">Liter (L)</option>
+                    <option value="ml">Milliliter (ml)</option>
+                    <option value="piece">Piece</option>
+                    <option value="dozen">Dozen</option>
+                    <option value="bundle">Bundle</option>
+                    <option value="box">Box</option>
+                    <option value="bag">Bag</option>
+                    <option value="crate">Crate</option>
+                    <option value="sack">Sack</option>
+                  </select>
+                </div>
+
+                <div className="ap-form-group">
+                  <label>Expected Price (per unit)</label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={editFormData.price}
+                    onChange={handleEditChange}
+                    placeholder="e.g., 2.50"
+                  />
+                </div>
+
+                <div className="ap-form-group full-width">
+                  <label>Product Description</label>
+                  <textarea
+                    name="productDescription"
+                    value={editFormData.productDescription}
+                    onChange={handleEditChange}
+                    placeholder="Describe your product..."
+                    rows="4"
+                  ></textarea>
+                </div>
+
+                <div className="ap-form-group full-width">
+                  <label>Product Image</label>
+                  <div
+                    className="ap-upload-area has-preview"
+                    onClick={() => editFileInputRef.current.click()}
+                  >
+                    {editImagePreview ? (
+                      <div className="ap-preview-wrapper">
+                        <div className="ap-preview-card">
+                          <img
+                            src={editImagePreview}
+                            alt="Preview"
+                            className="ap-preview-img"
+                          />
+                          <button
+                            type="button"
+                            className="ap-remove-img"
+                            onClick={removeEditImagePreview}
+                          >
+                            <FaTimes />
+                          </button>
+                          <div className="ap-file-info">
+                            <span className="ap-file-name">
+                              {editImageFile ? editImageFile.name : "Current Image"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <FaCloudUploadAlt className="ap-upload-icon" />
+                        <p>Upload Product Image</p>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      ref={editFileInputRef}
+                      style={{ display: "none" }}
+                      accept="image/*"
+                      onChange={handleEditImageChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="ap-form-footer">
+                <button
+                  type="button"
+                  className="ap-cancel-btn"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={editLoading}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="ap-submit-btn" disabled={editLoading}>
+                  {editLoading ? "Updating..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Edit Popup */}
+      {editSuccessPopup && (
+        <div className="ep-success-overlay">
+          <div className="ep-success-popup">
+            <FaCheckCircle className="ep-success-icon" />
+            <h3>Updated!</h3>
+            <p>Your product has been updated successfully.</p>
+            <button 
+              className="ep-success-btn" 
+              onClick={() => {
+                setEditSuccessPopup(false);
+                setShowEditModal(false);
+                fetchProducts();
+              }}
+            >
+              Okay
+            </button>
           </div>
         </div>
       )}

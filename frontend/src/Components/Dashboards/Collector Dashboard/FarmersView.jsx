@@ -71,14 +71,17 @@ const FarmersView = ({ onViewProfile, preFetchedFarmers }) => {
             <div key={farmer._id} className="farmer-card">
               <div className="card-top">
                 <div className="image-wrapper">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${farmer.name}`} alt={farmer.name} />
+                   <img 
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${farmer.name}`} 
+                    alt={farmer.name} 
+                  />
                   <span className="status-dot"></span>
                 </div>
                 <h3>{farmer.name}</h3>
               </div>
               <div className="card-details">
                 <div className="detail-item">
-                  <FaMapMarkerAlt /> <span>Location: <strong>{farmer.address.split(',')[0]}</strong></span>
+                  <FaMapMarkerAlt /> <span>Location: <strong>{farmer.address}</strong></span>
                 </div>
                 <div className="detail-item">
                   <FaLeaf /> <span>Farm Name: {farmer.farmDetails?.farmName || "N/A"}</span>
