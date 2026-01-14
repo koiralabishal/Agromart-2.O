@@ -16,6 +16,9 @@ import {
   FaBars,
   FaTimes,
   FaBoxes,
+  FaUser,
+  FaEnvelope,
+  FaWallet,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import api from "../../../api/axiosConfig";
@@ -30,6 +33,7 @@ import DetailedAnalytics from "./DetailedAnalytics";
 import SettingsView from "./SettingsView";
 import NotificationsView from "./NotificationsView";
 import ChatView from "./ChatView";
+import PaymentsView from "./PaymentsView";
 import CartView from "./CartView";
 import {
   LineChart,
@@ -53,7 +57,7 @@ const SupplierDashboard = () => {
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const saved = sessionStorage.getItem("supplierCartItems");
+      const saved = sessionStorage.getItem("cartItems");
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       console.error("Error parsing cartItems", e);
@@ -61,7 +65,7 @@ const SupplierDashboard = () => {
     }
   });
   const [hasViewedCart, setHasViewedCart] = useState(() => {
-    return sessionStorage.getItem("supplierHasViewedCart") === "true";
+    return sessionStorage.getItem("hasViewedCart") === "true";
   });
   const [selectedCollector, setSelectedCollector] = useState(() => {
     try {
@@ -72,13 +76,30 @@ const SupplierDashboard = () => {
       return null;
     }
   });
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orderType, setOrderType] = useState("received");
+  const [selectedOrder, setSelectedOrder] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("supplierSelectedOrder");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [orderType, setOrderType] = useState(
+    sessionStorage.getItem("supplierOrderType") || "received"
+  );
   const [inventorySubView, setInventorySubView] = useState("list");
   const [inventoryState, setInventoryState] = useState(null);
   const [preFetchedCollectors, setPreFetchedCollectors] = useState(null);
 
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("user");
+      return saved ? JSON.parse(saved) : { name: "John Doe" };
+    } catch (e) {
+      console.error("User parse error:", e);
+      return { name: "John Doe" };
+    }
+  });
   const userID = user?._id || user?.id;
   const navigate = useNavigate();
 
@@ -87,34 +108,41 @@ const SupplierDashboard = () => {
     const handleSync = () => {
       setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
     };
-    window.addEventListener('storage', handleSync);
-    window.addEventListener('userUpdated', handleSync);
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("userUpdated", handleSync);
     return () => {
-      window.removeEventListener('storage', handleSync);
-      window.removeEventListener('userUpdated', handleSync);
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("userUpdated", handleSync);
     };
   }, []);
 
   // Background data fetching for high performance (Zero-Loading feel)
   useEffect(() => {
     const preFetchDashboardData = async () => {
-      if (!userID || userID === 'admin-id') return;
-      
+      if (!userID || userID === "admin-id") return;
+
       try {
         // Parallel fetch for speed
-        const [invRes, collRes, profileRes] = await Promise.all([
+        const [invRes, collRes, profileRes, walletRes] = await Promise.all([
           api.get(`/inventory?userID=${userID}`),
           api.get("/users/active-collectors"),
-          api.get(`/users/profile/${userID}`)
+          api.get(`/users/profile/${userID}`),
+          api.get(`/wallet/${userID}`),
         ]);
 
         // 1. Handle Inventory Data
         setInventoryState(invRes.data);
-        localStorage.setItem("supplierInventory_cache", JSON.stringify(invRes.data));
+        localStorage.setItem(
+          "supplierInventory_cache",
+          JSON.stringify(invRes.data)
+        );
 
         // 2. Handle Collectors Data
         setPreFetchedCollectors(collRes.data);
-        localStorage.setItem("cached_active_collectors", JSON.stringify(collRes.data));
+        localStorage.setItem(
+          "cached_active_collectors",
+          JSON.stringify(collRes.data)
+        );
 
         // 3. Handle Profile Sync
         const updatedUser = { ...user, ...profileRes.data };
@@ -127,19 +155,28 @@ const SupplierDashboard = () => {
           setUser(updatedUser);
         }
 
-        console.log(">>> Supplier Dashboard data pre-fetched and cached");
+        // 4. Handle Wallet Data
+        localStorage.setItem(
+          `cached_supplier_wallet_${userID}`,
+          JSON.stringify(walletRes.data)
+        );
+
+        console.log(
+          ">>> Supplier Dashboard data pre-fetched and cached (including wallet)"
+        );
       } catch (err) {
         console.error("Error pre-fetching supplier data:", err);
       }
     };
-    
+
     preFetchDashboardData();
   }, [userID]);
 
   useEffect(() => {
     sessionStorage.setItem("supplierActiveView", activeView);
-    sessionStorage.setItem("supplierCartItems", JSON.stringify(cartItems));
-    sessionStorage.setItem("supplierHasViewedCart", hasViewedCart);
+    sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
+    sessionStorage.setItem("hasViewedCart", hasViewedCart);
+
     if (selectedCollector) {
       sessionStorage.setItem(
         "selectedCollector",
@@ -148,7 +185,17 @@ const SupplierDashboard = () => {
     } else {
       sessionStorage.removeItem("selectedCollector");
     }
-  }, [activeView, selectedCollector, cartItems]);
+
+    if (selectedOrder) {
+      sessionStorage.setItem("selectedOrder", JSON.stringify(selectedOrder));
+    } else {
+      sessionStorage.removeItem("selectedOrder");
+    }
+
+    if (orderType) {
+      sessionStorage.setItem("orderType", orderType);
+    }
+  }, [activeView, selectedCollector, cartItems, selectedOrder, orderType]);
 
   const handleAddToCart = async (product) => {
     const productId = product._id;
@@ -171,10 +218,15 @@ const SupplierDashboard = () => {
         }
       });
       setHasViewedCart(false);
-      console.log(`>>> Database updated: ${product.productName} quantity decreased by 1 in inventory`);
+      console.log(
+        `>>> Database updated: ${product.productName} quantity decreased by 1 in inventory`
+      );
     } catch (err) {
       console.error("Failed to update database quantity on add:", err);
-      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+      alert(
+        err.response?.data?.message ||
+          "Failed to update stock. Please try again."
+      );
     }
   };
 
@@ -191,24 +243,33 @@ const SupplierDashboard = () => {
             : item
         )
       );
-      console.log(`>>> Database updated: inventory item ${id} quantity changed by ${-delta}`);
+      console.log(
+        `>>> Database updated: inventory item ${id} quantity changed by ${-delta}`
+      );
     } catch (err) {
       console.error("Failed to update database quantity on update:", err);
-      alert(err.response?.data?.message || "Failed to update stock. Please try again.");
+      alert(
+        err.response?.data?.message ||
+          "Failed to update stock. Please try again."
+      );
     }
   };
 
   const handleRemoveItem = async (id) => {
-    const itemToRemove = cartItems.find(item => item._id === id);
+    const itemToRemove = cartItems.find((item) => item._id === id);
     if (!itemToRemove) return;
 
     try {
       // 1. Restore database quantity
-      await api.patch(`/inventory/${id}/quantity`, { delta: itemToRemove.quantity });
+      await api.patch(`/inventory/${id}/quantity`, {
+        delta: itemToRemove.quantity,
+      });
 
       // 2. Update local cart state
       setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
-      console.log(`>>> Database restored: ${itemToRemove.productName} quantity restored by ${itemToRemove.quantity}`);
+      console.log(
+        `>>> Database restored: ${itemToRemove.productName} quantity restored by ${itemToRemove.quantity}`
+      );
     } catch (err) {
       console.error("Failed to update database quantity on remove:", err);
       // Fallback: still remove locally to not block user
@@ -238,6 +299,10 @@ const SupplierDashboard = () => {
     setSelectedOrder(order);
     setOrderType(type);
     setActiveView("orderDetail");
+  };
+
+  const handleOrderUpdate = (updatedOrder) => {
+    setSelectedOrder(updatedOrder);
   };
 
   const handleViewProfile = (collector) => {
@@ -325,6 +390,18 @@ const SupplierDashboard = () => {
           </div>
           <div
             className={`sd-nav-item ${
+              activeView === "payments" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("payments");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaWallet /> Payments
+          </div>
+          <div
+            className={`sd-nav-item ${
               activeView === "analytics" ? "active" : ""
             }`}
             onClick={() => {
@@ -399,11 +476,26 @@ const SupplierDashboard = () => {
             <FaBell />
             <span className="notif-counter">2</span>
           </div>
-          <img
-            src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
-            alt="Profile"
-            className="sd-profile-pic"
-          />
+          <div className="sd-profile-container">
+            <img
+              src={
+                user.profileImage ||
+                "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"
+              }
+              alt="Profile"
+              className="sd-profile-pic"
+            />
+            <div className="sd-profile-tooltip">
+              <div className="tooltip-item">
+                <FaUser className="tooltip-icon" />
+                <span>{user.name}</span>
+              </div>
+              <div className="tooltip-item">
+                <FaEnvelope className="tooltip-icon" />
+                <span>{user.email}</span>
+              </div>
+            </div>
+          </div>
           <div className="sd-icon-btn" onClick={handleLogout} title="Logout">
             <FaSignOutAlt />
           </div>
@@ -535,8 +627,8 @@ const SupplierDashboard = () => {
 
         {activeView === "collectors" && (
           <div className="collectors-view-wrapper">
-            <CollectorsView 
-              onViewProfile={handleViewProfile} 
+            <CollectorsView
+              onViewProfile={handleViewProfile}
               preFetchedCollectors={preFetchedCollectors}
             />
           </div>
@@ -555,7 +647,9 @@ const SupplierDashboard = () => {
               initialData={inventoryState}
               onRefresh={() => {
                 // Background refresh
-                api.get(`/inventory?userID=${userID}`).then(res => setInventoryState(res.data));
+                api
+                  .get(`/inventory?userID=${userID}`)
+                  .then((res) => setInventoryState(res.data));
               }}
             />
           ) : (
@@ -563,7 +657,9 @@ const SupplierDashboard = () => {
               onBack={() => setInventorySubView("list")}
               onItemAdded={() => {
                 // Background refresh
-                api.get(`/inventory?userID=${userID}`).then(res => setInventoryState(res.data));
+                api
+                  .get(`/inventory?userID=${userID}`)
+                  .then((res) => setInventoryState(res.data));
               }}
             />
           ))}
@@ -575,8 +671,10 @@ const SupplierDashboard = () => {
             order={selectedOrder}
             orderType={orderType}
             onBack={() => setActiveView("orders")}
+            onOrderUpdate={handleOrderUpdate}
           />
         )}
+        {activeView === "payments" && <PaymentsView />}
         {activeView === "analytics" && <DetailedAnalytics />}
         {activeView === "settings" && <SettingsView />}
         {activeView === "notifications" && <NotificationsView />}
@@ -586,6 +684,12 @@ const SupplierDashboard = () => {
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
             onBack={() => setActiveView("collectors")}
+            onClearCart={() => {
+              setCartItems([]);
+              sessionStorage.removeItem("cartItems");
+              sessionStorage.removeItem("hasViewedCart");
+            }}
+            onOrderComplete={() => setActiveView("orders")}
           />
         )}
         {activeView === "chat" && <ChatView />}

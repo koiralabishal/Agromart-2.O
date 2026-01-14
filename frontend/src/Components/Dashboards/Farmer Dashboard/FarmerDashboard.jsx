@@ -15,6 +15,9 @@ import {
   FaCommentDots,
   FaBars,
   FaTimes,
+  FaUser,
+  FaEnvelope,
+  FaWallet,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +29,7 @@ import DetailedAnalytics from "./DetailedAnalytics";
 import SettingsView from "./SettingsView";
 import NotificationsView from "./NotificationsView";
 import ChatView from "./ChatView";
+import PaymentsView from "./PaymentsView";
 import {
   LineChart,
   Line,
@@ -44,11 +48,23 @@ import api from "../../../api/axiosConfig";
 
 const FarmerDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeView, setActiveView] = useState(sessionStorage.getItem("farmerActiveView") || "dashboard");
+  const [activeView, setActiveView] = useState(
+    sessionStorage.getItem("farmerActiveView") || "dashboard"
+  );
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [preFetchedProducts, setPreFetchedProducts] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("selectedOrder");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || { name: "John Doe" }
+  );
   const userID = user?._id || user?.id;
 
   // Sync user from localStorage if it changes (e.g., from SettingsView)
@@ -56,11 +72,11 @@ const FarmerDashboard = () => {
     const handleStorageChange = () => {
       setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
     };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('userUpdated', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userUpdated", handleStorageChange);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userUpdated', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userUpdated", handleStorageChange);
     };
   }, []);
 
@@ -69,16 +85,17 @@ const FarmerDashboard = () => {
     setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
   }, [activeView]);
 
-  // Fetch latest profile and products from database on mount (Zero-Loading Pattern)
+  // Fetch latest profile, products, and wallet from database on mount (Zero-Loading Pattern)
   useEffect(() => {
     const preFetchDashboardData = async () => {
-      if (!userID || userID === 'admin-id') return;
-      
+      if (!userID || userID === "admin-id") return;
+
       try {
         // Parallel fetch for high performance
-        const [profileRes, productsRes] = await Promise.all([
+        const [profileRes, productsRes, walletRes] = await Promise.all([
           api.get(`/users/profile/${userID}`),
-          api.get(`/products?userID=${userID}`)
+          api.get(`/products?userID=${userID}`),
+          api.get(`/wallet/${userID}`),
         ]);
 
         // 1. Handle Profile Data
@@ -94,9 +111,20 @@ const FarmerDashboard = () => {
 
         // 2. Handle Product Data
         setPreFetchedProducts(productsRes.data);
-        localStorage.setItem(`cached_farmer_products_${userID}`, JSON.stringify(productsRes.data));
-        
-        console.log(">>> Farmer Dashboard data synced and cached");
+        localStorage.setItem(
+          `cached_farmer_products_${userID}`,
+          JSON.stringify(productsRes.data)
+        );
+
+        // 3. Handle Wallet Data
+        localStorage.setItem(
+          `cached_farmer_wallet_${userID}`,
+          JSON.stringify(walletRes.data)
+        );
+
+        console.log(
+          ">>> Farmer Dashboard data synced and cached (including wallet)"
+        );
       } catch (err) {
         console.error("Dashboard pre-fetch failed:", err);
       }
@@ -106,7 +134,13 @@ const FarmerDashboard = () => {
 
   useEffect(() => {
     sessionStorage.setItem("farmerActiveView", activeView);
-  }, [activeView]);
+
+    if (selectedOrder) {
+      sessionStorage.setItem("selectedOrder", JSON.stringify(selectedOrder));
+    } else {
+      sessionStorage.removeItem("selectedOrder");
+    }
+  }, [activeView, selectedOrder]);
 
   useEffect(() => {
     if (userID) {
@@ -114,7 +148,10 @@ const FarmerDashboard = () => {
         try {
           const response = await api.get(`/products?userID=${userID}`);
           setPreFetchedProducts(response.data);
-          localStorage.setItem(`cached_farmer_products_${userID}`, JSON.stringify(response.data));
+          localStorage.setItem(
+            `cached_farmer_products_${userID}`,
+            JSON.stringify(response.data)
+          );
         } catch (err) {
           console.error("Pre-fetch failed", err);
         }
@@ -139,6 +176,15 @@ const FarmerDashboard = () => {
       sessionStorage.removeItem("farmerActiveView");
       navigate("/");
     }
+  };
+
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setActiveView("orderDetail");
+  };
+
+  const handleOrderUpdate = (updatedOrder) => {
+    setSelectedOrder(updatedOrder);
   };
 
   // Mock Data for Charts
@@ -220,6 +266,17 @@ const FarmerDashboard = () => {
           </div>
           <div
             className={`fd-nav-item ${
+              activeView === "payments" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("payments");
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaWallet /> Payments
+          </div>
+          <div
+            className={`fd-nav-item ${
               activeView === "analytics" ? "active" : ""
             }`}
             onClick={() => {
@@ -258,11 +315,26 @@ const FarmerDashboard = () => {
           >
             <FaBell />
           </div>
-          <img
-            src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
-            alt="Profile"
-            className="fd-profile-pic"
-          />
+          <div className="fd-profile-container">
+            <img
+              src={
+                user.profileImage ||
+                "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"
+              }
+              alt="Profile"
+              className="fd-profile-pic"
+            />
+            <div className="fd-profile-tooltip">
+              <div className="tooltip-item">
+                <FaUser className="tooltip-icon" />
+                <span>{user.name}</span>
+              </div>
+              <div className="tooltip-item">
+                <FaEnvelope className="tooltip-icon" />
+                <span>{user.email}</span>
+              </div>
+            </div>
+          </div>
           <div className="fd-icon-btn" onClick={handleLogout} title="Logout">
             <FaSignOutAlt />
           </div>
@@ -468,8 +540,8 @@ const FarmerDashboard = () => {
         )}
 
         {activeView === "products" && (
-          <ProductManagement 
-            onAddProduct={() => setActiveView("addProduct")} 
+          <ProductManagement
+            onAddProduct={() => setActiveView("addProduct")}
             preFetchedProducts={preFetchedProducts}
           />
         )}
@@ -479,12 +551,18 @@ const FarmerDashboard = () => {
         )}
 
         {activeView === "orders" && (
-          <OrderManagement onViewOrder={() => setActiveView("orderDetail")} />
+          <OrderManagement onViewOrder={handleViewOrder} />
         )}
 
         {activeView === "orderDetail" && (
-          <OrderDetailView onBack={() => setActiveView("orders")} />
+          <OrderDetailView
+            order={selectedOrder}
+            onBack={() => setActiveView("orders")}
+            onOrderUpdate={handleOrderUpdate}
+          />
         )}
+
+        {activeView === "payments" && <PaymentsView />}
 
         {activeView === "analytics" && <DetailedAnalytics />}
 
@@ -517,11 +595,13 @@ const FarmerDashboard = () => {
         </div>
       )}
 
-      <div className="chat-fab-fixed" onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}>
+      <div
+        className="chat-fab-fixed"
+        onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}
+      >
         <FaCommentDots />
       </div>
     </div>
-
   );
 };
 

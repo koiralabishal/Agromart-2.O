@@ -122,7 +122,7 @@ const CollectorProductView = ({ collector, onBack, onAddToCart }) => {
                       className="add-cart-btn-small"
                       disabled={isOutOfStock}
                       onClick={async () => {
-                        await onAddToCart(product);
+                        await onAddToCart({ ...product, collectorName: collector.name });
                         setAddedItem(product);
                         setShowPopup(true);
                         // Update local state for immediate feedback

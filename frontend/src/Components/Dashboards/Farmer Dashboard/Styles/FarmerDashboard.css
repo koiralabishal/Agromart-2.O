@@ -136,11 +136,87 @@
   justify-content: center;
 }
 
+.fd-profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .fd-profile-pic {
-  width: 31px; /* Standardize size */
-  height: 31px; /* Standardize size */
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.fd-profile-container:hover .fd-profile-pic {
+  border-color: var(--primary-green);
+  transform: scale(1.05);
+}
+
+.fd-profile-tooltip {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: -10px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  min-width: 250px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 2000;
+}
+
+.fd-profile-container:hover .fd-profile-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.fd-profile-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 25px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.tooltip-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--text-dark);
+}
+
+.tooltip-icon {
+  font-size: 1rem;
+  color: var(--primary-green);
+  opacity: 0.8;
+}
+
+.tooltip-item span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 /* Main Content */

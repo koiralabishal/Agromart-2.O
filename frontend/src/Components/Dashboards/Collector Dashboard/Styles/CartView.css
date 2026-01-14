@@ -403,3 +403,57 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Farmer Grouping Styles */
+.farmer-group-container {
+  margin-bottom: 2.5rem;
+  background: #fdfdfd;
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid #f0f0f0;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.farmer-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px dashed #eee;
+}
+
+.farmer-info-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.farmer-label {
+  background: #1dc956;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.farmer-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.group-item-count {
+  font-size: 0.9rem;
+  color: #888;
+  font-weight: 500;
+  background: #f0f0f0;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+}
+
+.cart-item-card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}

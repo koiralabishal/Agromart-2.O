@@ -8,8 +8,13 @@ const FarmersView = ({ onViewProfile, preFetchedFarmers }) => {
   // Immediate data: use pre-fetched data if available, otherwise check local storage cache
   const [farmers, setFarmers] = useState(() => {
     if (preFetchedFarmers) return preFetchedFarmers;
-    const cached = localStorage.getItem("cached_active_farmers");
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem("cached_active_farmers");
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      console.error("Farmers cache parse error:", e);
+      return null;
+    }
   });
   const [error, setError] = useState(null);
 

@@ -12,94 +12,199 @@ import {
 } from "react-icons/fa";
 import "./Styles/OrderDetailView.css";
 
-// Import local assets
-import cauliflowerImg from "../../../assets/products/cauliflower.jpeg";
-import broccoliImg from "../../../assets/products/broccoli.jpeg";
+import api from "../../../api/axiosConfig";
+import ConfirmationModal from "../../Common/ConfirmationModal";
+import OrderSuccessModal from "../../Common/OrderSuccessModal";
 
-const OrderDetailView = ({ onBack, orderType = "received" }) => {
-  const [currentStatus, setCurrentStatus] = useState("Pending");
+const OrderDetailView = ({
+  order,
+  onBack,
+  orderType = "received",
+  onOrderUpdate,
+}) => {
+  const [currentStatus, setCurrentStatus] = useState(
+    order?.status || "Pending"
+  );
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [confModal, setConfModal] = useState({
+    isOpen: false,
+    newStatus: "",
+    type: "warning",
+    title: "",
+    message: "",
+    orderID_Display: "",
+  });
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  if (!order) return <div className="order-detail-view">Loading...</div>;
 
   const statusOptions = [
     "Pending",
     "Accepted",
+    "Processing",
     "Shipping",
-    "Completed",
+    "Delivered",
+    "Canceled",
     "Rejected",
   ];
 
   const getDisabledStatus = (status) => {
-    if (currentStatus === "Rejected") return true;
+    if (
+      currentStatus === "Canceled" ||
+      currentStatus === "Delivered" ||
+      currentStatus === "Rejected"
+    )
+      return true; // Terminal states
+
     const hierarchy = {
       Pending: 0,
       Accepted: 1,
-      Shipping: 2,
-      Completed: 3,
-      Rejected: -1,
+      Processing: 2,
+      Shipping: 3,
+      Delivered: 4,
+      Canceled: -1,
+      Rejected: -2,
     };
-    const currentIdx = hierarchy[currentStatus];
+
+    const currentIdx = hierarchy[currentStatus] || 0;
     const targetIdx = hierarchy[status];
-    if (status === "Pending" && currentStatus !== "Pending") return true;
-    if (status === "Rejected" && currentIdx >= 1) return true;
-    if (targetIdx !== -1 && targetIdx < currentIdx) return true;
-    return false;
+
+    // Rejected is only allowed from Pending
+    if (status === "Rejected") {
+      return currentStatus !== "Pending";
+    }
+
+    // Canceled is allowed from Pending or Accepted
+    if (status === "Canceled") {
+      return currentIdx > 1; // Only allow cancellation before Processing
+    }
+
+    // Sequence: Can only move to the NEXT step
+    if (targetIdx === currentIdx + 1) return false;
+
+    return true; // Everything else is disabled
   };
 
-  const orderDetails = {
-    id: "AGRM-X12345",
-    summary: {
-      orderId: "AGRM-X12345",
-      orderDateTime: "October 26, 2023, 10:30 AM",
-      paymentStatus: "Paid",
-      paymentChannel: "Esewa",
-    },
-    party: {
-      name: orderType === "placed" ? "Sarah Chen" : "AgroDistributors Ltd.",
-      businessName:
-        orderType === "placed"
-          ? "Golden Harvest Farms"
-          : "Main Distribution Center",
-      contact: "+977 9800000000",
-      address: "Biratnagar, Nepal",
-      esewaId: "9800000000",
-    },
-    delivery: {
-      address: "123 Green Lane, Agroville, Nepal",
-      partner: "AgroLogistics Express",
-    },
-    items: [
-      {
-        id: 1,
-        name: "Fresh Red Tomatoes",
-        category: "Vegetable",
-        quantity: "200 kg",
-        unitPrice: "Rs. 120/kg",
-        total: "Rs. 24,000",
-        image: cauliflowerImg,
-      },
-      {
-        id: 2,
-        name: "Organic Potatoes",
-        category: "Vegetable",
-        quantity: "150 kg",
-        unitPrice: "Rs. 60/kg",
-        total: "Rs. 9,000",
-        image: broccoliImg,
-      },
-    ],
-    pricing: {
-      subtotal: "Rs. 33,000",
-      deliveryFee: "Rs. 500",
-      discount: "-Rs. 200",
-      finalTotal: "Rs. 33,300",
-    },
-  };
+  const handleStatusChange = async (status) => {
+    if (status === "Confirm Cash Paid") {
+      setConfModal({
+        isOpen: true,
+        newStatus: status,
+        type: "success",
+        title: "Confirm Payment",
+        message:
+          "Are you sure you want to confirm that you have paid cash for this order?",
+      });
+      return;
+    }
 
-  const handleStatusChange = (status) => {
     if (getDisabledStatus(status)) return;
-    setCurrentStatus(status);
-    setIsStatusOpen(false);
+
+    if (status === "Canceled" || status === "Rejected") {
+      setConfModal({
+        isOpen: true,
+        newStatus: status,
+        type: "danger",
+        title: `${status} Order`,
+        message: `Are you sure you want to ${status.toLowerCase()} this order? This action cannot be undone.`,
+      });
+      return;
+    }
+
+    await proceedWithStatusUpdate(status);
   };
+
+  const proceedWithStatusUpdate = async (status) => {
+    try {
+      if (status === "Confirm Cash Paid") {
+        await api.put(`/orders/${order._id}/confirm-payment`);
+        if (onOrderUpdate) {
+          onOrderUpdate({ ...order, paymentStatus: "Paid" });
+        }
+
+        const cacheKey = "supplierOrdersPlaced";
+        const cachedOrders = sessionStorage.getItem(cacheKey);
+        if (cachedOrders) {
+          const orders = JSON.parse(cachedOrders);
+          const updatedOrders = orders.map((o) =>
+            o._id === order._id ? { ...o, paymentStatus: "Paid" } : o
+          );
+          sessionStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
+        }
+
+        const savedOrderDetail = sessionStorage.getItem("selectedOrder");
+        if (savedOrderDetail) {
+          const orderObj = JSON.parse(savedOrderDetail);
+          if (orderObj._id === order._id) {
+            orderObj.paymentStatus = "Paid";
+            sessionStorage.setItem("selectedOrder", JSON.stringify(orderObj));
+          }
+        }
+        setShowSuccess(true);
+        return;
+      }
+
+      await api.put(`/orders/${order._id}/status`, { status });
+      setCurrentStatus(status);
+      setIsStatusOpen(false);
+
+      // Update Parent State (For persistence)
+      if (onOrderUpdate) {
+        onOrderUpdate({ ...order, status });
+      }
+
+      // Update Cache (Optimistic / Consistency update)
+      const cacheKey =
+        orderType === "placed"
+          ? "supplierOrdersPlaced"
+          : "supplierOrdersReceived";
+      const cachedOrders = sessionStorage.getItem(cacheKey);
+      if (cachedOrders) {
+        const orders = JSON.parse(cachedOrders);
+        const updatedOrders = orders.map((o) =>
+          o._id === order._id ? { ...o, status: status } : o
+        );
+        sessionStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
+      }
+      const savedOrderDetail = sessionStorage.getItem("selectedOrder");
+      if (savedOrderDetail) {
+        const orderObj = JSON.parse(savedOrderDetail);
+        if (orderObj._id === order._id) {
+          orderObj.status = status;
+          sessionStorage.setItem("selectedOrder", JSON.stringify(orderObj));
+        }
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert(error.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  // Map real order data
+  const buyer = order.buyerID;
+  const buyerName = buyer?.name || "Unknown Buyer";
+  const buyerBusiness =
+    buyer?.businessName || buyer?.companyName || buyer?.name || "N/A";
+  const buyerPhone = buyer?.phone || "N/A";
+  const buyerAddress = buyer?.address || "N/A";
+
+  const seller = order.sellerID;
+  const sellerName = seller?.name || "Unknown Seller";
+  const sellerBusiness =
+    seller?.businessName || seller?.companyName || seller?.name || "N/A";
+  const sellerPhone = seller?.phone || "N/A";
+  const sellerAddress = seller?.address || "N/A";
+
+  const orderDate = new Date(order.createdAt).toLocaleString();
+
+  // Price calculations
+  const subtotal = order.products.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+  const deliveryFee = 5.0;
+  const discount = 0;
+  const finalTotal = order.totalAmount;
 
   return (
     <div className="order-detail-view">
@@ -110,47 +215,100 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
             onClick={onBack}
             title="Back to Orders"
           />
-          <h2>Order {orderDetails.id}</h2>
+          <h2>Order {order.orderID}</h2>
 
-          {orderType === "received" && (
-            <div className="odv-status-dropdown-container">
-              <div
-                className={`odv-status-badge interactable status-${currentStatus.toLowerCase()}`}
-                onClick={() => setIsStatusOpen(!isStatusOpen)}
-              >
-                {currentStatus} <FaChevronDown size={10} />
-              </div>
-              {isStatusOpen && (
-                <div className="odv-status-options">
-                  {statusOptions.map((opt) => (
+          <div className="odv-status-dropdown-container">
+            <div
+              className={`odv-status-badge ${
+                orderType === "received" ? "interactable" : ""
+              } status-${currentStatus.toLowerCase()} ${
+                currentStatus === "Rejected" ? "disabled" : ""
+              }`}
+              onClick={() =>
+                orderType === "received" &&
+                currentStatus !== "Rejected" &&
+                setIsStatusOpen(!isStatusOpen)
+              }
+            >
+              {currentStatus}{" "}
+              {orderType === "received" &&
+                currentStatus !== "Delivered" &&
+                currentStatus !== "Canceled" && <FaChevronDown size={10} />}
+            </div>
+            {isStatusOpen && (
+              <div className="odv-status-options">
+                {statusOptions.map((opt) => {
+                  if (orderType === "received" && opt === "Canceled")
+                    return null;
+                  const isDisabled = getDisabledStatus(opt);
+                  if (isDisabled && opt !== currentStatus) return null; // Only show current or valid next
+                  return (
                     <div
                       key={opt}
                       className={`status-option ${
-                        getDisabledStatus(opt) ? "disabled" : ""
+                        isDisabled ? "disabled" : ""
                       }`}
-                      onClick={() => handleStatusChange(opt)}
+                      onClick={() => !isDisabled && handleStatusChange(opt)}
                     >
                       {opt}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {orderType === "placed" && (
-            <div
-              className={`odv-status-badge status-${currentStatus.toLowerCase()}`}
-            >
-              {currentStatus}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-        <button className="download-invoice-btn">
-          <FaDownload /> Download Invoice
-        </button>
+        <div className="odv-header-actions">
+          {orderType === "placed" && currentStatus === "Pending" && (
+            <button
+              className="odv-cancel-btn"
+              onClick={() =>
+                setConfModal({
+                  isOpen: true,
+                  newStatus: "Canceled",
+                  type: "danger",
+                  title: "Cancel Order",
+                  message:
+                    "Are you sure you want to cancel this order? This action cannot be undone.",
+                  orderID_Display: order.orderID,
+                })
+              }
+            >
+              Cancel Order
+            </button>
+          )}
+          {orderType === "placed" &&
+            currentStatus === "Delivered" &&
+            order.paymentMethod === "COD" &&
+            order.paymentStatus === "Pending" && (
+              <button
+                className="confirm-cash-btn"
+                style={{
+                  backgroundColor: "#1dc956",
+                  color: "white",
+                  padding: "10px 18px",
+                  borderRadius: "8px",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                }}
+                onClick={() => handleStatusChange("Confirm Cash Paid")}
+              >
+                <FaCheckCircle /> Confirm Cash Paid
+              </button>
+            )}
+          <button className="download-invoice-btn">
+            <FaDownload /> Download Invoice
+          </button>
+        </div>
       </div>
 
       <div className="odv-main-content">
+        {/* ROW 1: Summary and Items */}
         <div className="odv-row">
           <div className="odv-left-col">
             <section className="odv-card">
@@ -158,27 +316,27 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
               <div className="summary-list">
                 <div className="summary-item">
                   <span className="label">Order ID</span>
-                  <span className="value bold">
-                    {orderDetails.summary.orderId}
-                  </span>
+                  <span className="value bold">{order.orderID}</span>
                 </div>
                 <div className="summary-item">
-                  <span className="label">Date & Time</span>
-                  <span className="value">
-                    {orderDetails.summary.orderDateTime}
+                  <span className="label">Order Date & Time</span>
+                  <span className="value">{orderDate}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Order Status</span>
+                  <span
+                    className={`odv-status-pill status-${currentStatus.toLowerCase()}`}
+                  >
+                    {currentStatus}
                   </span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Payment Status</span>
-                  <span className="value bold">
-                    {orderDetails.summary.paymentStatus}
-                  </span>
+                  <span className="value bold">{order.paymentStatus}</span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Payment Channel</span>
-                  <span className="value bold">
-                    {orderDetails.summary.paymentChannel}
-                  </span>
+                  <span className="value bold">{order.paymentMethod}</span>
                 </div>
               </div>
             </section>
@@ -199,20 +357,25 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {orderDetails.items.map((item) => (
-                      <tr key={item.id}>
+                    {order.products.map((item, idx) => (
+                      <tr key={item.productID || idx}>
                         <td>
                           <img
-                            src={item.image}
-                            alt={item.name}
+                            src={
+                              item.image ||
+                              "https://via.placeholder.com/50?text=Product"
+                            }
+                            alt={item.productName}
                             className="odv-item-thumbnail"
                           />
                         </td>
-                        <td className="bold">{item.name}</td>
-                        <td>{item.category}</td>
+                        <td className="bold">{item.productName}</td>
+                        <td>{item.category || "N/A"}</td>
                         <td className="bold">{item.quantity}</td>
-                        <td>{item.unitPrice}</td>
-                        <td className="bold total-price-col">{item.total}</td>
+                        <td>Rs. {item.price.toFixed(2)}</td>
+                        <td className="bold total-price-col">
+                          Rs. {(item.price * item.quantity).toFixed(2)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -222,36 +385,33 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
           </div>
         </div>
 
+        {/* ROW 2: Buyer Details and price */}
         <div className="odv-row">
           <div className="odv-left-col">
             <section className="odv-card">
-              <h3>
-                {orderType === "placed"
-                  ? "Farmer Details"
-                  : "Distributor Details"}
-              </h3>
+              <h3>Buyer Details {orderType === "placed" ? "(Me)" : ""}</h3>
               <div className="summary-list">
                 <div className="summary-item">
                   <span className="label">Name</span>
-                  <span className="value bold">{orderDetails.party.name}</span>
+                  <span className="value bold">{buyerName}</span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Business</span>
-                  <span className="value bold">
-                    {orderDetails.party.businessName}
-                  </span>
+                  <span className="value bold">{buyerBusiness}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Email</span>
+                  <span className="value bold">{buyer?.email || "N/A"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Contact</span>
                   <span className="value phone-link">
-                    <FaPhoneAlt size={12} /> {orderDetails.party.contact}
+                    <FaPhoneAlt size={12} /> {buyerPhone}
                   </span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Address</span>
-                  <span className="value bold">
-                    {orderDetails.party.address}
-                  </span>
+                  <span className="value bold">{buyerAddress}</span>
                 </div>
               </div>
             </section>
@@ -262,25 +422,23 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
               <div className="pricing-list">
                 <div className="pricing-row">
                   <span>Subtotal</span>
-                  <span className="bold">{orderDetails.pricing.subtotal}</span>
+                  <span className="bold">Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 <div className="pricing-row">
                   <span>Delivery Fee</span>
-                  <span className="bold">
-                    {orderDetails.pricing.deliveryFee}
-                  </span>
+                  <span className="bold">Rs. {deliveryFee.toFixed(2)}</span>
                 </div>
                 <div className="pricing-row discount">
                   <span>Discount</span>
                   <span className="bold red-text">
-                    {orderDetails.pricing.discount}
+                    -Rs. {discount.toFixed(2)}
                   </span>
                 </div>
                 <div className="pricing-divider"></div>
                 <div className="pricing-final">
                   <span>Final Payable Amount</span>
                   <span className="final-amount">
-                    {orderDetails.pricing.finalTotal}
+                    Rs. {Number(finalTotal).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -288,22 +446,35 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
           </div>
         </div>
 
+        {/* ROW 3: Seller Details and Tracker */}
         <div className="odv-row">
           <div className="odv-left-col">
             <section className="odv-card">
-              <h3>Delivery Information</h3>
+              <h3>
+                Seller Information {orderType === "received" ? "(Me)" : ""}
+              </h3>
               <div className="summary-list">
                 <div className="summary-item">
-                  <span className="label">Address</span>
-                  <span className="value bold address-val">
-                    {orderDetails.delivery.address}
+                  <span className="label">Name</span>
+                  <span className="value bold">{sellerName}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Business</span>
+                  <span className="value bold">{sellerBusiness}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Email</span>
+                  <span className="value bold">{seller?.email || "N/A"}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Contact</span>
+                  <span className="value phone-link">
+                    <FaPhoneAlt size={12} /> {sellerPhone}
                   </span>
                 </div>
                 <div className="summary-item">
-                  <span className="label">Partner</span>
-                  <span className="value bold">
-                    {orderDetails.delivery.partner}
-                  </span>
+                  <span className="label">Address</span>
+                  <span className="value bold">{sellerAddress}</span>
                 </div>
               </div>
             </section>
@@ -323,83 +494,165 @@ const OrderDetailView = ({ onBack, orderType = "received" }) => {
                     <span className="track-title">Order Placed</span>
                   </div>
                 </div>
-                <div
-                  className={`track-step ${
-                    currentStatus !== "Pending" ? "completed" : "active"
-                  }`}
-                >
-                  <div className="track-checkpoint">
-                    <div className="checkpoint-icon">
-                      {currentStatus === "Rejected" ? (
+
+                {currentStatus === "Canceled" ||
+                currentStatus === "Rejected" ? (
+                  <div className="track-step rejected">
+                    <div className="track-checkpoint">
+                      <div className="checkpoint-icon">
                         <FaTimesCircle />
-                      ) : (
-                        <FaCheckCircle />
-                      )}
+                      </div>
                     </div>
+                    <div className="track-info">
+                      <span className="track-title">Order {currentStatus}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Step 2: Accepted */}
                     <div
-                      className={`track-line ${
-                        ["Shipping", "Completed"].includes(currentStatus)
-                          ? "line-completed"
-                          : currentStatus === "Accepted"
-                          ? "line-active"
+                      className={`track-step ${
+                        [
+                          "Accepted",
+                          "Processing",
+                          "Shipping",
+                          "Delivered",
+                        ].includes(currentStatus)
+                          ? "completed"
+                          : currentStatus === "Pending"
+                          ? "active"
                           : ""
                       }`}
-                    ></div>
-                  </div>
-                  <div className="track-info">
-                    <span className="track-title">
-                      {currentStatus === "Rejected"
-                        ? "Order Rejected"
-                        : "Accepted"}
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className={`track-step ${
-                    ["Shipping", "Completed"].includes(currentStatus)
-                      ? "completed"
-                      : currentStatus === "Accepted"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="track-checkpoint">
-                    <div className="checkpoint-icon">
-                      <FaBox />
+                    >
+                      <div className="track-checkpoint">
+                        <div className="checkpoint-icon">
+                          <FaCheckCircle />
+                        </div>
+                        <div
+                          className={`track-line ${
+                            ["Processing", "Shipping", "Delivered"].includes(
+                              currentStatus
+                            )
+                              ? "line-completed"
+                              : currentStatus === "Accepted"
+                              ? "line-active"
+                              : ""
+                          }`}
+                        ></div>
+                      </div>
+                      <div className="track-info">
+                        <span className="track-title">Accepted</span>
+                      </div>
                     </div>
+
+                    {/* Step 3: Processing */}
                     <div
-                      className={`track-line ${
-                        currentStatus === "Completed" ? "line-completed" : ""
+                      className={`track-step ${
+                        ["Processing", "Shipping", "Delivered"].includes(
+                          currentStatus
+                        )
+                          ? "completed"
+                          : currentStatus === "Accepted"
+                          ? "active"
+                          : ""
                       }`}
-                    ></div>
-                  </div>
-                  <div className="track-info">
-                    <span className="track-title">Ready for Pickup</span>
-                  </div>
-                </div>
-                <div
-                  className={`track-step ${
-                    currentStatus === "Completed"
-                      ? "completed"
-                      : currentStatus === "Shipping"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="track-checkpoint">
-                    <div className="checkpoint-icon">
-                      <FaArchive />
+                    >
+                      <div className="track-checkpoint">
+                        <div className="checkpoint-icon">
+                          <FaArchive />
+                        </div>
+                        <div
+                          className={`track-line ${
+                            ["Shipping", "Delivered"].includes(currentStatus)
+                              ? "line-completed"
+                              : currentStatus === "Processing"
+                              ? "line-active"
+                              : ""
+                          }`}
+                        ></div>
+                      </div>
+                      <div className="track-info">
+                        <span className="track-title">Processing</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="track-info">
-                    <span className="track-title">Completed</span>
-                  </div>
-                </div>
+
+                    {/* Step 4: Shipping */}
+                    <div
+                      className={`track-step ${
+                        ["Shipping", "Delivered"].includes(currentStatus)
+                          ? "completed"
+                          : currentStatus === "Processing"
+                          ? "active"
+                          : ""
+                      }`}
+                    >
+                      <div className="track-checkpoint">
+                        <div className="checkpoint-icon">
+                          <FaBox />
+                        </div>
+                        <div
+                          className={`track-line ${
+                            currentStatus === "Delivered"
+                              ? "line-completed"
+                              : currentStatus === "Shipping"
+                              ? "line-active"
+                              : ""
+                          }`}
+                        ></div>
+                      </div>
+                      <div className="track-info">
+                        <span className="track-title">Shipping</span>
+                      </div>
+                    </div>
+
+                    {/* Step 5: Delivered */}
+                    <div
+                      className={`track-step ${
+                        currentStatus === "Delivered"
+                          ? "completed"
+                          : currentStatus === "Shipping"
+                          ? "active"
+                          : ""
+                      }`}
+                    >
+                      <div className="track-checkpoint">
+                        <div className="checkpoint-icon">
+                          <FaCheckCircle />
+                        </div>
+                      </div>
+                      <div className="track-info">
+                        <span className="track-title">Delivered</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={confModal.isOpen}
+        onClose={() => setConfModal({ ...confModal, isOpen: false })}
+        onConfirm={() => {
+          proceedWithStatusUpdate(confModal.newStatus);
+          setConfModal({ ...confModal, isOpen: false });
+        }}
+        title={confModal.title}
+        message={confModal.message}
+        orderID={confModal.orderID_Display || order.orderID}
+        type={confModal.type}
+        confirmText={`Yes, ${confModal.newStatus}`}
+        cancelText="No, Keep"
+      />
+      <OrderSuccessModal
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Payment Confirmed!"
+        message="You have successfully confirmed the cash payment for this order."
+        showPaymentNote={false}
+      />
     </div>
   );
 };

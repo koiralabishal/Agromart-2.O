@@ -1,4 +1,4 @@
-/* OrderDetailView.css */
+/* OrderDetailView.css - Standard Platform Style */
 *,
 *::before,
 *::after {
@@ -59,8 +59,31 @@
   font-weight: 700;
 }
 
+.odv-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.odv-cancel-btn {
+  background: white;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.odv-cancel-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
 .download-invoice-btn {
-  background: #2f9e44; /* Darker green like button in image */
+  background: #2f9e44; 
   color: white;
   border: none;
   padding: 0.7rem 1.4rem;
@@ -102,7 +125,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 0;
-  margin-bottom: 0; /* Changed from 1.5rem since odv-row handles the gap */
+  margin-bottom: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   height: 100%;
@@ -265,34 +288,6 @@
   color: #1a1a1a;
 }
 
-.odv-tag-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.order-tag {
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.order-tag.organic {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.order-tag.local {
-  background: #f0f9ff;
-  color: #0284c7;
-}
-
-.order-tag.non-organic {
-  background: #f8fafc;
-  color: #64748b;
-}
-
 /* Pricing Section */
 .pricing-card {
   padding: 0;
@@ -403,16 +398,18 @@
 
 /* Status Specific Colors */
 .status-pending { background: #fff7ed; color: #c2410c; }
-.status-accepted { background: #eff6ff; color: #1d4ed8; }
+.status-accepted, .status-processing { background: #eff6ff; color: #1d4ed8; }
 .status-shipping { background: #fdf2f8; color: #9d174d; }
-.status-completed { background: #f0fdf4; color: #16a34a; }
+.status-completed, .status-delivered { background: #f0fdf4; color: #16a34a; }
 .status-rejected { background: #fef2f2; color: #dc2626; }
+.status-canceled { background: #f3f4f6; color: #4b5563; }
 
 .odv-status-pill.status-pending { background: #fff7ed; color: #c2410c; }
-.odv-status-pill.status-accepted { background: #eff6ff; color: #1d4ed8; }
+.odv-status-pill.status-accepted, .odv-status-pill.status-processing { background: #eff6ff; color: #1d4ed8; }
 .odv-status-pill.status-shipping { background: #fdf2f8; color: #9d174d; }
-.odv-status-pill.status-completed { background: #f0fdf4; color: #16a34a; }
+.odv-status-pill.status-completed, .odv-status-pill.status-delivered { background: #f0fdf4; color: #16a34a; }
 .odv-status-pill.status-rejected { background: #fef2f2; color: #dc2626; }
+.odv-status-pill.status-canceled { background: #f3f4f6; color: #4b5563; }
 
 .status-option.disabled {
   opacity: 0.5;
@@ -516,17 +513,9 @@
   margin-bottom: 0.3rem;
 }
 
-.track-date {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-weight: 500;
-}
-
-/* Existing ... rest of the styles ... */
-
 @media (max-width: 1100px) {
   .odv-row {
-    grid-template-columns: 1fr 1fr; /* Maintain 2 columns longer */
+    grid-template-columns: 1fr 1fr;
     gap: 1.2rem;
   }
 }
@@ -537,12 +526,12 @@
   }
 
   .odv-row {
-    grid-template-columns: 1fr; /* Break to 1 column at 850px */
+    grid-template-columns: 1fr;
     gap: 1.2rem;
   }
 
   .odv-card {
-    height: auto; /* Allow height to fit content in 1-column view */
+    height: auto;
   }
 }
 
@@ -566,10 +555,6 @@
   .download-invoice-btn {
     width: 100%;
     justify-content: center;
-  }
-
-  .odv-row {
-    grid-template-columns: 1fr;
   }
 
   .odv-card h3 {
@@ -598,13 +583,7 @@
     font-size: 0.85rem;
     text-align: left;
     word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
     max-width: 100%;
-  }
-
-  .odv-status-pill {
-    word-break: keep-all;
   }
 
   .address-val {
@@ -612,16 +591,10 @@
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
   }
 
   .odv-table-wrapper {
     padding: 0 1.2rem 1.2rem 1.2rem;
-  }
-
-  .odv-items-table {
-    width: 100%;
   }
 
   .odv-items-table th,
@@ -660,10 +633,6 @@
   .track-title {
     font-size: 0.75rem;
   }
-
-  .track-date {
-    font-size: 0.7rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -674,10 +643,6 @@
   .odv-status-badge {
     font-size: 0.7rem;
     padding: 0.3rem 0.7rem;
-  }
-
-  .back-btn {
-    font-size: 1rem;
   }
 
   .odv-card h3 {
@@ -709,23 +674,16 @@
     font-size: 0.8rem;
     text-align: left;
     word-wrap: break-word;
-    overflow-wrap: break-word;
     max-width: 100%;
   }
 
   .address-val {
     max-width: 100%;
     white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
   }
 
   .odv-table-wrapper {
     padding: 0 1rem 1rem 1rem;
-  }
-
-  .odv-items-table {
-    width: 100%;
   }
 
   .odv-items-table th,
@@ -782,9 +740,5 @@
 
   .track-title {
     font-size: 0.8rem;
-  }
-
-  .track-date {
-    font-size: 0.75rem;
   }
 }

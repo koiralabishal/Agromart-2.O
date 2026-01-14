@@ -1,0 +1,375 @@
+.payments-view {
+  padding: 1rem 0;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pv-header {
+  margin-bottom: 2.5rem;
+}
+
+.pv-header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.pv-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Wallet Module */
+.pv-section {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1dc956;
+}
+
+.section-title.ledger {
+  color: #2c3e50;
+}
+
+.pv-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.pv-balance-card {
+  padding: 1.8rem;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.pv-balance-card:hover {
+  transform: translateY(-5px);
+}
+
+.pv-balance-card.available {
+  background: linear-gradient(135deg, #1dc956 0%, #159f42 100%);
+  color: white;
+}
+
+.pv-balance-card.locked {
+  background: linear-gradient(135deg, #f5a623 0%, #d48806 100%);
+  color: white;
+}
+
+.pv-balance-card.total {
+  background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+  color: white;
+}
+
+.card-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
+}
+
+.info-icon {
+  cursor: help;
+  font-size: 1rem;
+}
+
+.card-amount {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.card-footer {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Withdrawal Action */
+.pv-actions {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 1.5rem;
+}
+
+.withdraw-btn {
+  background: #1dc956;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(29, 201, 86, 0.2);
+}
+
+.withdraw-btn:hover {
+  background: #159f42;
+  transform: scale(1.02);
+}
+
+.withdraw-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Table Styles */
+.pv-table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.pv-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.pv-table th {
+  text-align: left;
+  padding: 1.2rem 1rem;
+  background: #f8f9fa;
+  color: #666;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pv-table td {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.order-id {
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.method-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.method-tag.esewa {
+  background: #e6f6ec;
+  color: #1dc956;
+}
+
+.method-tag.khalti {
+  background: #f3e8ff;
+  color: #a855f7;
+}
+
+.method-tag.bank {
+  background: #f0f4f8;
+  color: #2c3e50;
+}
+
+.method-tag.cod {
+  background: #f0f4f8;
+  color: #2c3e50;
+}
+
+.status-pill {
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-pill.completed {
+  background: #e6f6ec;
+  color: #1dc956;
+}
+.status-pill.pending {
+  background: #fff8e6;
+  color: #f5a623;
+}
+.status-pill.locked {
+  background: #f0f0f0;
+  color: #888;
+}
+
+.pv-amount {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.pv-amount.credit {
+  color: #1dc956;
+}
+.pv-amount.debit {
+  color: #ef4444;
+}
+
+/* Modal Styles */
+.withdraw-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.withdraw-modal {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 20px;
+  padding: 2.5rem;
+  position: relative;
+  animation: modalSlide 0.3s ease;
+}
+
+@keyframes modalSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.withdraw-modal h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+.modal-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.modal-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.modal-form-group input,
+.modal-form-group select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.modal-form-group input:focus {
+  border-color: #1dc956;
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .pv-header h1 {
+    font-size: 1.8rem;
+  }
+  .pv-balance-grid {
+    grid-template-columns: 1fr;
+  }
+  .pv-section {
+    padding: 1.5rem;
+  }
+}
+
+/* Success Modal Specific Styles */
+.success-modal {
+  text-align: center;
+  border-top: 5px solid #ef4444; /* Added a red accent to the top */
+}
+
+.success-icon-container {
+  font-size: 4rem;
+  color: #1dc956;
+  margin-bottom: 1rem;
+}
+
+.success-message-red {
+  color: #ef4444;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #fff5f5;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+
+.modal-close-btn {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 0.8rem 2.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 1rem;
+}
+
+.modal-close-btn:hover {
+  background: #1a252f;
+}

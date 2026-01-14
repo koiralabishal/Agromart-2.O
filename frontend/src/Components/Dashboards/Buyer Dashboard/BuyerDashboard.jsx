@@ -15,6 +15,8 @@ import {
   FaTimes,
   FaList,
   FaTruck,
+  FaUser,
+  FaEnvelope
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosConfig";
@@ -48,7 +50,7 @@ const BuyerDashboard = () => {
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const saved = sessionStorage.getItem("buyerCartItems");
+      const saved = sessionStorage.getItem("cartItems");
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       console.error("Error parsing cartItems", e);
@@ -56,7 +58,7 @@ const BuyerDashboard = () => {
     }
   });
   const [hasViewedCart, setHasViewedCart] = useState(() => {
-    return sessionStorage.getItem("buyerHasViewedCart") === "true";
+    return sessionStorage.getItem("hasViewedCart") === "true";
   });
   const [selectedDistributor, setSelectedDistributor] = useState(() => {
     try {
@@ -134,8 +136,8 @@ const BuyerDashboard = () => {
 
   useEffect(() => {
     sessionStorage.setItem("buyerActiveView", activeView);
-    sessionStorage.setItem("buyerCartItems", JSON.stringify(cartItems));
-    sessionStorage.setItem("buyerHasViewedCart", hasViewedCart);
+    sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
+    sessionStorage.setItem("hasViewedCart", hasViewedCart);
     if (selectedDistributor) {
       sessionStorage.setItem(
         "selectedDistributor",
@@ -241,9 +243,13 @@ const BuyerDashboard = () => {
     }
   };
 
-  const handleViewOrder = (order, type) => {
+  const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setActiveView("orderDetail");
+  };
+
+  const handleOrderUpdate = (updatedOrder) => {
+    setSelectedOrder(updatedOrder);
   };
 
   const handleViewProfile = (distributor) => {
@@ -376,11 +382,23 @@ const BuyerDashboard = () => {
             <FaBell />
             <span className="notif-counter">3</span>
           </div>
-          <img
-            src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
-            alt="Profile"
-            className="bd-profile-pic"
-          />
+          <div className="bd-profile-container">
+            <img
+              src={user.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
+              alt="Profile"
+              className="bd-profile-pic"
+            />
+            <div className="bd-profile-tooltip">
+              <div className="tooltip-item">
+                <FaUser className="tooltip-icon" />
+                <span>{user.name}</span>
+              </div>
+              <div className="tooltip-item">
+                <FaEnvelope className="tooltip-icon" />
+                <span>{user.email}</span>
+              </div>
+            </div>
+          </div>
           <div className="bd-icon-btn" onClick={handleLogout} title="Logout">
             <FaSignOutAlt />
           </div>
@@ -574,6 +592,7 @@ const BuyerDashboard = () => {
             order={selectedOrder}
             orderType="placed"
             onBack={() => setActiveView("orders")}
+            onOrderUpdate={handleOrderUpdate}
           />
         )}
         {activeView === "settings" && <SettingsView />}
@@ -584,6 +603,12 @@ const BuyerDashboard = () => {
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
             onBack={() => setActiveView("distributors")}
+            onClearCart={() => {
+              setCartItems([]);
+              sessionStorage.removeItem("cartItems");
+              sessionStorage.removeItem("hasViewedCart");
+            }}
+            onOrderComplete={() => setActiveView("orders")}
           />
         )}
         {activeView === "chat" && <ChatView />}

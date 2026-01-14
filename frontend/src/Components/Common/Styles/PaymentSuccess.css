@@ -1,0 +1,590 @@
+.payment-success-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f4f6f9;
+  padding: 1rem;
+}
+
+.payment-card {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.spinner-icon {
+  font-size: 3rem;
+  color: #1dc956;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+.check-icon {
+  font-size: 4rem;
+  color: #1dc956;
+  margin-bottom: 1.5rem;
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.error-icon {
+  font-size: 4rem;
+  color: #ff4d4f;
+  margin-bottom: 1.5rem;
+}
+
+.status-content h2 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+}
+
+.status-content p {
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.transaction-details {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 100%;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.transaction-details p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-dashboard,
+.btn-retry {
+  padding: 0.8rem 1.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-dashboard {
+  background: #1dc956;
+  color: white;
+  flex: 1;
+}
+
+.btn-dashboard:hover {
+  background: #15a344;
+  transform: translateY(-2px);
+}
+
+.btn-retry {
+  background: transparent;
+  border: 1px solid #ff4d4f;
+  color: #ff4d4f;
+  flex: 1;
+}
+
+.btn-retry:hover {
+  background: #fff1f0;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Payment Failure Specific Styles */
+
+/* 1. Page Background - Dark Brinjal Gradient */
+.payment-success-container.failure-mode {
+  background: linear-gradient(135deg, #2e003e 0%, #3d005e 50%, #1a0024 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Optional: Add subtle background pattern or glow for premium feel */
+.payment-success-container.failure-mode::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%);
+  animation: rotateBg 60s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotateBg {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 2. Card - Premium White/Glass Look */
+.payment-card.failure-card {
+  background: rgba(255, 255, 255, 0.95); /* Slight transparency for depth */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* Deep shadow */
+  color: #2c3e50; /* Reset text color to dark */
+}
+
+/* Icon */
+.payment-card.failure-card .error-icon {
+  color: #e74c3c; /* Vibrant Red */
+  filter: drop-shadow(0 4px 6px rgba(231, 76, 60, 0.2));
+  font-size: 4.5rem;
+}
+
+/* Headings */
+.payment-card.failure-card .status-content h2 {
+  color: #2d3436;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.payment-card.failure-card .status-content p {
+  color: #636e72;
+}
+
+/* Buttons */
+.payment-card.failure-card .btn-retry {
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  background: transparent;
+}
+
+.payment-card.failure-card .btn-retry:hover {
+  background: #e74c3c;
+  color: white;
+  box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.payment-card.failure-card .btn-dashboard {
+  background: #2e003e; /* Match theme color for primary button */
+  color: white;
+  border: 2px solid #2e003e;
+}
+
+.payment-card.failure-card .btn-dashboard:hover {
+  background: #4a0063;
+  border-color: #4a0063;
+  box-shadow: 0 5px 15px rgba(74, 0, 99, 0.3);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   Payment SUCCESS Specific Styles (Premium Green Theme)
+   ========================================= */
+
+/* 1. Page Background - Deep Emerald/Forest Gradient */
+.payment-success-container.success-mode {
+  background: linear-gradient(135deg, #002b1d 0%, #004d33 50%, #001a11 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-success-container.success-mode::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+  animation: rotateBg 60s linear infinite;
+  pointer-events: none;
+}
+
+/* 2. Card - Premium White/Glass Look */
+.payment-card.success-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  color: #2c3e50;
+  max-width: 900px; /* Wider for detailed view */
+}
+
+/* Icon Wrapper for Glow Effect */
+.payment-card.success-card .success-icon-wrapper {
+  display: inline-flex;
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(29, 201, 86, 0.4);
+  background: white;
+  padding: 5px; /* Tiny spacing */
+  margin-bottom: 1.5rem;
+}
+
+.payment-card.success-card .check-icon {
+  color: #1dc956;
+  font-size: 4.5rem;
+  margin-bottom: 0; /* Wrapper handles margin */
+  filter: drop-shadow(0 4px 6px rgba(29, 201, 86, 0.2));
+}
+
+/* Typography */
+.payment-card.success-card .status-content h2 {
+  color: #004d33;
+  font-weight: 800;
+  font-size: 2rem;
+  margin-bottom: 0.2rem;
+}
+
+.payment-card.success-card .sub-heading {
+  color: #1dc956;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+/* Transaction Details Section */
+.payment-card.success-card .transaction-details {
+  background: #f1f8f5; /* Very light green tint */
+  border: 1px solid #e0ebe6;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.detail-row .label {
+  color: #555;
+  font-weight: 500;
+}
+
+.detail-row .value {
+  color: #2c3e50;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.detail-row .transaction-uuid {
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.divider {
+  height: 1px;
+  background: #e0ebe6;
+  margin: 1rem 0;
+}
+
+.payment-card.success-card h3 {
+  font-size: 1.1rem;
+  color: #004d33;
+  margin-bottom: 1rem;
+  border-left: 4px solid #1dc956;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-icon {
+  color: #1dc956;
+}
+
+/* Orders List */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Order Card */
+.order-card {
+  background: white;
+  border: 1px solid #e0ebe6;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 77, 51, 0.1);
+  border-color: #1dc956;
+}
+
+/* Seller Header */
+.seller-header {
+  background: linear-gradient(135deg, #004d33 0%, #006b47 100%);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seller-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+}
+
+.seller-icon {
+  font-size: 1.5rem;
+  color: #1dc956;
+}
+
+.seller-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: white;
+}
+
+.seller-role {
+  font-size: 0.75rem;
+  color: #b8e6d0;
+  text-transform: capitalize;
+}
+
+.order-id-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Products Section */
+.products-section {
+  padding: 1rem;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.products-table thead {
+  background: #f8f9fa;
+}
+
+.products-table th {
+  padding: 0.6rem;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e0ebe6;
+}
+
+.products-table th:last-child,
+.products-table td:last-child {
+  text-align: right;
+}
+
+.products-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.products-table tbody tr:hover {
+  background: #f8fdf9;
+}
+
+.products-table td {
+  padding: 0.8rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.product-unit {
+  display: block;
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 400;
+  margin-top: 0.2rem;
+}
+
+.product-qty {
+  color: #666;
+  font-weight: 500;
+}
+
+.product-price {
+  color: #555;
+}
+
+.product-total {
+  color: #004d33;
+  font-weight: 700;
+}
+
+/* Order Footer */
+.order-footer {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-top: 2px solid #e0ebe6;
+}
+
+.order-footer-breakdown {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ebe6;
+}
+
+.order-subtotal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.order-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-total-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 1rem;
+}
+
+.order-total-amount {
+  font-weight: 800;
+  color: #004d33;
+  font-size: 1.2rem;
+}
+
+/* Grand Total Section */
+.grand-total-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid #1dc956;
+}
+
+.grand-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #004d33 0%, #006b47 100%);
+  padding: 1.2rem 1.5rem;
+  border-radius: 10px;
+}
+
+.grand-total-label {
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+.grand-total-amount {
+  color: #1dc956;
+  font-weight: 900;
+  font-size: 1.8rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Button */
+.payment-card.success-card .btn-dashboard {
+  background: #004d33;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 77, 51, 0.3);
+}
+
+.payment-card.success-card .btn-dashboard:hover {
+  background: #006b47;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 77, 51, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-card.success-card {
+    max-width: 100%;
+    padding: 2rem 1.5rem;
+  }
+
+  .products-table {
+    font-size: 0.85rem;
+  }
+
+  .products-table th,
+  .products-table td {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .seller-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .grand-total-row {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}

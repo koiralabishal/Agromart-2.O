@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./Components/Landing Page/LandingPage";
+import PaymentSuccess from "./Components/Common/PaymentSuccess";
+import PaymentFailure from "./Components/Common/PaymentFailure";
 import FarmerDashboard from "./Components/Dashboards/Farmer Dashboard/FarmerDashboard";
 import CollectorDashboard from "./Components/Dashboards/Collector Dashboard/CollectorDashboard";
 import SupplierDashboard from "./Components/Dashboards/Supplier Dashboard/SupplierDashboard";
@@ -13,6 +15,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failure" element={<PaymentFailure />} />
 
         {/* Protected Dashboard Routes */}
         <Route
@@ -47,15 +51,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin-dashboard" element={
-          <ProtectedRoute allowedRole="admin">
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/document" element={<DocumentViewer />} />
-
-
-        
       </Routes>
     </Router>
   );

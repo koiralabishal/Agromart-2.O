@@ -383,8 +383,14 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .status-option {
@@ -402,17 +408,55 @@
 }
 
 /* Status Specific Colors */
-.status-pending { background: #fff7ed; color: #c2410c; }
-.status-accepted { background: #eff6ff; color: #1d4ed8; }
-.status-shipping { background: #fdf2f8; color: #9d174d; }
-.status-completed { background: #f0fdf4; color: #16a34a; }
-.status-rejected { background: #fef2f2; color: #dc2626; }
+.status-pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+.status-accepted {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.status-shipping {
+  background: #fdf2f8;
+  color: #9d174d;
+}
+.status-completed {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.status-rejected {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.status-canceled {
+  background: #f3f4f6;
+  color: #4b5563;
+}
 
-.odv-status-pill.status-pending { background: #fff7ed; color: #c2410c; }
-.odv-status-pill.status-accepted { background: #eff6ff; color: #1d4ed8; }
-.odv-status-pill.status-shipping { background: #fdf2f8; color: #9d174d; }
-.odv-status-pill.status-completed { background: #f0fdf4; color: #16a34a; }
-.odv-status-pill.status-rejected { background: #fef2f2; color: #dc2626; }
+.odv-status-pill.status-pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+.odv-status-pill.status-accepted {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.odv-status-pill.status-shipping {
+  background: #fdf2f8;
+  color: #9d174d;
+}
+.odv-status-pill.status-completed {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.odv-status-pill.status-rejected {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.odv-status-pill.status-canceled {
+  background: #f3f4f6;
+  color: #4b5563;
+}
 
 .status-option.disabled {
   opacity: 0.5;

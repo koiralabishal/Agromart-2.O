@@ -18,7 +18,9 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
   const [products, setProducts] = useState(() => {
     const distributorId = distributor?._id || distributor?.id;
     if (!distributorId) return null;
-    const cached = localStorage.getItem(`cached_distributor_products_${distributorId}`);
+    const cached = localStorage.getItem(
+      `cached_distributor_products_${distributorId}`
+    );
     return cached ? JSON.parse(cached) : null;
   });
   const [error, setError] = useState(null);
@@ -38,11 +40,16 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
       const response = await api.get(`/inventory?userID=${distributorId}`);
       setProducts(response.data);
       // Cache the result for this specific distributor
-      localStorage.setItem(`cached_distributor_products_${distributorId}`, JSON.stringify(response.data));
+      localStorage.setItem(
+        `cached_distributor_products_${distributorId}`,
+        JSON.stringify(response.data)
+      );
       setError(null);
     } catch (err) {
       console.error("Error fetching distributor products:", err);
-      setError(err.response?.data?.message || err.message || "Failed to fetch products");
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch products"
+      );
       setProducts((prev) => prev || []); // Fallback to empty if no cache
     }
   };
@@ -58,7 +65,7 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
   if (!distributor) return null;
 
   const filteredProducts = (products || []).filter((p) =>
-    p.productName.toLowerCase().includes(searchTerm.toLowerCase()) 
+    p.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -98,12 +105,17 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
           </div>
         ) : filteredProducts.length > 0 ? (
           filteredProducts.map((product) => {
-            const isOutOfStock = product.availableStatus === "Out of Stock" || product.quantity <= 0;
+            const isOutOfStock =
+              product.availableStatus === "Out of Stock" ||
+              product.quantity <= 0;
 
             return (
               <div key={product._id || product.id} className="inventory-card">
                 <img
-                  src={product.productImage || "https://via.placeholder.com/300x200?text=No+Image"}
+                  src={
+                    product.productImage ||
+                    "https://via.placeholder.com/300x200?text=No+Image"
+                  }
                   alt={product.productName}
                   className="inventory-image"
                 />
@@ -117,7 +129,10 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
                       className="add-cart-btn-small"
                       disabled={isOutOfStock}
                       onClick={async () => {
-                        await onAddToCart(product);
+                        await onAddToCart({
+                          ...product,
+                          distributorName: distributor.name,
+                        });
                         setAddedItem(product);
                         setShowPopup(true);
                         // Update local state for immediate feedback
@@ -138,7 +153,9 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
                   <div className="item-description-container">
                     <p
                       className={`item-description ${
-                        expandedProducts[product._id || product.id] ? "expanded" : ""
+                        expandedProducts[product._id || product.id]
+                          ? "expanded"
+                          : ""
                       }`}
                     >
                       {product.productDescription}
@@ -147,7 +164,9 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
                       product.productDescription.split(/\s+/).length > 20 && (
                         <button
                           className="description-toggle-btn"
-                          onClick={() => toggleDescription(product._id || product.id)}
+                          onClick={() =>
+                            toggleDescription(product._id || product.id)
+                          }
                           title={
                             expandedProducts[product._id || product.id]
                               ? "Show Less"
@@ -169,7 +188,9 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
                     </span>
                     <div className="qty-wrapper">
                       <FaBox className="im-detail-icon" />
-                      <span>{product.quantity} {product.unit}</span>
+                      <span>
+                        {product.quantity} {product.unit}
+                      </span>
                     </div>
                     <span
                       className={`im-status-tag ${
@@ -200,15 +221,22 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="cart-popup-img-wrapper">
-               <img src={addedItem.productImage || "https://via.placeholder.com/300x200?text=No+Image"} alt={addedItem.productName} className="cart-popup-product-img" />
-               <div className="cart-popup-check-badge">
-                 <FaCheckCircle />
-               </div>
+              <img
+                src={
+                  addedItem.productImage ||
+                  "https://via.placeholder.com/300x200?text=No+Image"
+                }
+                alt={addedItem.productName}
+                className="cart-popup-product-img"
+              />
+              <div className="cart-popup-check-badge">
+                <FaCheckCircle />
+              </div>
             </div>
             <h3>Added to Cart!</h3>
             <p>
-              <strong>{addedItem.productName}</strong> has been successfully added to your
-              cart.
+              <strong>{addedItem.productName}</strong> has been successfully
+              added to your cart.
             </p>
             <button
               className="cart-popup-btn"

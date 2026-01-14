@@ -8,13 +8,130 @@ import {
 } from "react-icons/fa";
 import "./Styles/CartView.css";
 
-const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
+import api from "../../../api/axiosConfig";
+import OrderSuccessModal from "../../Common/OrderSuccessModal";
+import ComingSoonModal from "../../Common/ComingSoonModal";
+
+const CartView = ({
+  cartItems,
+  onUpdateQuantity,
+  onRemoveItem,
+  onBack,
+  onClearCart,
+  onOrderComplete,
+}) => {
+  const [paymentMethod, setPaymentMethod] = React.useState("COD");
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [showComingSoon, setShowComingSoon] = React.useState(false);
+
+  // Group items by collector for clearer organization
+  const groupedItems = React.useMemo(() => {
+    const groups = {};
+    cartItems.forEach((item) => {
+      let collectorId, collectorName;
+
+      if (item.userID && typeof item.userID === "object") {
+        collectorId = item.userID._id || item.userID.id;
+        collectorName = item.userID.name;
+      } else {
+        collectorId = item.userID || "unknown";
+        collectorName = item.collectorName || "Selected Collector";
+      }
+
+      if (!groups[collectorId]) {
+        groups[collectorId] = {
+          collectorId,
+          collectorName,
+          items: [],
+        };
+      }
+      groups[collectorId].items.push(item);
+    });
+    return Object.values(groups);
+  }, [cartItems]);
+
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const shipping = cartItems.length > 0 ? 5.0 : 0;
-  const grandTotal = subtotal + shipping;
+
+  // Rs. 100 delivery charge per order (per collector)
+  const deliveryChargePerOrder = 100;
+  const numberOfOrders = groupedItems.length; // Each collector = 1 order
+  const deliveryCharge = numberOfOrders * deliveryChargePerOrder;
+  const grandTotal = subtotal + deliveryCharge;
+
+  const handlePlaceOrder = async () => {
+    setIsProcessing(true);
+    try {
+      if (paymentMethod === "COD") {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userID = user?._id || user?.id;
+
+        await api.post("/orders/create", {
+          cartItems,
+          paymentMethod: "COD",
+          userID,
+          totalAmount: grandTotal,
+        });
+        setShowSuccessModal(true);
+        return;
+      }
+
+      if (paymentMethod === "eSewa") {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userID = user?._id || user?.id;
+
+        const response = await api.post("/orders/initiate", {
+          totalAmount: grandTotal,
+          cartItems,
+          userID,
+        });
+
+        const { paymentParams } = response.data;
+
+        // Store transaction UUID for failure handling
+        sessionStorage.setItem(
+          "transactionUUID",
+          paymentParams.transaction_uuid
+        );
+
+        const form = document.createElement("form");
+        form.setAttribute("method", "POST");
+        form.setAttribute("action", paymentParams.url);
+        for (const key in paymentParams) {
+          if (key === "url") continue;
+          const hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", key);
+          hiddenField.setAttribute("value", paymentParams[key]);
+          form.appendChild(hiddenField);
+        }
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+      if (paymentMethod === "Khalti") {
+        setShowComingSoon(true);
+        setIsProcessing(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      alert("Failed to place order. Please try again.");
+    } finally {
+      if (paymentMethod !== "COD") setIsProcessing(false);
+      if (paymentMethod === "COD") setIsProcessing(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
+    onClearCart && onClearCart();
+    onOrderComplete && onOrderComplete();
+  };
+
 
   if (cartItems.length === 0) {
     return (
@@ -35,6 +152,12 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
 
   return (
     <div className="cart-view-container">
+      <OrderSuccessModal isOpen={showSuccessModal} onClose={handleCloseModal} />
+      <ComingSoonModal
+        isOpen={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+        featureName="Khalti Payment Integration"
+      />
       <div className="cart-header-row">
         <button className="back-btn-cart" onClick={onBack}>
           <FaArrowLeft /> Back
@@ -44,47 +167,62 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
       </div>
 
       <div className="cart-content-grid">
-        {/* Left Side: Items */}
+        {/* Left Side: Items Grouped by Collector */}
         <div className="cart-items-section">
-          <div className="cart-items-list">
-            {cartItems.map((item) => (
-              <div key={item._id} className="cart-item-card">
-                <div className="item-image">
-                  <img
-                    src={
-                      item.productImage ||
-                      "https://via.placeholder.com/200?text=Product"
-                    }
-                    alt={item.productName}
-                  />
+          {groupedItems.map((group) => (
+            <div key={group.collectorId} className="farmer-group-container">
+              <div className="farmer-group-header">
+                <div className="farmer-info-badge">
+                  <span className="farmer-label">COLLECTOR</span>
+                  <span className="farmer-name">{group.collectorName}</span>
                 </div>
-                <div className="item-info">
-                  <div className="info-main">
-                    <h3>{item.productName}</h3>
-                    <p>{item.category}</p>
-                  </div>
-                  <div className="info-price">
-                    Rs. {(item.price * item.quantity).toFixed(2)}
-                  </div>
+                <div className="group-item-count">
+                  {group.items.length}{" "}
+                  {group.items.length === 1 ? "item" : "items"}
                 </div>
-                <div className="item-controls">
-                  <button onClick={() => onUpdateQuantity(item._id, -1)}>
-                    <FaMinus />
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => onUpdateQuantity(item._id, 1)}>
-                    <FaPlus />
-                  </button>
-                </div>
-                <button
-                  className="remove-btn"
-                  onClick={() => onRemoveItem(item._id)}
-                >
-                  <FaTrash />
-                </button>
               </div>
-            ))}
-          </div>
+
+              <div className="cart-items-list">
+                {group.items.map((item) => (
+                  <div key={item._id} className="cart-item-card">
+                    <div className="item-image">
+                      <img
+                        src={
+                          item.productImage ||
+                          "https://via.placeholder.com/200?text=Product"
+                        }
+                        alt={item.productName}
+                      />
+                    </div>
+                    <div className="item-info">
+                      <div className="info-main">
+                        <h3>{item.productName}</h3>
+                        <p>{item.category}</p>
+                      </div>
+                      <div className="info-price">
+                        Rs. {(item.price * item.quantity).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="item-controls">
+                      <button onClick={() => onUpdateQuantity(item._id, -1)}>
+                        <FaMinus />
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => onUpdateQuantity(item._id, 1)}>
+                        <FaPlus />
+                      </button>
+                    </div>
+                    <button
+                      className="remove-btn"
+                      onClick={() => onRemoveItem(item._id)}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Right Side: Summary */}
@@ -96,8 +234,8 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
               <span>Rs. {subtotal.toFixed(2)}</span>
             </div>
             <div className="summary-line">
-              <span>Shipping</span>
-              <span>Rs. {shipping.toFixed(2)}</span>
+              <span>Delivery Charge ({numberOfOrders} {numberOfOrders === 1 ? 'order' : 'orders'} × Rs. {deliveryChargePerOrder})</span>
+              <span>Rs. {deliveryCharge.toFixed(2)}</span>
             </div>
             <div className="summary-divider"></div>
             <div className="summary-line grand-total">
@@ -118,11 +256,23 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
               <h3>Payment Method</h3>
               <div className="payment-options">
                 <label className="payment-option">
-                  <input type="radio" name="payment" defaultChecked />
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="COD"
+                    checked={paymentMethod === "COD"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
                   <span>Cash on Delivery</span>
                 </label>
                 <label className="payment-option">
-                  <input type="radio" name="payment" />
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="eSewa"
+                    checked={paymentMethod === "eSewa"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
                   <span>Online Payment (E-sewa)</span>
                   <img
                     src="https://esewa.com.np/common/images/esewa_logo.png"
@@ -131,13 +281,31 @@ const CartView = ({ cartItems, onUpdateQuantity, onRemoveItem, onBack }) => {
                   />
                 </label>
                 <label className="payment-option">
-                  <input type="radio" name="payment" />
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Khalti"
+                    checked={paymentMethod === "Khalti"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
                   <span>Online Payment (Khalti)</span>
+                  <img
+                    src="https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-original-577x577/s3/102020/khalti_logo.png?itok=AtjU-A3U"
+                    alt="Khalti"
+                    className="payment-logo"
+                    style={{ height: "20px", marginLeft: "auto" }}
+                  />
                 </label>
               </div>
             </div>
 
-            <button className="place-order-btn">Place Order</button>
+            <button
+              className="place-order-btn"
+              onClick={handlePlaceOrder}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Processing..." : "Place Order"}
+            </button>
           </div>
         </div>
       </div>
