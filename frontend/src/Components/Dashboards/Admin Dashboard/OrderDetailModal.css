@@ -1,0 +1,209 @@
+/* OrderDetailModal.css */
+
+/* Reuse similar overlay details from UserDetailModal for consistency */
+.od-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  animation: fadeIn 0.3s ease-in-out;
+  padding: 1rem;
+}
+
+.od-modal {
+  background-color: #ffffff;
+  border-radius: 16px;
+  width: 700px; /* Slightly wider for table */
+  max-width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+  scrollbar-width: none;
+}
+
+.od-modal::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Header */
+.od-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.od-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.od-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: #9ca3af;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.od-close-btn:hover {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+/* Body */
+.od-body {
+  padding: 2rem;
+}
+
+/* Info Grid */
+.od-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.od-info-item h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.od-info-item p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Items Table */
+.od-items-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.od-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.od-table th {
+  background-color: #f3f4f6;
+  text-align: left;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #4b5563;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.od-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f9fafb;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.od-table tr:last-child td {
+  border-bottom: none;
+}
+
+.od-item-name {
+  font-weight: 600;
+}
+
+/* Summary Section */
+.od-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.od-summary-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 300px;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+.od-summary-row.total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1dc956;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 2px dashed #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .od-modal {
+    width: 95%;
+  }
+  
+  .od-header {
+    padding: 1rem 1.25rem;
+  }
+  
+  .od-body {
+    padding: 1.25rem;
+  }
+  
+  .od-info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Make table scrollable on small screens */
+  .od-items-container {
+    overflow-x: auto;
+  }
+  
+  .od-table {
+    min-width: 500px; /* Ensure table keeps shape */
+  }
+}

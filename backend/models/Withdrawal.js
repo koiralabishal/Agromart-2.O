@@ -12,7 +12,7 @@ const withdrawalSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['Pending', 'Approved', 'Completed', 'Rejected'], 
+    enum: ['Pending', 'Verified', 'Completed', 'Rejected', 'Approved'], 
     default: 'Pending' 
   },
   paymentMethod: {

@@ -30,7 +30,7 @@ const transactionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Completed", "Pending", "Locked"],
+      enum: ["Completed", "Pending", "Locked", "Verified", "Rejected"],
       required: true,
     },
     description: {

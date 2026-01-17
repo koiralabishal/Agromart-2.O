@@ -8,6 +8,7 @@ import inventoryRoutes from "./routes/inventoryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import walletRoutes from "./routes/walletRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Health Check
 app.get("/", (req, res) => {

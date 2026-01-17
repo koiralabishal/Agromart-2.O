@@ -20,8 +20,13 @@ const walletSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isFrozen: {
+      type: String,
+      enum: ["yes", "no"],
+      default: "no",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Wallet = mongoose.model("Wallet", walletSchema);

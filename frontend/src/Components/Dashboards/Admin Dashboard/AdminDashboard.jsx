@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaLeaf,
   FaHome,
@@ -7,229 +7,296 @@ import {
   FaShoppingBag,
   FaSignOutAlt,
   FaBars,
-  FaTimes,
-  FaSearch,
   FaChevronLeft,
   FaChevronRight,
+  FaBoxOpen,
+  FaClipboardList,
+  FaWallet,
+  FaGavel,
+  FaChevronDown,
+  FaSearch,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
 import AdminOverview from "./AdminOverview";
 import UserManagementView from "./UserManagementView";
 import UserDetailModal from "./UserDetailModal";
+import AdminOrdersView from "./AdminOrdersView";
+import AdminProductsView from "./AdminProductsView";
+import AdminInventoryView from "./AdminInventoryView";
+import AdminWalletView from "./AdminWalletView";
+import AdminDisputesView from "./AdminDisputesView";
 
-// Mock Data for different roles
-const mockFarmers = [
-  {
-    id: 1,
-    name: "Bishal Koirala",
-    email: "bslkoirala@gmail.com",
-    phone: "9841234567",
-    status: "Verified",
-    businessName: "Koirala Farms",
-    docStatus: "Approved",
-    location: "Pokhara, Nepal",
-    documentUrl:
-      "https://res.cloudinary.com/delqlxp6s/image/upload/v1767625082/documents/ivgift52pfcr2njalakv.jpg",
-    documentType: "image",
-    documentName: "Koirala_Farms_License.jpg",
-  },
-  {
-    id: 2,
-    name: "Ram Thapa",
-    email: "ram.thapa@example.com",
-    phone: "9812345678",
-    status: "Unverified",
-    businessName: "Himalayan Organic",
-    docStatus: "Pending",
-    location: "Mustang, Nepal",
-    documentUrl:
-      "https://res.cloudinary.com/delqlxp6s/image/upload/v1767625082/documents/ivgift52pfcr2njalakv.jpg",
-    documentType: "image",
-    documentName: "Himalayan_Organic_License.jpg",
-  },
-  {
-    id: 3,
-    name: "Sita Sharma",
-    email: "sita.s@example.com",
-    phone: "9801234567",
-    status: "Verified",
-    businessName: "Green Valley",
-    docStatus: "Approved",
-    location: "Chitwan, Nepal",
-    documentUrl:
-      "https://res.cloudinary.com/delqlxp6s/image/upload/v1767625082/documents/ivgift52pfcr2njalakv.jpg",
-    documentType: "image",
-    documentName: "Green_Valley_License.jpg",
-  },
-];
-
-const mockCollectors = [
-  {
-    id: 1,
-    name: "Hari Bahadur",
-    email: "hari.b@example.com",
-    phone: "9865432109",
-    status: "Verified",
-    businessName: "Pokhara Collection Center",
-    docStatus: "Approved",
-    location: "Pokhara, Nepal",
-    documentUrl:
-      "https://res.cloudinary.com/delqlxp6s/image/upload/v1767625082/documents/ivgift52pfcr2njalakv.jpg",
-    documentType: "image",
-    documentName: "Pokhara_Collection_Center_License.jpg",
-  },
-  {
-    id: 2,
-    name: "Gita Magar",
-    email: "gita.m@example.com",
-    phone: "9845678901",
-    status: "Unverified",
-    businessName: "Gandaki Aggregators",
-    docStatus: "Pending",
-    location: "Syangja, Nepal",
-    documentUrl:
-      "https://res.cloudinary.com/delqlxp6s/image/upload/v1767625082/documents/ivgift52pfcr2njalakv.jpg",
-    documentType: "image",
-    documentName: "Gandaki_Aggregators_License.jpg",
-  },
-];
-
-const mockSuppliers = [
-  {
-    id: 1,
-    name: "ABC Logistics",
-    email: "contact@abclogistics.com",
-    phone: "01-4455667",
-    status: "Verified",
-    businessName: "ABC Logistics Pvt Ltd",
-    docStatus: "Approved",
-    location: "Kathmandu, Nepal",
-    documentUrl:
-      "https://res.cloudinary.com/delqlxp6s/image/upload/v1767625082/documents/ivgift52pfcr2njalakv.jpg",
-    documentType: "image",
-    documentName: "ABC_Logistics_Pvt_Ltd_License.jpg",
-  },
-];
-
-const mockBuyers = [
-  {
-    id: 1,
-    name: "Hotel Annapurna",
-    email: "purchasing@annapurna.com",
-    phone: "01-5544332",
-    status: "Verified",
-    businessName: "Hotel Annapurna",
-    location: "Kathmandu, Nepal",
-  },
-  {
-    id: 2,
-    name: "Bhojan Griha",
-    email: "info@bhojan.com",
-    phone: "01-6677889",
-    status: "Verified",
-    businessName: "Bhojan Griha",
-    location: "Lalitpur, Nepal",
-  },
-];
+import api from "../../../api/axiosConfig";
 
 const AdminDashboard = () => {
+  // ... (state lines)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState("dashboard");
+  const [activeView, setActiveView] = useState(
+    sessionStorage.getItem("adminActiveView") || "dashboard",
+  );
   const [selectedUser, setSelectedUser] = useState(null);
-  const navigate = useNavigate(); // Hook
+  const [stats, setStats] = useState(() => {
+    const saved = sessionStorage.getItem("adminStats");
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  // ... (existing handlers)
+  // Global Dashboard Cache
+  const [dataCache, setDataCache] = useState(() => {
+    const saved = sessionStorage.getItem("adminDataCache");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          farmers: null,
+          collectors: null,
+          suppliers: null,
+          buyers: null,
+          orders: null,
+          products: null,
+          inventory: null,
+          wallets: null,
+          codLedger: null,
+          withdrawals: null,
+          disputes: null,
+        };
+  });
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  const handleLogout = async () => {
-    try {
-      await fetch("http://localhost:5000/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("user");
-      let activeViewKey = "adminActiveView"; // Example key if we were persisting state
-      sessionStorage.removeItem(activeViewKey);
-      navigate("/");
-    } catch (err) {
-      console.error("Logout failed", err);
-      localStorage.removeItem("user");
-      navigate("/");
+  const updateCache = (key, data) => {
+    if (typeof key === "object" && data === undefined) {
+      setDataCache((prev) => ({ ...prev, ...key }));
+    } else {
+      setDataCache((prev) => ({ ...prev, [key]: data }));
     }
   };
 
-  const handleViewDetails = (user) => {
-    setSelectedUser(user);
+  // Refresh trigger for UserManagementView
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Collapsible sections state
+  const [expandedSections, setExpandedSections] = useState(
+    JSON.parse(sessionStorage.getItem("adminExpandedSections")) || {
+      management: false,
+      operations: false,
+      financial: false,
+    },
+  );
+
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
-  const handleCloseModal = () => {
-    setSelectedUser(null);
-  };
+  // ... (useEffects)
+  const navigate = useNavigate();
 
-  const handleVerifyUser = (user) => {
-    alert(`Verified user: ${user.name}`);
-    setSelectedUser(null);
-  };
+  useEffect(() => {
+    sessionStorage.setItem("adminActiveView", activeView);
+    sessionStorage.setItem(
+      "adminExpandedSections",
+      JSON.stringify(expandedSections),
+    );
+    sessionStorage.setItem("adminDataCache", JSON.stringify(dataCache));
+    if (stats) {
+      sessionStorage.setItem("adminStats", JSON.stringify(stats));
+    }
+  }, [activeView, expandedSections, dataCache, stats]);
 
-  const handleRejectUser = (user) => {
-    alert(`Rejected user: ${user.name}`);
-    setSelectedUser(null);
+  useEffect(() => {
+    const prefetchAll = async () => {
+      try {
+        // 1. Stats
+        const statsRes = await api.get("/admin/stats");
+        setStats(statsRes.data);
+
+        // 2. Background prefetch other core sections
+        api
+          .get("/admin/users?role=farmer")
+          .then((res) => updateCache("farmers", res.data));
+        api
+          .get("/admin/users?role=collector")
+          .then((res) => updateCache("collectors", res.data));
+        api
+          .get("/admin/users?role=supplier")
+          .then((res) => updateCache("suppliers", res.data));
+        api
+          .get("/admin/users?role=buyer")
+          .then((res) => updateCache("buyers", res.data));
+        api.get("/admin/orders").then((res) => updateCache("orders", res.data));
+        api
+          .get("/admin/products")
+          .then((res) => updateCache("products", res.data));
+        api
+          .get("/admin/inventory")
+          .then((res) => updateCache("inventory", res.data));
+        api
+          .get("/admin/wallets")
+          .then((res) => updateCache("wallets", res.data));
+        api
+          .get("/admin/cod-ledger")
+          .then((res) => updateCache("codLedger", res.data));
+        api
+          .get("/admin/withdrawals")
+          .then((res) => updateCache("withdrawals", res.data));
+        api
+          .get("/admin/disputes")
+          .then((res) => updateCache("disputes", res.data));
+      } catch (err) {
+        console.error("Error prefetching admin data", err);
+      }
+    };
+
+    prefetchAll();
+  }, [refreshTrigger]);
+
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem("user");
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
   };
 
   return (
     <div className="admin-dashboard-container">
       {/* Sidebar */}
       <aside className={`ad-sidebar ${isSidebarOpen ? "open" : "closed"}`}>
+        {/* ... Sidebar Header ... */}
         <div className="ad-sidebar-header-mobile">
           <div className="ad-logo">
             <FaLeaf /> <span>AgroMart</span>
           </div>
-          {/* <button className="ad-sidebar-close-btn" onClick={() => setIsSidebarOpen(false)}>
-                <FaChevronLeft />
-            </button> */}
         </div>
 
         <nav className="ad-nav">
+          {/* Dashboard - Always visible */}
           <div
-            className={`ad-nav-item ${
-              activeView === "dashboard" ? "active" : ""
-            }`}
+            className={`ad-nav-item ${activeView === "dashboard" ? "active" : ""}`}
             onClick={() => setActiveView("dashboard")}
           >
             <FaHome className="ad-nav-icon" /> Dashboard
           </div>
-          <div
-            className={`ad-nav-item ${
-              activeView === "farmers" ? "active" : ""
-            }`}
-            onClick={() => setActiveView("farmers")}
-          >
-            <FaUsers className="ad-nav-icon" /> Farmers
+
+          {/* Management Section */}
+          <div className="ad-nav-section">
+            <div
+              className="ad-nav-section-header"
+              onClick={() => toggleSection("management")}
+            >
+              <div className="ad-nav-section-title">
+                <FaUsers className="ad-nav-icon" /> Management
+              </div>
+              <FaChevronDown
+                className={`ad-nav-chevron ${expandedSections.management ? "expanded" : ""}`}
+              />
+            </div>
+            {expandedSections.management && (
+              <div className="ad-nav-section-items">
+                <div
+                  className={`ad-nav-item ${activeView === "farmers" ? "active" : ""}`}
+                  onClick={() => setActiveView("farmers")}
+                >
+                  <FaUsers className="ad-nav-icon" /> Farmers
+                </div>
+                <div
+                  className={`ad-nav-item ${activeView === "collectors" ? "active" : ""}`}
+                  onClick={() => setActiveView("collectors")}
+                >
+                  <FaTruck className="ad-nav-icon" /> Collectors
+                </div>
+                <div
+                  className={`ad-nav-item ${activeView === "suppliers" ? "active" : ""}`}
+                  onClick={() => setActiveView("suppliers")}
+                >
+                  <FaTruck
+                    className="ad-nav-icon"
+                    style={{ transform: "scaleX(-1)" }}
+                  />{" "}
+                  Suppliers
+                </div>
+                <div
+                  className={`ad-nav-item ${activeView === "buyers" ? "active" : ""}`}
+                  onClick={() => setActiveView("buyers")}
+                >
+                  <FaShoppingBag className="ad-nav-icon" /> Buyers
+                </div>
+              </div>
+            )}
           </div>
-          <div
-            className={`ad-nav-item ${
-              activeView === "collectors" ? "active" : ""
-            }`}
-            onClick={() => setActiveView("collectors")}
-          >
-            <FaTruck className="ad-nav-icon" /> Collectors
+
+          {/* Operations Section */}
+          <div className="ad-nav-section">
+            <div
+              className="ad-nav-section-header"
+              onClick={() => toggleSection("operations")}
+            >
+              <div className="ad-nav-section-title">
+                <FaClipboardList className="ad-nav-icon" /> Operations
+              </div>
+              <FaChevronDown
+                className={`ad-nav-chevron ${expandedSections.operations ? "expanded" : ""}`}
+              />
+            </div>
+            {expandedSections.operations && (
+              <div className="ad-nav-section-items">
+                <div
+                  className={`ad-nav-item ${activeView === "orders" ? "active" : ""}`}
+                  onClick={() => setActiveView("orders")}
+                >
+                  <FaClipboardList className="ad-nav-icon" /> Orders
+                </div>
+                <div
+                  className={`ad-nav-item ${activeView === "products" ? "active" : ""}`}
+                  onClick={() => setActiveView("products")}
+                >
+                  <FaBoxOpen className="ad-nav-icon" /> Products
+                </div>
+                <div
+                  className={`ad-nav-item ${activeView === "inventory" ? "active" : ""}`}
+                  onClick={() => setActiveView("inventory")}
+                >
+                  <FaBoxOpen className="ad-nav-icon" /> Inventory
+                </div>
+              </div>
+            )}
           </div>
-          <div
-            className={`ad-nav-item ${
-              activeView === "suppliers" ? "active" : ""
-            }`}
-            onClick={() => setActiveView("suppliers")}
-          >
-            <FaTruck
-              className="ad-nav-icon"
-              style={{ transform: "scaleX(-1)" }}
-            />{" "}
-            Suppliers
+
+          {/* Financial Section */}
+          <div className="ad-nav-section">
+            <div
+              className="ad-nav-section-header"
+              onClick={() => toggleSection("financial")}
+            >
+              <div className="ad-nav-section-title">
+                <FaWallet className="ad-nav-icon" /> Financial
+              </div>
+              <FaChevronDown
+                className={`ad-nav-chevron ${expandedSections.financial ? "expanded" : ""}`}
+              />
+            </div>
+            {expandedSections.financial && (
+              <div className="ad-nav-section-items">
+                <div
+                  className={`ad-nav-item ${activeView === "wallet" ? "active" : ""}`}
+                  onClick={() => setActiveView("wallet")}
+                >
+                  <FaWallet className="ad-nav-icon" /> Wallet / COD
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Disputes - Always visible with badge */}
           <div
-            className={`ad-nav-item ${activeView === "buyers" ? "active" : ""}`}
-            onClick={() => setActiveView("buyers")}
+            className={`ad-nav-item ${activeView === "disputes" ? "active" : ""}`}
+            onClick={() => setActiveView("disputes")}
           >
-            <FaShoppingBag className="ad-nav-icon" /> Buyers
+            <FaGavel className="ad-nav-icon" /> Disputes
+            {stats?.pendingDisputes > 0 && (
+              <span className="nav-badge">{stats?.pendingDisputes}</span>
+            )}
           </div>
         </nav>
 
@@ -240,83 +307,97 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <main className="ad-main">
-        {/* Header */}
+        {/* ... Header ... */}
         <header className="ad-header">
-          <div className="ad-header-left">
-            <button
-              className={`ad-sidebar-toggle ${
-                isSidebarOpen ? "sidebar-open" : ""
-              }`}
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              {isSidebarOpen ? <FaChevronLeft /> : <FaChevronRight />}
-            </button>
-            <span className="ad-breadcrumbs">
-              {activeView.charAt(0).toUpperCase() + activeView.slice(1)}{" "}
-              Overview
-            </span>
-          </div>
-
+          <button
+            className={`ad-sidebar-toggle ${isSidebarOpen ? "sidebar-open" : ""}`}
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? <FaChevronLeft /> : <FaChevronRight />}
+          </button>
+          <span className="ad-breadcrumbs">
+            {activeView.charAt(0).toUpperCase() + activeView.slice(1)} Overview
+          </span>
           <div className="ad-header-right">
-            {/* <div className="ad-search-bar">
-                            <FaSearch color="#9CA3AF" />
-                            <input type="text" placeholder="Search..." />
-                        </div> */}
             <div className="ad-profile">
               <img
-                src="https://ui-avatars.com/api/?name=Admin+A&background=random"
-                alt="Admin"
+                src="https://ui-avatars.com/api/?name=Admin+User&background=2E8B57&color=fff"
+                alt=""
                 className="ad-avatar"
               />
               <div className="ad-profile-info">
                 <span className="ad-profile-name">AgroMart Admin</span>
-                <span className="ad-profile-role">System Administrator</span>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Content Area */}
         <div className="ad-content-area">
-          {activeView === "dashboard" && <AdminOverview />}
-          {activeView === "farmers" && (
+          {activeView === "dashboard" && (
+            <AdminOverview key="dashboard" stats={stats} />
+          )}
+
+          {["farmers", "collectors", "suppliers", "buyers"].includes(
+            activeView,
+          ) && (
             <UserManagementView
-              role="Farmer"
-              data={mockFarmers}
-              onViewDetails={handleViewDetails}
+              key={activeView}
+              role={
+                activeView.slice(0, -1).charAt(0).toUpperCase() +
+                activeView.slice(0, -1).slice(1)
+              }
+              onViewDetails={setSelectedUser}
+              refreshTrigger={refreshTrigger}
+              cache={dataCache[activeView]}
+              onCacheUpdate={(data) => updateCache(activeView, data)}
             />
           )}
-          {activeView === "collectors" && (
-            <UserManagementView
-              role="Collector"
-              data={mockCollectors}
-              onViewDetails={handleViewDetails}
+
+          {activeView === "orders" && (
+            <AdminOrdersView
+              key="orders"
+              cache={dataCache.orders}
+              onCacheUpdate={(data) => updateCache("orders", data)}
             />
           )}
-          {activeView === "suppliers" && (
-            <UserManagementView
-              role="Supplier"
-              data={mockSuppliers}
-              onViewDetails={handleViewDetails}
+          {activeView === "products" && (
+            <AdminProductsView
+              key="products"
+              cache={dataCache.products}
+              onCacheUpdate={(data) => updateCache("products", data)}
             />
           )}
-          {activeView === "buyers" && (
-            <UserManagementView
-              role="Buyer"
-              data={mockBuyers}
-              onViewDetails={handleViewDetails}
+          {activeView === "inventory" && (
+            <AdminInventoryView
+              key="inventory"
+              cache={dataCache.inventory}
+              onCacheUpdate={(data) => updateCache("inventory", data)}
+            />
+          )}
+          {activeView === "wallet" && (
+            <AdminWalletView
+              key="wallet"
+              walletsCache={dataCache.wallets}
+              codCache={dataCache.codLedger}
+              withdrawalsCache={dataCache.withdrawals}
+              onCacheUpdate={updateCache}
+            />
+          )}
+          {activeView === "disputes" && (
+            <AdminDisputesView
+              key="disputes"
+              cache={dataCache.disputes}
+              onCacheUpdate={(data) => updateCache("disputes", data)}
             />
           )}
         </div>
       </main>
 
-      {/* Modal */}
       {selectedUser && (
         <UserDetailModal
           user={selectedUser}
-          onClose={handleCloseModal}
-          onVerify={handleVerifyUser}
-          onReject={handleRejectUser}
+          onClose={() => setSelectedUser(null)}
+          onUpdate={() => setRefreshTrigger((prev) => prev + 1)}
         />
       )}
     </div>

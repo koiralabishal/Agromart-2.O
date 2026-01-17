@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaTimes,
   FaCheck,
@@ -8,297 +8,229 @@ import {
   FaPhone,
   FaEnvelope,
 } from "react-icons/fa";
-import "./AdminDashboard.css"; // Reusing some styles
+import api from "../../../api/axiosConfig";
+import "./AdminDashboard.css"; // Keeping for shared styles if any
+import "./UserDetailModal.css"; // New external CSS
+import ConfirmationModal from "../../Common/ConfirmationModal";
 
-// Inline styles for the modal specifically to keep it self-contained or add to CSS later
-const modalOverlayStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(0,0,0,0.5)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 1000,
-};
+const UserDetailModal = ({ user: initialUser, onClose, onUpdate }) => {
+  const [user, setUser] = useState(initialUser);
+  const [roleProfile, setRoleProfile] = useState(null);
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
 
-const modalContentStyle = {
-  backgroundColor: "white",
-  borderRadius: "12px",
-  width: "600px",
-  maxWidth: "90%",
-  maxHeight: "90vh",
-  overflowY: "auto",
-  boxShadow:
-    "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-};
-
-const UserDetailModal = ({ user, onClose, onVerify, onReject }) => {
   if (!user) return null;
 
-  // Generate dynamic document name if not provided
-  const getDocumentName = () => {
-    if (user.documentName) return user.documentName;
-    const baseName = (user.businessName || user.name || "User").replace(/\s+/g, "_");
-    return `${baseName}_License.jpg`;
+  useEffect(() => {
+    const fetchRoleProfile = async () => {
+      if (
+        !initialUser ||
+        initialUser.role === "buyer" ||
+        initialUser.role === "admin"
+      )
+        return;
+
+      try {
+        let endpoint = `/admin/users/${initialUser._id}/role-profile`;
+        const res = await api.get(endpoint);
+        setRoleProfile(res.data);
+      } catch (err) {
+        console.error("Error fetching role profile:", err);
+      }
+    };
+
+    fetchRoleProfile();
+  }, [initialUser]);
+
+  const closeConfirmModal = () => {
+    setConfirmModal({ ...confirmModal, isOpen: false });
   };
 
+  const performVerify = async () => {
+    closeConfirmModal();
+    try {
+      await api.put(`/admin/users/${user._id}/verify`, {
+        status: "Verified",
+        docStatus: "Approved",
+      });
+      // Update local state to reflect changes immediately
+      setUser({ ...user, status: "Verified", docStatus: "Approved" });
+      if (onUpdate) onUpdate(); // Trigger parent refresh
+    } catch (err) {
+      console.error("Error verifying user", err);
+    }
+  };
+
+  const performReject = async () => {
+    closeConfirmModal();
+    try {
+      await api.put(`/admin/users/${user._id}/verify`, {
+        docStatus: "Rejected",
+      });
+      // Update local state to reflect changes immediately
+      setUser({ ...user, docStatus: "Rejected" });
+      if (onUpdate) onUpdate(); // Trigger parent refresh
+    } catch (err) {
+      console.error("Error rejecting user", err);
+    }
+  };
+
+  const handleVerifyClick = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Approve User?",
+      message: "Are you sure you want to verify and approve this user?",
+      type: "success",
+      onConfirm: performVerify,
+    });
+  };
+
+  const handleRejectClick = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Reject User?",
+      message: "Are you sure you want to reject this user?",
+      type: "danger",
+      onConfirm: performReject,
+    });
+  };
+
+  const getDocumentName = () => {
+    if (user.documentName) return user.documentName;
+    return `${(user.businessName || user.name || "User").replace(
+      /\s+/g,
+      "_",
+    )}_License.jpg`;
+  };
 
   return (
-    <div style={modalOverlayStyle}>
-      <div style={modalContentStyle} className="ud-modal">
+    <div className="ud-overlay">
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={closeConfirmModal}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+      />
+      <div className="ud-modal">
         {/* Header */}
-        <div
-          className="ud-header"
-          style={{
-            padding: "1.5rem",
-            borderBottom: "1px solid #E5E7EB",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#1F2937" }}>
-            User Verification
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1.2rem",
-              color: "#6B7280",
-            }}
-          >
+        <div className="ud-header">
+          <h2 className="ud-title">User Details</h2>
+          <button onClick={onClose} className="ud-close-btn">
             <FaTimes />
           </button>
         </div>
 
-        {/* content */}
-        <div className="ud-body" style={{ padding: "2rem" }}>
-          {/* Profile Header */}
-          <div style={{ display: "flex", gap: "1.5rem", marginBottom: "2rem" }}>
+        {/* Content */}
+        <div className="ud-body">
+          {/* Basic Profile Info */}
+          <div className="ud-profile-grid">
             <img
-              src={`https://ui-avatars.com/api/?name=${user.name}&background=1DC956&color=fff&size=128`}
+              src={
+                user.profileImage ||
+                `https://ui-avatars.com/api/?name=${user.name}&background=10B981&color=fff&size=128`
+              }
               alt={user.name}
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                objectFit: "cover",
-              }}
+              className="ud-profile-img"
             />
-            <div>
-              <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.5rem" }}>
-                {user.name}
-              </h3>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.4rem",
-                  color: "#6B7280",
-                  fontSize: "0.9rem",
-                }}
-              >
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <FaMapMarkerAlt /> {user.location || "Kathmandu, Nepal"}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <FaEnvelope /> {user.email}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <FaPhone /> {user.phone}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Farm/Business Info */}
-          <div style={{ marginBottom: "2rem" }}>
-            <h4
-              style={{
-                fontSize: "1rem",
-                fontWeight: 600,
-                marginBottom: "1rem",
-                color: "#374151",
-              }}
-            >
-              Business Details
-            </h4>
-            <div
-              style={{
-                background: "#F9FAFB",
-                padding: "1rem",
-                borderRadius: "8px",
-                border: "1px solid #E5E7EB",
-              }}
-            >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1rem",
-                }}
-              >
-                <div>
-                  <span
-                    style={{
-                      display: "block",
-                      fontSize: "0.8rem",
-                      color: "#6B7280",
-                    }}
-                  >
-                    Organization/Farm Name
+            <div style={{ flex: 1 }}>
+              <div className="ud-profile-info-header">
+                <h3>
+                  {user.name}
+                  <span className="ud-role-badge">{user.role}</span>
+                </h3>
+                <div className="ud-contact-row">
+                  <span className="ud-contact-item">
+                    <FaEnvelope /> {user.email}
                   </span>
-                  <span style={{ fontWeight: 500 }}>
-                    {user.businessName || "N/A"}
+                  <span className="ud-contact-item">
+                    <FaPhone /> {user.phone || "N/A"}
                   </span>
-                </div>
-                <div>
-                  <span
-                    style={{
-                      display: "block",
-                      fontSize: "0.8rem",
-                      color: "#6B7280",
-                    }}
-                  >
-                    Registration Date
-                  </span>
-                  <span style={{ fontWeight: 500 }}>
-                    {user.joinedDate || "Jan 12, 2024"}
+                  <span className="ud-contact-item">
+                    <FaMapMarkerAlt /> {user.address || "N/A"}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Documents */}
-          <div style={{ marginBottom: "2rem" }}>
-            <h4
-              style={{
-                fontSize: "1rem",
-                fontWeight: 600,
-                marginBottom: "1rem",
-                color: "#374151",
-              }}
-            >
-              Documents
-            </h4>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                padding: "1rem",
-                border: "1px solid #E5E7EB",
-                borderRadius: "8px",
-              }}
-            >
-              <FaFileImage size={24} color="#3B82F6" />
-              <div style={{ flex: 1 }}>
-                <span style={{ display: "block", fontWeight: 500 }}>
-                  {getDocumentName()}
-                </span>
-                <span style={{ fontSize: "0.8rem", color: "#6B7280" }}>
-                  Image File
+          {/* Status Section */}
+          <div className="ud-status-grid">
+            <div className="ud-status-row">
+              <span className="ud-status-label">Account Status:</span>
+              <span
+                className={`ud-status-value ${
+                  user.status === "Verified"
+                    ? "status-verified"
+                    : "status-unverified"
+                }`}
+              >
+                {user.status || "Unverified"}
+              </span>
+            </div>
+            {user.role !== "buyer" && (
+              <div className="ud-status-row">
+                <span className="ud-status-label">Document Status:</span>
+                <span
+                  className={`ud-status-value ${
+                    user.docStatus === "Approved"
+                      ? "status-approved"
+                      : user.docStatus === "Rejected"
+                        ? "status-rejected"
+                        : "status-pending"
+                  }`}
+                >
+                  {user.docStatus || "Pending"}
                 </span>
               </div>
+            )}
+          </div>
+
+          {/* Documents (If any) */}
+          {user.role !== "buyer" && (
+            <div className="ud-docs-section">
+              <h4 className="ud-docs-title">Documents</h4>
+              <div className="ud-doc-card">
+                <FaFileImage size={24} color="#3B82F6" />
+                <span className="ud-doc-name">{getDocumentName()}</span>
+                <button
+                  className="ud-view-btn"
+                  onClick={() => {
+                    const url = roleProfile?.licenseUrl;
+                    if (url) window.open(url, "_blank");
+                    else alert("No license document found for this user.");
+                  }}
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Actions - Only show if NOT Approved */}
+          {user.docStatus !== "Approved" && (
+            <div className="ud-action-buttons">
               <button
-                style={{
-                  color: "#1DC956",
-                  background: "none",
-                  border: "none",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  if (user.documentUrl) {
-                    const viewerUrl = `/document?url=${encodeURIComponent(
-                      user.documentUrl
-                    )}&file=${encodeURIComponent(
-                      user.documentName || "Document"
-                    )}&type=${user.documentType}`;
-                    window.open(viewerUrl, "_blank");
-                  } else {
-                    alert("Document URL not found");
-                  }
-                }}
+                onClick={handleRejectClick}
+                className="ud-btn ud-btn-reject"
               >
-                View
+                <FaBan /> Reject
+              </button>
+              <button
+                onClick={handleVerifyClick}
+                className="ud-btn ud-btn-verify"
+              >
+                <FaCheck /> Verify & Approve
               </button>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div
-            style={{
-              display: "flex",
-              gap: "1rem",
-              paddingTop: "1rem",
-              borderTop: "1px solid #E5E7EB",
-            }}
-          >
-            <button
-              onClick={() => onReject(user)}
-              style={{
-                flex: 1,
-                padding: "0.8rem",
-                border: "1px solid #EF4444",
-                color: "#EF4444",
-                background: "white",
-                borderRadius: "8px",
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <FaBan /> Reject User
-            </button>
-            <button
-              onClick={() => onVerify(user)}
-              style={{
-                flex: 1,
-                padding: "0.8rem",
-                border: "none",
-                color: "white",
-                background: "#1DC956",
-                borderRadius: "8px",
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <FaCheck /> Verify & Approve
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -128,24 +128,7 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check for Admin Login (Environment Variables)
-    console.log("Login Attempt:", email);
-    console.log("Env Email:", process.env.ADMIN_EMAIL);
-    console.log("Env Pass Match:", password === process.env.ADMIN_PASSWORD);
-
-    if (
-      email === process.env.ADMIN_EMAIL &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
-      return res.json({
-        _id: "admin-id",
-        name: "Admin",
-        email: email,
-        role: "admin",
-        token: generateToken("admin-id"),
-      });
-    }
-
+    // Find user in database (including admin)
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {

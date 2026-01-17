@@ -214,3 +214,22 @@ export const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+// @desc    Delete own account
+// @route   DELETE /api/users/profile
+// @access  Private
+import { performUserDeletion } from "../utils/deleteAction.js";
+
+export const deleteMyAccount = async (req, res) => {
+    try {
+        const userID = req.user._id; // From authMiddleware
+        const reason = req.body.reason || "User requested self-deletion";
+
+        const result = await performUserDeletion(userID, "SELF", reason);
+        
+        res.json(result);
+    } catch (error) {
+        console.error("Self Delete Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+}

@@ -4,6 +4,7 @@ import {
   getActiveFarmers,
   getActiveCollectors,
   updateUserProfile,
+  deleteMyAccount,
 } from "../controllers/userController.js";
 import { upload } from "../config/cloudinary.js";
 
@@ -22,5 +23,6 @@ router.get("/profile/:userID", async (req, res) => {
   }
 });
 router.put("/profile", upload.single("profileImage"), updateUserProfile);
+router.delete("/profile", deleteMyAccount);
 
 export default router;

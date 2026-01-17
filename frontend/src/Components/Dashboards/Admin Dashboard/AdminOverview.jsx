@@ -26,7 +26,7 @@ import {
   Cell,
 } from "recharts";
 
-const AdminOverview = () => {
+const AdminOverview = ({ stats }) => {
   const [growthFilter, setGrowthFilter] = React.useState("thisYear");
   const [revenueFilter, setRevenueFilter] = React.useState("thisYear");
   const [vegFilter, setVegFilter] = React.useState("thisYear");
@@ -58,17 +58,16 @@ const AdminOverview = () => {
   ];
   
   const userCompositionData = [
-    { name: "Farmers", value: 120, color: "#1DC956" },
-    { name: "Collectors", value: 45, color: "#3B82F6" },
-    { name: "Suppliers", value: 32, color: "#F59E0B" },
-    { name: "Buyers", value: 380, color: "#EF4444" },
+    { name: "Farmers", value: stats?.totalFarmers || 120, color: "#1DC956" },
+    { name: "Collectors", value: stats?.totalCollectors || 45, color: "#3B82F6" },
+    { name: "Suppliers", value: stats?.totalSuppliers || 32, color: "#F59E0B" },
+    { name: "Buyers", value: stats?.totalBuyers || 380, color: "#EF4444" },
   ];
 
   // Helper to slice data dynamically based on filter
   const getFilteredData = (filterType) => {
     // Use real current date
     const currentMonthIndex = new Date().getMonth(); // 0 for Jan, 1 for Feb, etc.
-    // const currentMonthIndex = 12; // Nov (Simulated)
 
     if (filterType === "thisYear") {
       // Show Jan to Current Month
@@ -79,16 +78,7 @@ const AdminOverview = () => {
         // If June (5) or later, we can just slice current year
         return currentYearData.slice(currentMonthIndex - 5, currentMonthIndex + 1);
       } else {
-        // If earlier than June, need to pull from previous year
-        // e.g. If Jan (0), need 5 months from prev year (Index 1 to 5 of prev year array?)
-        // previousYearData array above has 6 items (Jul-Dec).
-        // If Jan (0), we need Dec, Nov, Oct, Sep, Aug (5 items). 
-        // last 5 items of previousYearData.
-        
         const monthsNeededFromPrev = 5 - currentMonthIndex;
-        // previousYearData has 6 items. length=6.
-        // If we need 5 items, slice(6-5) = slice(1).
-        
         const prevSlice = previousYearData.slice(previousYearData.length - monthsNeededFromPrev);
         const currSlice = currentYearData.slice(0, currentMonthIndex + 1);
         return [...prevSlice, ...currSlice];
@@ -110,14 +100,13 @@ const AdminOverview = () => {
 
   return (
     <div className="admin-overview">
-      {/* ... (Stats Grid and Category Stats remain unchanged) ... */}
       <div className="ad-stats-grid">
         <div className="ad-stat-card ad-card-green">
           <div className="ad-stat-header">
             <span className="ad-stat-title">Total Revenue</span>
             <FaChartLine className="ad-stat-icon" />
           </div>
-          <div className="ad-stat-value">NPR 1,24,000</div>
+          <div className="ad-stat-value">NPR {stats?.totalRevenue ? stats.totalRevenue.toLocaleString() : "1,24,000"}</div>
           <div className="ad-stat-change">+12.5% from last month</div>
         </div>
         <div className="ad-stat-card ad-card-blue">
@@ -125,7 +114,7 @@ const AdminOverview = () => {
             <span className="ad-stat-title">Total Orders</span>
             <FaShoppingCart className="ad-stat-icon" />
           </div>
-          <div className="ad-stat-value">1,452</div>
+          <div className="ad-stat-value">{stats?.totalOrders || "1,452"}</div>
           <div className="ad-stat-change">+8.2% from last month</div>
         </div>
         <div className="ad-stat-card ad-card-yellow">
@@ -133,7 +122,7 @@ const AdminOverview = () => {
             <span className="ad-stat-title">Total Users</span>
             <FaUsers className="ad-stat-icon" />
           </div>
-          <div className="ad-stat-value">584</div>
+          <div className="ad-stat-value">{stats?.totalUsers || "584"}</div>
           <div className="ad-stat-change">+24 new this week</div>
         </div>
         <div className="ad-stat-card ad-card-red">
@@ -153,7 +142,7 @@ const AdminOverview = () => {
           </div>
           <div className="ad-cat-info">
             <div className="ad-cat-title">Farmers</div>
-            <div className="ad-cat-val">120</div>
+            <div className="ad-cat-val">{stats?.totalFarmers || 120}</div>
           </div>
         </div>
         <div className="ad-cat-card cat-collectors">
@@ -162,7 +151,7 @@ const AdminOverview = () => {
           </div>
           <div className="ad-cat-info">
             <div className="ad-cat-title">Collectors</div>
-            <div className="ad-cat-val">45</div>
+            <div className="ad-cat-val">{stats?.totalCollectors || 45}</div>
           </div>
         </div>
         <div className="ad-cat-card cat-suppliers">
@@ -171,7 +160,7 @@ const AdminOverview = () => {
           </div>
           <div className="ad-cat-info">
             <div className="ad-cat-title">Suppliers</div>
-            <div className="ad-cat-val">32</div>
+            <div className="ad-cat-val">{stats?.totalSuppliers || 32}</div>
           </div>
         </div>
         <div className="ad-cat-card cat-buyers">
@@ -180,7 +169,7 @@ const AdminOverview = () => {
           </div>
           <div className="ad-cat-info">
             <div className="ad-cat-title">Buyers</div>
-            <div className="ad-cat-val">380</div>
+            <div className="ad-cat-val">{stats?.totalBuyers || 380}</div>
           </div>
         </div>
         <div className="ad-cat-card cat-products">
@@ -189,7 +178,7 @@ const AdminOverview = () => {
           </div>
           <div className="ad-cat-info">
             <div className="ad-cat-title">Products</div>
-            <div className="ad-cat-val">1,240</div>
+            <div className="ad-cat-val">{stats?.totalProducts || "1,240"}</div>
           </div>
         </div>
       </div>
