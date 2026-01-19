@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaEye, FaFilter, FaChevronDown } from "react-icons/fa";
 import api from "../../../api/axiosConfig";
+import Pagination from "../../Common/Pagination";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import "./Styles/OrderManagement.css";
 
@@ -32,6 +33,8 @@ const OrderManagement = ({ onViewOrder }) => {
     type: "warning"
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -91,6 +94,11 @@ const OrderManagement = ({ onViewOrder }) => {
 
     return matchesSearch && matchesFilter;
   }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   return (
     <div className="order-management">
@@ -157,7 +165,7 @@ const OrderManagement = ({ onViewOrder }) => {
             ) : filteredOrders.length === 0 ? (
                 <tr><td colSpan="7" style={{textAlign:"center", padding:"1rem"}}>No orders found.</td></tr>
             ) : (
-              filteredOrders.map((order) => (
+              paginatedOrders.map((order) => (
                 <tr key={order._id}>
                   <td className="party-name">{order.orderID}</td>
                   <td className="ordered-items">
@@ -216,6 +224,14 @@ const OrderManagement = ({ onViewOrder }) => {
             )}
           </tbody>
         </table>
+        {filteredOrders.length > itemsPerPage && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredOrders.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        )}
       </div>
 
       <ConfirmationModal

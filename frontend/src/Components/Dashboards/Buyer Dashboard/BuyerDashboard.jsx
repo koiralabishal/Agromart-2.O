@@ -16,7 +16,8 @@ import {
   FaList,
   FaTruck,
   FaUser,
-  FaEnvelope
+  FaEnvelope,
+  FaCreditCard
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosConfig";
@@ -28,6 +29,7 @@ import SettingsView from "./SettingsView";
 import BuyerNotificationsView from "./BuyerNotificationsView";
 import ChatView from "./ChatView";
 import CartView from "./CartView";
+import PaymentsView from "./PaymentsView";
 import {
   LineChart,
   Line,
@@ -343,6 +345,18 @@ const BuyerDashboard = () => {
           >
             <FaCog /> Settings
           </div>
+          <div
+            className={`bd-nav-item ${
+              activeView === "payments" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("payments");
+              setSelectedDistributor(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaCreditCard /> Payments
+          </div>
         </nav>
 
         <div className="bd-profile-actions">
@@ -611,6 +625,7 @@ const BuyerDashboard = () => {
             onOrderComplete={() => setActiveView("orders")}
           />
         )}
+        {activeView === "payments" && <PaymentsView />}
         {activeView === "chat" && <ChatView />}
       </main>
 

@@ -2,9 +2,6 @@ import Wallet from "../models/Wallet.js";
 import Transaction from "../models/Transaction.js";
 import Withdrawal from "../models/Withdrawal.js";
 import User from "../models/User.js";
-import Farmer from "../models/Farmer.js";
-import Collector from "../models/Collector.js";
-import Supplier from "../models/Supplier.js";
 
 // @desc    Get Wallet Data (Balance & Transactions) for a user
 // @route   GET /api/wallet/:userId
@@ -13,37 +10,53 @@ export const getWalletData = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Check user role - only sellers (farmer, collector, supplier) should have wallets
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Buyers are pure consumers and don't need wallets
+    // Buyers are consumers and don't need balance/wallets, but can see history
     const sellerRoles = ["farmer", "collector", "supplier"];
-    if (!sellerRoles.includes(user.role)) {
-      return res.status(403).json({ 
-        message: "Wallet access is only available for sellers (farmers, collectors, suppliers)",
-        role: user.role 
-      });
-    }
+    const isSeller = sellerRoles.includes(user.role);
 
-    // Fetch Wallet
-    let wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      // Only create wallet for sellers
-      wallet = await Wallet.create({ userId });
+    // Fetch Wallet (only for sellers)
+    let wallet = null;
+    if (isSeller) {
+      wallet = await Wallet.findOne({ userId });
+      if (!wallet) {
+        wallet = await Wallet.create({ userId });
+      }
     }
 
     // Fetch Transactions (Split into Online and COD)
-    // Query by sellerId since this user is the seller receiving payments
-    const transactions = await Transaction.find({ sellerId: userId })
+    const transactions = await Transaction.find({ 
+      $or: [
+        { sellerId: userId },
+        { buyerId: userId }
+      ]
+    })
+      .populate("sellerId", "name role")
+      .populate("buyerId", "name role")
       .sort({ createdAt: -1 })
       .limit(50);
 
-    console.log(`[Wallet] User ${userId} - Found ${transactions.length} transactions`);
+    // Online transactions: 
+    // - For sellers: Credits (Earnings)
+    // - For buyers: Payments they made
+    const onlineTransactions = transactions.filter(t => {
+      const isOnline = t.paymentMethod !== 'COD';
+      if (!isOnline) return false;
+
+      const asSeller = t.sellerId?._id?.toString() === userId.toString() || t.sellerId?.toString() === userId.toString();
+      const asBuyer = t.buyerId?._id?.toString() === userId.toString() || t.buyerId?.toString() === userId.toString();
+
+      if (asSeller) return t.type === 'Credit'; // Earnings
+      if (asBuyer) return true; // Any purchase made online
+
+      return false;
+    });
     
-    const onlineTransactions = transactions.filter(t => t.paymentMethod !== 'COD' && t.type === 'Credit');
+    // COD transactions (Can be Received or Paid)
     const codTransactions = transactions.filter(t => t.paymentMethod === 'COD');
     
     console.log(`[Wallet] Online: ${onlineTransactions.length}, COD: ${codTransactions.length}`);
@@ -94,9 +107,20 @@ export const requestWithdrawal = async (req, res) => {
       });
     }
 
-    // 1. Validate Balance
+    // 1. Validate Balance and Wallet Status
     const wallet = await Wallet.findOne({ userId });
-    if (!wallet || wallet.availableBalance < amount) {
+    
+    if (!wallet) {
+      return res.status(404).json({ message: "Wallet not found" });
+    }
+
+    if (wallet.isFrozen === "yes") {
+      return res.status(403).json({ 
+        message: "This wallet is currently frozen by the administrator. Please contact support." 
+      });
+    }
+
+    if (wallet.availableBalance < amount) {
       return res.status(400).json({ message: "Insufficient available balance" });
     }
 
@@ -111,10 +135,10 @@ export const requestWithdrawal = async (req, res) => {
 
     await withdrawal.save();
 
-    // 3. Deduct from available balance and move to locked/pending? 
-    // Actually, usually we deduct immediately to prevent double spending
-    wallet.availableBalance -= amount;
-    await wallet.save();
+    // 3. DO NOT Deduct from available balance immediately anymore
+    // Balance will be deducted only when the status is 'Verified' by the Admin.
+    // wallet.availableBalance -= amount;
+    // await wallet.save();
 
     // 4. Create a Transaction Record (Debit)
     await Transaction.create({

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../api/axiosConfig";
+import Pagination from "../../Common/Pagination";
+
 
 const AdminDisputesView = ({ cache, onCacheUpdate }) => {
   const [disputes, setDisputes] = useState(cache || []);
   const [loading, setLoading] = useState(!cache);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   useEffect(() => {
     fetchDisputes();
@@ -38,7 +43,13 @@ const AdminDisputesView = ({ cache, onCacheUpdate }) => {
     }
   };
 
+  const paginatedDisputes = disputes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
   return (
+
     <div className="admin-view-container">
       <h2 className="um-title">Dispute Resolution</h2>
       {loading && !cache ? (
@@ -57,7 +68,7 @@ const AdminDisputesView = ({ cache, onCacheUpdate }) => {
               </tr>
             </thead>
             <tbody>
-              {disputes.map(d => (
+              {paginatedDisputes.map(d => (
                 <tr key={d._id}>
                   <td>{d.orderID}</td>
                   <td>{d.raisedBy?.name}</td>
@@ -83,6 +94,14 @@ const AdminDisputesView = ({ cache, onCacheUpdate }) => {
               )}
             </tbody>
           </table>
+          {disputes.length > itemsPerPage && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={disputes.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          )}
         </div>
       )}
     </div>

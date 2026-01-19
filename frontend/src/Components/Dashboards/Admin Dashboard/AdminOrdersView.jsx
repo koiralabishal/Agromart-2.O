@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import api from "../../../api/axiosConfig";
 import { FaEye, FaSearch, FaArrowLeft } from "react-icons/fa";
 import OrderDetailModal from "./OrderDetailModal";
+import Pagination from "../../Common/Pagination";
+
 
 const AdminOrdersView = ({ cache, onCacheUpdate }) => {
   const [orders, setOrders] = useState(cache || []);
@@ -11,6 +13,9 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(!cache);
+  const [currentGridPage, setCurrentGridPage] = useState(1);
+  const [currentDetailPage, setCurrentDetailPage] = useState(1);
+
 
   useEffect(() => {
     if (cache) {
@@ -104,6 +109,18 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
     return list;
   };
 
+  const itemsPerPage = 10;
+  const paginatedUsers = usersList.slice(
+    (currentGridPage - 1) * itemsPerPage,
+    currentGridPage * itemsPerPage,
+  );
+  
+  const detailOrders = getDetailOrders();
+  const paginatedOrders = detailOrders.slice(
+    (currentDetailPage - 1) * itemsPerPage,
+    currentDetailPage * itemsPerPage,
+  );
+
   return (
     <div className="admin-view-container">
       <OrderDetailModal
@@ -131,7 +148,7 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
                   gap: "1.5rem",
                 }}
               >
-                {usersList.map((data) => (
+                {paginatedUsers.map((data) => (
                   <div
                     key={data.user._id}
                     style={{
@@ -308,6 +325,13 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
                   </div>
                 )}
               </div>
+              <Pagination
+                currentPage={currentGridPage}
+                totalItems={usersList.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentGridPage(page)}
+              />
+
             </>
           )}
 
@@ -414,7 +438,7 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {getDetailOrders().map((order) => (
+                    {paginatedOrders.map((order) => (
                       <tr key={order._id}>
                         <td>{order.orderID}</td>
                         <td>
@@ -470,7 +494,7 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
                         </td>
                       </tr>
                     ))}
-                    {getDetailOrders().length === 0 && (
+                    {detailOrders.length === 0 && (
                       <tr>
                         <td
                           colSpan="7"
@@ -483,6 +507,13 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                currentPage={currentDetailPage}
+                totalItems={detailOrders.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentDetailPage(page)}
+              />
+
             </>
           )}
         </>

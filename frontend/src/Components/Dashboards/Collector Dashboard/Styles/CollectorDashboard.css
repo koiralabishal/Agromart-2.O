@@ -50,7 +50,7 @@
 
 .cd-nav {
   display: flex;
-  gap: 3rem;
+  gap: 1.5rem;
   flex: 1;
   justify-content: center;
 }
@@ -419,7 +419,7 @@ rect:focus {
   right: -0.4rem;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1300px) {
   .cd-charts-grid {
     grid-template-columns: 1fr;
   }

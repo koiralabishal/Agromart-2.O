@@ -3,6 +3,8 @@ import api from "../../../api/axiosConfig";
 import { FaArrowLeft } from "react-icons/fa";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import ReasonModal from "../../Common/ReasonModal";
+import Pagination from "../../Common/Pagination";
+
 
 const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpdate }) => {
   const [selectedWallet, setSelectedWallet] = useState(null);
@@ -11,6 +13,11 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
   const [codTxns, setCodTxns] = useState(codCache || []);
   const [withdrawals, setWithdrawals] = useState(withdrawalsCache || []);
   const [loading, setLoading] = useState(!walletsCache || !codCache || !withdrawalsCache);
+  const [currentWalletPage, setCurrentWalletPage] = useState(1);
+  const [currentCodPage, setCurrentCodPage] = useState(1);
+  const [currentWithdrawalPage, setCurrentWithdrawalPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -193,7 +200,43 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
       : "U";
   };
 
+  const paginatedWallets = wallets.slice(
+    (currentWalletPage - 1) * itemsPerPage,
+    currentWalletPage * itemsPerPage,
+  );
+
+  const getFilteredCodTxns = () => {
+    return codTxns.filter(
+      (t) =>
+        t.sellerId?._id === selectedWallet?.userId?._id ||
+        t.sellerId === selectedWallet?.userId?._id ||
+        t.buyerId?._id === selectedWallet?.userId?._id ||
+        t.buyerId === selectedWallet?.userId?._id,
+    );
+  };
+
+  const getFilteredWithdrawals = () => {
+    return withdrawals.filter(
+      (w) =>
+        w.userId?._id === selectedWallet?.userId?._id ||
+        w.userId === selectedWallet?.userId?._id,
+    );
+  };
+
+  const currentCodTxns = getFilteredCodTxns();
+  const paginatedCodTxns = currentCodTxns.slice(
+    (currentCodPage - 1) * itemsPerPage,
+    currentCodPage * itemsPerPage,
+  );
+
+  const currentWithdrawals = getFilteredWithdrawals();
+  const paginatedWithdrawals = currentWithdrawals.slice(
+    (currentWithdrawalPage - 1) * itemsPerPage,
+    currentWithdrawalPage * itemsPerPage,
+  );
+
   return (
+
     <div className="admin-view-container">
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
@@ -220,182 +263,192 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
         <>
           {/* 1. GRID VIEW */}
           {!selectedWallet && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: "1.5rem",
-              }}
-            >
-              {wallets.map((w) => (
-                <div
-                  key={w._id}
-                  style={{
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                    padding: "1.5rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    border: "1px solid #f3f4f6",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
-                  }}
-                >
-                  {/* Profile Image */}
+            <>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                  gap: "1.5rem",
+                }}
+              >
+                {paginatedWallets.map((w) => (
                   <div
+                    key={w._id}
                     style={{
-                      width: "80px",
-                      height: "80px",
-                      borderRadius: "50%",
-                      marginBottom: "1rem",
-                      border: "3px solid #f3f4f6",
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                      padding: "1.5rem",
                       display: "flex",
+                      flexDirection: "column",
                       alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: "#dcfce7",
-                      color: "#166534",
-                      fontSize: "1.5rem",
-                      fontWeight: "600",
-                      overflow: "hidden",
+                      textAlign: "center",
+                      border: "1px solid #f3f4f6",
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-4px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
                     }}
                   >
-                    {w.userId?.profileImage ? (
-                      <img
-                        src={w.userId.profileImage}
-                        alt={w.userId?.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.parentElement.innerText = renderInitials(
-                            w.userId?.name,
-                          );
-                        }}
-                      />
-                    ) : (
-                      renderInitials(w.userId?.name)
-                    )}
-                  </div>
-
-                  <h3
-                    style={{
-                      fontSize: "1.1rem",
-                      fontWeight: "600",
-                      color: "#1f2937",
-                      marginBottom: "0.25rem",
-                    }}
-                  >
-                    {w.userId?.name}
-                  </h3>
-                  <p
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.9rem",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {w.userId?.email}
-                  </p>
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      textTransform: "uppercase",
-                      color: "#9ca3af",
-                      fontWeight: "600",
-                      marginBottom: "1.5rem",
-                    }}
-                  >
-                    {w.userId?.role}
-                  </span>
-
-                  {/* Mini Stats (Preview) */}
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.85rem",
-                      backgroundColor: "#f9fafb",
-                      padding: "0.75rem",
-                      borderRadius: "8px",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <div style={{ textAlign: "center", flex: 1 }}>
-                      <div style={{ color: "#6b7280", fontSize: "0.75rem" }}>
-                        Available
-                      </div>
-                      <div style={{ color: "#166534", fontWeight: "700" }}>
-                        Rs. {w.availableBalance}
-                      </div>
-                    </div>
+                    {/* Profile Image */}
                     <div
                       style={{
-                        width: "1px",
-                        backgroundColor: "#e5e7eb",
-                        margin: "0 0.5rem",
-                      }}
-                    ></div>
-                    <div style={{ textAlign: "center", flex: 1 }}>
-                      <div style={{ color: "#6b7280", fontSize: "0.75rem" }}>
-                        Locked
-                      </div>
-                      <div style={{ color: "#ef4444", fontWeight: "700" }}>
-                        Rs. {w.lockedBalance}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: "auto", width: "100%" }}>
-                    <button
-                      onClick={() => setSelectedWallet(w)}
-                      style={{
-                        width: "100%",
-                        padding: "0.75rem",
-                        backgroundColor: "#1dc956",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontWeight: "600",
-                        cursor: "pointer",
+                        width: "80px",
+                        height: "80px",
+                        borderRadius: "50%",
+                        marginBottom: "1rem",
+                        border: "3px solid #f3f4f6",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: "0.5rem",
+                        backgroundColor: "#dcfce7",
+                        color: "#166534",
+                        fontSize: "1.5rem",
+                        fontWeight: "600",
+                        overflow: "hidden",
                       }}
                     >
-                      View Wallet Details
-                    </button>
+                      {w.userId?.profileImage ? (
+                        <img
+                          src={w.userId.profileImage}
+                          alt={w.userId?.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.parentElement.innerText = renderInitials(
+                              w.userId?.name,
+                            );
+                          }}
+                        />
+                      ) : (
+                        renderInitials(w.userId?.name)
+                      )}
+                    </div>
+
+                    <h3
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "600",
+                        color: "#1f2937",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {w.userId?.name}
+                    </h3>
+                    <p
+                      style={{
+                        color: "#6b7280",
+                        fontSize: "0.9rem",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      {w.userId?.email}
+                    </p>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        textTransform: "uppercase",
+                        color: "#9ca3af",
+                        fontWeight: "600",
+                        marginBottom: "1.5rem",
+                      }}
+                    >
+                      {w.userId?.role}
+                    </span>
+
+                    {/* Mini Stats (Preview) */}
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "0.85rem",
+                        backgroundColor: "#f9fafb",
+                        padding: "0.75rem",
+                        borderRadius: "8px",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <div style={{ textAlign: "center", flex: 1 }}>
+                        <div style={{ color: "#6b7280", fontSize: "0.75rem" }}>
+                          Available
+                        </div>
+                        <div style={{ color: "#166534", fontWeight: "700" }}>
+                          Rs. {w.availableBalance}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          width: "1px",
+                          backgroundColor: "#e5e7eb",
+                          margin: "0 0.5rem",
+                        }}
+                      ></div>
+                      <div style={{ textAlign: "center", flex: 1 }}>
+                        <div style={{ color: "#6b7280", fontSize: "0.75rem" }}>
+                          Locked
+                        </div>
+                        <div style={{ color: "#ef4444", fontWeight: "700" }}>
+                          Rs. {w.lockedBalance}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: "auto", width: "100%" }}>
+                      <button
+                        onClick={() => setSelectedWallet(w)}
+                        style={{
+                          width: "100%",
+                          padding: "0.75rem",
+                          backgroundColor: "#1dc956",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        View Wallet Details
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {wallets.length === 0 && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    textAlign: "center",
-                    padding: "4rem",
-                    color: "#6b7280",
-                  }}
-                >
-                  No wallets found
-                </div>
+                ))}
+                {wallets.length === 0 && (
+                  <div
+                    style={{
+                      gridColumn: "1 / -1",
+                      textAlign: "center",
+                      padding: "4rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    No wallets found
+                  </div>
+                )}
+              </div>
+              {wallets.length > itemsPerPage && (
+                <Pagination
+                  currentPage={currentWalletPage}
+                  totalItems={wallets.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={(page) => setCurrentWalletPage(page)}
+                />
               )}
-            </div>
+            </>
           )}
 
           {/* 2. DETAIL VIEW (Drilldown) */}
@@ -651,104 +704,112 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
 
                 {/* TAB 2: COD SETTLEMENTS */}
                 {activeDetailTab === "cod" && (
-                  <table className="um-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Buyer</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {codTxns
-                        .filter(
-                          (t) =>
-                            t.sellerId?._id === selectedWallet.userId?._id ||
-                            t.sellerId === selectedWallet.userId?._id,
-                        )
-                        .map((t) => (
-                          <tr key={t._id}>
-                            <td>{new Date(t.createdAt).toLocaleDateString()}</td>
-                            <td>
-                              {t.buyerId?.name || "Unknown"}
-                              <br />
-                              <span
-                                style={{ fontSize: "0.75rem", color: "#6b7280" }}
-                              >
-                                (Buyer)
-                              </span>
-                            </td>
-                            <td style={{ fontWeight: "600" }}>Rs. {t.amount}</td>
-                            <td>
-                              <span
-                                className={`um-status-badge ${
-                                  t.status === "Completed"
-                                    ? "status-verified"
-                                    : "status-pending"
-                                }`}
-                              >
-                                {t.status}
-                              </span>
-                            </td>
-                            <td>
-                              {t.status !== "Completed" && (
-                                <button
-                                  className="um-action-btn"
-                                  style={{
-                                    backgroundColor: "#3b82f6",
-                                    color: "white",
-                                    padding: "0.4rem 0.8rem",
-                                    borderRadius: "6px",
-                                    border: "none",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => settleCOD(t._id)}
+                  <>
+                    <table className="um-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Type</th>
+                          <th>Partner</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedCodTxns.map((t) => {
+                          const isReceived = t.sellerId?._id === selectedWallet?.userId?._id || t.sellerId === selectedWallet?.userId?._id;
+                          const partner = isReceived ? t.buyerId : t.sellerId;
+                          
+                          return (
+                            <tr key={t._id}>
+                              <td>{new Date(t.createdAt).toLocaleDateString()}</td>
+                              <td>
+                                <span className={`um-status-badge ${isReceived ? 'status-verified' : 'status-pending'}`} style={{ backgroundColor: isReceived ? '#dcfce7' : '#fee2e2', color: isReceived ? '#166534' : '#991b1b' }}>
+                                  {isReceived ? 'Received' : 'Paid'}
+                                </span>
+                              </td>
+                              <td>
+                                {partner?.name || "Unknown"}
+                                <br />
+                                <span
+                                  style={{ fontSize: "0.75rem", color: "#6b7280" }}
                                 >
-                                  Verify Settle
-                                </button>
-                              )}
+                                  ({isReceived ? 'Buyer' : 'Seller'})
+                                </span>
+                              </td>
+                              <td style={{ fontWeight: "600" }}>Rs. {t.amount}</td>
+                              <td>
+                                <span
+                                  className={`um-status-badge ${
+                                    t.status === "Completed"
+                                      ? "status-verified"
+                                      : "status-pending"
+                                  }`}
+                                >
+                                  {t.status}
+                                </span>
+                              </td>
+                              <td>
+                                {t.status !== "Completed" && (
+                                  <button
+                                    className="um-action-btn"
+                                    style={{
+                                      backgroundColor: "#3b82f6",
+                                      color: "white",
+                                      padding: "0.4rem 0.8rem",
+                                      borderRadius: "6px",
+                                      border: "none",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={() => settleCOD(t._id)}
+                                  >
+                                    Verify Settle
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {paginatedCodTxns.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan="6"
+                              style={{ textAlign: "center", padding: "2rem" }}
+                            >
+                              No COD transactions found for this user.
                             </td>
                           </tr>
-                        ))}
-                      {codTxns.filter(
-                        (t) => t.sellerId?._id === selectedWallet.userId?._id,
-                      ).length === 0 && (
-                        <tr>
-                          <td
-                            colSpan="5"
-                            style={{ textAlign: "center", padding: "2rem" }}
-                          >
-                            No COD transactions found for this user.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        ) || null}
+                      </tbody>
+                    </table>
+                    {currentCodTxns.length > itemsPerPage && (
+                      <Pagination
+                        currentPage={currentCodPage}
+                        totalItems={currentCodTxns.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={(page) => setCurrentCodPage(page)}
+                      />
+                    )}
+                  </>
                 )}
 
                 {/* TAB 3: WITHDRAWAL REQUESTS */}
                 {activeDetailTab === "requests" && (
-                  <table className="um-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Method</th>
-                        <th>Payment Details</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {withdrawals
-                        .filter(
-                          (w) =>
-                            w.userId?._id === selectedWallet.userId?._id ||
-                            w.userId === selectedWallet.userId?._id,
-                        )
-                        .map((w) => (
+                  <>
+                    <table className="um-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Amount</th>
+                          <th>Method</th>
+                          <th>Payment Details</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedWithdrawals.map((w) => (
                           <tr key={w._id}>
                             <td>{new Date(w.createdAt).toLocaleDateString()}</td>
                             <td style={{ fontWeight: "600", color: "#d97706" }}>
@@ -832,20 +893,27 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                             </td>
                           </tr>
                         ))}
-                      {withdrawals.filter(
-                        (w) => w.userId?._id === selectedWallet.userId?._id,
-                      ).length === 0 && (
-                        <tr>
-                          <td
-                            colSpan="6"
-                            style={{ textAlign: "center", padding: "2rem" }}
-                          >
-                            No withdrawal requests found for this user.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        {paginatedWithdrawals.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan="6"
+                              style={{ textAlign: "center", padding: "2rem" }}
+                            >
+                              No withdrawal requests found for this user.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {currentWithdrawals.length > itemsPerPage && (
+                      <Pagination
+                        currentPage={currentWithdrawalPage}
+                        totalItems={currentWithdrawals.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={(page) => setCurrentWithdrawalPage(page)}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             </div>

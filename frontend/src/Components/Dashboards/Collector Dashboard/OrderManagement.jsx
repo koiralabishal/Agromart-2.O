@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaFilter, FaChevronDown } from "react-icons/fa";
 import api from "../../../api/axiosConfig";
+import Pagination from "../../Common/Pagination";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
 import "./Styles/OrderManagement.css";
@@ -51,6 +52,9 @@ const OrderManagement = ({ onViewOrder }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isFilterPlacedOpen, setIsFilterPlacedOpen] = useState(false);
   const [isFilterReceivedOpen, setIsFilterReceivedOpen] = useState(false);
+  const [currentPlacedPage, setCurrentPlacedPage] = useState(1);
+  const [currentReceivedPage, setCurrentReceivedPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -165,6 +169,15 @@ const OrderManagement = ({ onViewOrder }) => {
     filterReceived
   );
 
+  const paginatedPlaced = filteredPlaced.slice(
+    (currentPlacedPage - 1) * itemsPerPage,
+    currentPlacedPage * itemsPerPage,
+  );
+  const paginatedReceived = filteredReceived.slice(
+    (currentReceivedPage - 1) * itemsPerPage,
+    currentReceivedPage * itemsPerPage,
+  );
+
   return (
     <div className="order-management">
       <div className="om-header">
@@ -261,7 +274,7 @@ const OrderManagement = ({ onViewOrder }) => {
                   </td>
                 </tr>
               ) : (
-                filteredPlaced.map((order) => (
+                paginatedPlaced.map((order) => (
                   <tr key={order._id}>
                     <td className="party-name">{order.orderID}</td>
                     <td className="ordered-items">
@@ -362,6 +375,14 @@ const OrderManagement = ({ onViewOrder }) => {
               )}
             </tbody>
           </table>
+          {filteredPlaced.length > itemsPerPage && (
+            <Pagination
+              currentPage={currentPlacedPage}
+              totalItems={filteredPlaced.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => setCurrentPlacedPage(page)}
+            />
+          )}
         </div>
       </div>
 
@@ -454,7 +475,7 @@ const OrderManagement = ({ onViewOrder }) => {
                   </td>
                 </tr>
               ) : (
-                filteredReceived.map((order) => (
+                paginatedReceived.map((order) => (
                   <tr key={order._id}>
                     <td className="party-name">{order.orderID}</td>
                     <td className="ordered-items">
@@ -530,6 +551,14 @@ const OrderManagement = ({ onViewOrder }) => {
               )}
             </tbody>
           </table>
+          {filteredReceived.length > itemsPerPage && (
+            <Pagination
+              currentPage={currentReceivedPage}
+              totalItems={filteredReceived.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => setCurrentReceivedPage(page)}
+            />
+          )}
         </div>
       </div>
 

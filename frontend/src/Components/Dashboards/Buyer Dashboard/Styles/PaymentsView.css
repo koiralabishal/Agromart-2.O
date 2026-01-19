@@ -1,0 +1,161 @@
+.payments-view {
+  padding: 1rem 0;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pv-header {
+  margin-bottom: 2.5rem;
+}
+
+.pv-header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.pv-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.pv-section {
+  background: white;
+  border-radius: 20px;
+  padding: 2.3rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1dc956;
+}
+
+.section-title.ledger {
+  color: #2c3e50;
+}
+
+/* Table Styles */
+.pv-table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.pv-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+  table-layout: fixed;
+}
+
+/* Standard 7-col layout */
+/* Standard 7-col layout */
+/* Columns will distribute equally with table-layout: fixed */
+
+.pv-table th {
+  text-align: left;
+  padding: 1.2rem 1rem;
+  background: #f8f9fa;
+  color: #666;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pv-table td {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.order-id {
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.method-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.method-tag.esewa {
+  background: #e6f6ec;
+  color: #1dc956;
+}
+
+.method-tag.khalti {
+  background: #f3e8ff;
+  color: #a855f7;
+}
+
+.method-tag.cod {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.status-pill {
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-pill.completed {
+  background: #e6f6ec;
+  color: #1dc956;
+}
+.status-pill.pending {
+  background: #fff8e6;
+  color: #f5a623;
+}
+.status-pill.verified {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.status-pill.rejected {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.pv-amount {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.pv-amount.debit {
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .pv-header h1 {
+    font-size: 1.8rem;
+  }
+  .pv-section {
+    padding: 1.5rem;
+  }
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaFilter, FaChevronDown } from "react-icons/fa";
 import api from "../../../api/axiosConfig";
+import Pagination from "../../Common/Pagination";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
 import "./Styles/BuyerOrderManagement.css";
@@ -17,6 +18,8 @@ const BuyerOrderManagement = ({ onViewOrder }) => {
   });
   const [showSuccess, setShowSuccess] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [ordersPlaced, setOrdersPlaced] = useState(() => {
     try {
@@ -125,6 +128,11 @@ const BuyerOrderManagement = ({ onViewOrder }) => {
     })
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
   return (
     <div className="buyer-order-management">
       <div className="om-header">
@@ -223,7 +231,7 @@ const BuyerOrderManagement = ({ onViewOrder }) => {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => (
+                paginatedOrders.map((order) => (
                   <tr key={order._id}>
                     <td className="party-name">{order.orderID}</td>
                     <td className="ordered-items">
@@ -316,6 +324,14 @@ const BuyerOrderManagement = ({ onViewOrder }) => {
               )}
             </tbody>
           </table>
+          {filteredOrders.length > itemsPerPage && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredOrders.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          )}
         </div>
       </div>
 

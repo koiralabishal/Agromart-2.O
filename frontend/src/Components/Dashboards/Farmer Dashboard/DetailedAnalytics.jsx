@@ -23,57 +23,136 @@ import {
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import "./Styles/DetailedAnalytics.css";
 
-const DetailedAnalytics = () => {
-  // Mock Data for Charts (Synchronized with FarmerDashboard.jsx)
-  const salesData = [
-    { name: "Jan", fruits: 400, vegetables: 240 },
-    { name: "Feb", fruits: 300, vegetables: 139 },
-    { name: "Mar", fruits: 200, vegetables: 980 },
-    { name: "Apr", fruits: 278, vegetables: 390 },
-    { name: "May", fruits: 189, vegetables: 480 },
-    { name: "Jun", fruits: 239, vegetables: 380 },
-    { name: "Jul", fruits: 349, vegetables: 430 },
-    { name: "Aug", fruits: 200, vegetables: 500 },
-    { name: "Sep", fruits: 278, vegetables: 390 },
-    { name: "Oct", fruits: 189, vegetables: 480 },
-    { name: "Nov", fruits: 239, vegetables: 380 },
-    { name: "Dec", fruits: 349, vegetables: 430 },
-  ];
+const DetailedAnalytics = ({
+  orders = [],
+  wallet = {},
+  walletData = null,
+  products = [],
+}) => {
+  // Processor functions (same logic as FarmerDashboard for consistency)
+  const processSalesData = () => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
 
-  const demandData = [
-    { name: "Tomatoes", value: 500 },
-    { name: "Potatoes", value: 450 },
-    { name: "Onions", value: 400 },
-    { name: "Bell Peppers", value: 370 },
-    { name: "Apples", value: 350 },
-    { name: "Oranges", value: 300 },
-    { name: "Carrots", value: 280 },
-    { name: "Spinach", value: 250 },
-  ];
+    const data = months.map((name) => ({
+      name,
+      fruits: 0,
+      vegetables: 0,
+    }));
+
+    orders.forEach((order) => {
+      // User requested: line graph only show fruits and vegetables that are successfully delivered AND paid
+      if (order.status !== "Delivered" || order.paymentStatus !== "Paid")
+        return;
+
+      const date = new Date(order.createdAt);
+      const monthIndex = date.getMonth();
+
+      order.products.forEach((item) => {
+        const category = item.category
+          ? item.category.toLowerCase()
+          : "vegetables";
+        if (category.includes("fruit")) {
+          data[monthIndex].fruits += item.quantity;
+        } else {
+          data[monthIndex].vegetables += item.quantity;
+        }
+      });
+    });
+
+    return data;
+  };
+
+  const processDemandData = () => {
+    const productMap = {};
+    orders.forEach((order) => {
+      // User requested: High demand includes Pending and Delivered status
+      if (order.status !== "Pending" && order.status !== "Delivered") return;
+
+      order.products.forEach((item) => {
+        if (productMap[item.productName]) {
+          productMap[item.productName] += item.quantity;
+        } else {
+          productMap[item.productName] = item.quantity;
+        }
+      });
+    });
+
+    return Object.keys(productMap)
+      .map((name) => ({ name, value: productMap[name] }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+  };
+
+  const salesData = processSalesData();
+  const demandData = processDemandData();
+
+  // Calculate Statistics
+  const totalOnlineRevenue = Number(
+    wallet?.totalEarnings || wallet?.totalRevenue || 0,
+  );
+
+  const totalCODEarnings = walletData?.codTransactions
+    ? walletData.codTransactions
+        .filter((t) => t.type === "Credit" && t.status === "Completed")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+    : 0;
+
+  const totalRevenue = totalOnlineRevenue + totalCODEarnings;
+
+  // Products Sold should only count Delivered AND Paid orders per user request
+  const finalizedOrders = orders.filter(
+    (o) => o.status === "Delivered" && o.paymentStatus === "Paid",
+  );
+
+  const totalProductsSold = finalizedOrders.reduce((acc, order) => {
+    return acc + order.products.reduce((sum, p) => sum + p.quantity, 0);
+  }, 0);
+
+  const uniqueCustomers = new Set(
+    orders.map((o) => o.buyerID?._id || o.buyerID),
+  ).size;
+
+  const averageOrderValue =
+    finalizedOrders.length > 0
+      ? (totalRevenue / finalizedOrders.length).toFixed(2)
+      : 0;
 
   const stats = [
     {
-      title: "Total Sales Revenue",
-      value: "Rs. 28,450",
-      change: "+12.5% from last month",
+      title: "Total Revenues",
+      value: `Rs. ${totalRevenue.toLocaleString()}`,
+      change: "Lifetime Earnings (Online + COD)",
       icon: <TbCurrencyRupeeNepalese />,
     },
     {
       title: "Products Sold",
-      value: "7,890 units",
-      change: "+8.1% from last month",
+      value: `${totalProductsSold.toLocaleString()} units`,
+      change: "Total volume sold",
       icon: <FaLeaf />,
     },
     {
-      title: "New Customers",
-      value: "145",
-      change: "+18% from last month",
+      title: "Unique Buyers",
+      value: uniqueCustomers,
+      change: "Customer base size",
       icon: <FaUsers />,
     },
     {
       title: "Average Order Value",
-      value: "Rs. 1,200.50",
-      change: "+3.2% from last month",
+      value: `Rs. ${Number(averageOrderValue).toLocaleString()}`,
+      change: "Revenue per order (approx.)",
       icon: <FaChartLine />,
     },
   ];
@@ -160,23 +239,23 @@ const DetailedAnalytics = () => {
                   wrapperStyle={{ marginBottom: -30, marginLeft: 31 }}
                   iconType="circle"
                   formatter={(value) => (
-                    <span style={{ marginRight: 10 }}>{value === "fruits" ? "Fruits" : "Vegetables"}</span>
+                    <span style={{ marginRight: 10 }}>{value}</span>
                   )}
                 />
 
                 <Line
                   type="monotone"
-                  dataKey="fruits"
-                  name="Fruits"
-                  stroke="#F5A623"
+                  dataKey="vegetables"
+                  name="Vegetables"
+                  stroke="#1dc956"
                   strokeWidth={2}
                   dot={false}
                 />
                 <Line
                   type="monotone"
-                  dataKey="vegetables"
-                  name="Vegetables"
-                  stroke="#1DC956"
+                  dataKey="fruits"
+                  name="Fruits"
+                  stroke="#f1c40f"
                   strokeWidth={2}
                   dot={false}
                 />

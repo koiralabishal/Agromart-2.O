@@ -7,6 +7,7 @@ import {
   deleteMyAccount,
 } from "../controllers/userController.js";
 import { upload } from "../config/cloudinary.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 

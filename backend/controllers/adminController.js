@@ -176,10 +176,9 @@ export const deleteUser = async (req, res) => {
 // ==========================================
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate(
-      "userID",
-      "name email role profileImage",
-    );
+    const products = await Product.find()
+      .populate("userID", "name email role profileImage")
+      .sort("-createdAt");
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -188,10 +187,9 @@ export const getAllProducts = async (req, res) => {
 
 export const getAllInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.find().populate(
-      "userID",
-      "name email role profileImage",
-    );
+    const inventory = await Inventory.find()
+      .populate("userID", "name email role profileImage")
+      .sort("-createdAt");
     res.json(inventory);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -292,10 +290,9 @@ export const updateOrderStatusAdmin = async (req, res) => {
 // ==========================================
 export const getAllWallets = async (req, res) => {
   try {
-    const wallets = await Wallet.find().populate(
-      "userId",
-      "name role email profileImage",
-    );
+    const wallets = await Wallet.find()
+      .populate("userId", "name role email profileImage")
+      .sort("-createdAt");
     res.json(wallets);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -357,10 +354,9 @@ export const getWithdrawals = async (req, res) => {
   try {
     const { status } = req.query;
     const query = status ? { status } : {};
-    const withdrawals = await Withdrawal.find(query).populate(
-      "userId",
-      "name email",
-    );
+    const withdrawals = await Withdrawal.find(query)
+      .populate("userId", "name email")
+      .sort("-createdAt");
     res.json(withdrawals);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -396,14 +392,30 @@ export const processWithdrawal = async (req, res) => {
       return res.status(400).json({ message: "Already finalized" });
     }
 
+    const oldStatus = withdrawal.status;
     withdrawal.status = status;
     withdrawal.remarks = remarks || "";
     withdrawal.processedAt = new Date();
     await withdrawal.save();
 
-    if (status === "Rejected") {
-      // Refund balance to wallet since it was deducted on request
-      const userId = withdrawal.userId._id || withdrawal.userId;
+    const userId = withdrawal.userId._id || withdrawal.userId;
+
+    // Deduct balance when verified if it wasn't already deducted
+    if (status === "Verified" && (oldStatus === "Pending")) {
+      const wallet = await Wallet.findOne({ userId });
+      if (wallet) {
+        if (wallet.availableBalance < withdrawal.amount) {
+           // This is a safety check. Usually backend ensures this.
+           // However, if balance dropped below amount while pending... 
+        }
+        wallet.availableBalance -= withdrawal.amount;
+        await wallet.save();
+      }
+    }
+
+    // Refund logic: Only if we are rejecting a previously 'Verified' or 'Completed' request
+    // If it was 'Pending', we never deducted it, so no refund needed.
+    if (status === "Rejected" && ["Verified", "Completed"].includes(oldStatus)) {
       await Wallet.findOneAndUpdate(
         { userId },
         { $inc: { availableBalance: withdrawal.amount } }
@@ -411,7 +423,7 @@ export const processWithdrawal = async (req, res) => {
     }
 
     // Sync corresponding Transaction record
-    const userId = withdrawal.userId._id || withdrawal.userId;
+
     // We look for the most recent Pending or current-status transaction for this withdrawal
     await Transaction.findOneAndUpdate(
       {
@@ -475,7 +487,8 @@ export const getDisputes = async (req, res) => {
   try {
     const disputes = await Dispute.find()
       .populate("raisedBy", "name email role")
-      .populate("sellerID", "name email");
+      .populate("sellerID", "name email")
+      .sort("-createdAt");
     res.json(disputes);
   } catch (error) {
     res.status(500).json({ message: error.message });

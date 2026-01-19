@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import api from "../../../api/axiosConfig";
 import { FaTrash, FaSearch, FaEye, FaArrowLeft } from "react-icons/fa";
 import ConfirmationModal from "../../Common/ConfirmationModal";
+import Pagination from "../../Common/Pagination";
+
 
 const AdminInventoryView = ({ cache, onCacheUpdate }) => {
   const [inventory, setInventory] = useState(cache || []);
@@ -10,6 +12,10 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(!cache);
+  const [currentUserPage, setCurrentUserPage] = useState(1);
+  const [currentItemPage, setCurrentItemPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -93,6 +99,17 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
       })
     : [];
 
+  const paginatedUsers = usersList.slice(
+    (currentUserPage - 1) * itemsPerPage,
+    currentUserPage * itemsPerPage,
+  );
+
+  const paginatedItems = filteredInventory.slice(
+    (currentItemPage - 1) * itemsPerPage,
+    currentItemPage * itemsPerPage,
+  );
+
+
   return (
     <div className="admin-view-container">
       {/* Modals */}
@@ -148,7 +165,7 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
                   gap: "1.5rem",
                 }}
               >
-                {usersList.map((data) => (
+                {paginatedUsers.map((data) => (
                   <div
                     key={data.user._id}
                     style={{
@@ -283,6 +300,14 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
                   </div>
                 )}
               </div>
+
+              <Pagination
+                currentPage={currentUserPage}
+                totalItems={usersList.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentUserPage(page)}
+              />
+
             </>
           )}
 
@@ -360,7 +385,7 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredInventory.map((p) => (
+                    {paginatedItems.map((p) => (
                       <tr key={p._id}>
                         <td>
                           <div
@@ -430,6 +455,14 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentItemPage}
+                totalItems={filteredInventory.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentItemPage(page)}
+              />
+
             </>
           )}
         </>

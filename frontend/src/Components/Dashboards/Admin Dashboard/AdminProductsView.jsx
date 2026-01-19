@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import api from "../../../api/axiosConfig";
 import { FaTrash, FaSearch, FaEye, FaArrowLeft, FaUser } from "react-icons/fa";
 import ConfirmationModal from "../../Common/ConfirmationModal";
+import Pagination from "../../Common/Pagination";
+
 
 const AdminProductsView = ({ cache, onCacheUpdate }) => {
   const [products, setProducts] = useState(cache || []);
@@ -10,6 +12,9 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedFarmer, setSelectedFarmer] = useState(null);
   const [loading, setLoading] = useState(!cache);
+  const [currentFarmerPage, setCurrentFarmerPage] = useState(1);
+  const [currentProductPage, setCurrentProductPage] = useState(1);
+
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -93,6 +98,18 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
       })
     : [];
 
+  const itemsPerPage = 10;
+  const paginatedFarmers = farmersList.slice(
+    (currentFarmerPage - 1) * itemsPerPage,
+    currentFarmerPage * itemsPerPage,
+  );
+
+  const paginatedProducts = filteredProducts.slice(
+    (currentProductPage - 1) * itemsPerPage,
+    currentProductPage * itemsPerPage,
+  );
+
+
   return (
     <div className="admin-view-container">
       {/* Modals */}
@@ -148,7 +165,7 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
                   gap: "1.5rem",
                 }}
               >
-                {farmersList.map((data) => (
+                {paginatedFarmers.map((data) => (
                   <div
                     key={data.user._id}
                     style={{
@@ -259,6 +276,14 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
                   <div style={{ color: "#6b7280", padding: "2rem" }}>No farmers found with products.</div>
                 )}
               </div>
+
+              <Pagination
+                currentPage={currentFarmerPage}
+                totalItems={farmersList.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentFarmerPage(page)}
+              />
+
             </>
           )}
 
@@ -334,7 +359,7 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredProducts.map((p) => (
+                    {paginatedProducts.map((p) => (
                       <tr key={p._id}>
                         <td>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -396,6 +421,14 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentProductPage}
+                totalItems={filteredProducts.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentProductPage(page)}
+              />
+
             </>
           )}
         </>

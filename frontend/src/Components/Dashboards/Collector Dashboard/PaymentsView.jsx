@@ -12,6 +12,7 @@ import {
 } from "react-icons/fa";
 import "./Styles/PaymentsView.css";
 import api from "../../../api/axiosConfig";
+import Pagination from "../../Common/Pagination";
 
 const PaymentsView = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -33,6 +34,10 @@ const PaymentsView = () => {
   const [accountDetails, setAccountDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [currentOnlinePage, setCurrentOnlinePage] = useState(1);
+  const [currentWithdrawalPage, setCurrentWithdrawalPage] = useState(1);
+  const [currentCodPage, setCurrentCodPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchWalletData = async () => {
     try {
@@ -40,7 +45,7 @@ const PaymentsView = () => {
       setWalletData(response.data);
       localStorage.setItem(
         `cached_collector_wallet_${userID}`,
-        JSON.stringify(response.data)
+        JSON.stringify(response.data),
       );
     } catch (error) {
       console.error("Error fetching wallet:", error);
@@ -117,6 +122,19 @@ const PaymentsView = () => {
   const { wallet, onlineTransactions, codTransactions, withdrawals } =
     walletData || {};
 
+  const paginatedOnlineTxns = (onlineTransactions || []).slice(
+    (currentOnlinePage - 1) * itemsPerPage,
+    currentOnlinePage * itemsPerPage,
+  );
+  const paginatedWithdrawals = (withdrawals || []).slice(
+    (currentWithdrawalPage - 1) * itemsPerPage,
+    currentWithdrawalPage * itemsPerPage,
+  );
+  const paginatedCodTxns = (codTransactions || []).slice(
+    (currentCodPage - 1) * itemsPerPage,
+    currentCodPage * itemsPerPage,
+  );
+
   return (
     <div className="payments-view">
       <div className="pv-header">
@@ -175,13 +193,22 @@ const PaymentsView = () => {
         </div>
 
         <div className="pv-actions">
-          <button
-            className="withdraw-btn"
-            onClick={() => setIsWithdrawModalOpen(true)}
-            disabled={!wallet?.availableBalance || wallet.availableBalance <= 0}
-          >
-            <FaArrowUp /> Request Withdrawal
-          </button>
+          {wallet?.isFrozen === "yes" ? (
+            <div className="frozen-warning">
+              <FaInfoCircle /> Your wallet is currently frozen by the
+              administrator. Withdrawals are temporarily disabled.
+            </div>
+          ) : (
+            <button
+              className="withdraw-btn"
+              onClick={() => setIsWithdrawModalOpen(true)}
+              disabled={
+                !wallet?.availableBalance || wallet.availableBalance <= 0
+              }
+            >
+              <FaArrowUp /> Request Withdrawal
+            </button>
+          )}
         </div>
 
         {/* Online Transaction History */}
@@ -201,61 +228,123 @@ const PaymentsView = () => {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Order/Description</th>
+                  <th>Partner</th>
+                  <th>Order ID</th>
                   <th>Method</th>
                   <th>Status</th>
                   <th>Amount</th>
+                  <th>Remarks</th>
                 </tr>
               </thead>
               <tbody>
                 {onlineTransactions?.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       style={{ textAlign: "center", padding: "2rem" }}
                     >
                       No online transactions yet.
                     </td>
                   </tr>
                 ) : (
-                  onlineTransactions?.map((tx) => (
-                    <tr key={tx._id}>
-                      <td>{new Date(tx.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        {tx.orderId ? (
-                          <span className="order-id">
-                            Order {tx.orderID_Display}
-                          </span>
-                        ) : (
-                          tx.description
-                        )}
-                      </td>
-                      <td>
-                        <span
-                          className={`method-tag ${tx.paymentMethod.toLowerCase()}`}
-                        >
-                          {tx.paymentMethod}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`status-pill ${tx.status.toLowerCase()}`}
-                        >
-                          {tx.status === "Locked" && (
-                            <FaClock style={{ marginRight: "4px" }} />
+                  paginatedOnlineTxns.map((tx) => {
+                    const isReceived =
+                      tx.sellerId?._id === userID || tx.sellerId === userID;
+                    const partner = isReceived ? tx.buyerId : tx.sellerId;
+                    return (
+                      <tr key={tx._id}>
+                        <td>{new Date(tx.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          {partner ? (
+                            <>
+                              {partner.name || "Unknown"}
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "#666",
+                                  textTransform: "capitalize",
+                                }}
+                              >
+                                {partner.role ||
+                                  (isReceived ? "Buyer" : "Seller")}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {tx.type === "Debit" &&
+                              tx.description?.toLowerCase().includes("withdraw")
+                                ? "Platform (Withdrawal)"
+                                : "System"}
+                              <div
+                                style={{ fontSize: "0.75rem", color: "#666" }}
+                              >
+                                {tx.type === "Debit" ? "Payout" : "Adjustment"}
+                              </div>
+                            </>
                           )}
-                          {tx.status}
-                        </span>
-                      </td>
-                      <td className={`pv-amount ${tx.type.toLowerCase()}`}>
-                        {tx.type === "Credit" ? "+" : "-"} Rs.{" "}
-                        {tx.amount.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td>
+                          <span className="order-id">
+                            {tx.orderID ||
+                              (tx.orderId ? tx.orderId.orderID : "N/A")}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`method-tag ${tx.paymentMethod.toLowerCase()}`}
+                          >
+                            {tx.paymentMethod}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`status-pill ${
+                              tx.status === "Locked"
+                                ? isReceived
+                                  ? "locked"
+                                  : "completed"
+                                : tx.status.toLowerCase()
+                            }`}
+                          >
+                            {((tx.status === "Locked" && isReceived) ||
+                              tx.status === "Pending") && (
+                              <FaClock style={{ marginRight: "4px" }} />
+                            )}
+                            {tx.status === "Locked"
+                              ? isReceived
+                                ? "Locked"
+                                : "Paid"
+                              : tx.status === "Completed"
+                                ? isReceived
+                                  ? "Received"
+                                  : "Paid"
+                                : tx.status}
+                          </span>
+                        </td>
+                        <td
+                          className={`pv-amount ${isReceived ? "credit" : "debit"}`}
+                        >
+                          <div style={{ fontWeight: "600" }}>
+                            Rs. {tx.amount.toLocaleString()}
+                          </div>
+                        </td>
+                        <td style={{ fontStyle: "italic" }}>
+                          {tx.description}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
+            {onlineTransactions?.length > itemsPerPage && (
+              <Pagination
+                currentPage={currentOnlinePage}
+                totalItems={onlineTransactions.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentOnlinePage(page)}
+              />
+            )}
           </div>
         </div>
 
@@ -281,20 +370,22 @@ const PaymentsView = () => {
                   <th>Account Details</th>
                   <th>Status</th>
                   <th>Amount</th>
+                  <th>Remarks</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {withdrawals?.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       style={{ textAlign: "center", padding: "2rem" }}
                     >
                       No withdrawal requests yet.
                     </td>
                   </tr>
                 ) : (
-                  withdrawals?.map((w) => (
+                  paginatedWithdrawals.map((w) => (
                     <tr key={w._id}>
                       <td>{new Date(w.createdAt).toLocaleDateString()}</td>
                       <td>
@@ -316,13 +407,28 @@ const PaymentsView = () => {
                         className="pv-amount debit"
                         style={{ color: "#ef4444" }}
                       >
-                        - Rs. {w.amount.toLocaleString()}
+                        Rs. {w.amount.toLocaleString()}
                       </td>
+                      <td className="remarks-cell">
+                        {w.remarks ||
+                          (w.status === "Pending"
+                            ? "Withdrawal Requested"
+                            : "-")}
+                      </td>
+                      <td></td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+            {withdrawals?.length > itemsPerPage && (
+              <Pagination
+                currentPage={currentWithdrawalPage}
+                totalItems={withdrawals.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentWithdrawalPage(page)}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -330,14 +436,14 @@ const PaymentsView = () => {
       {/* COD Settlement Ledger */}
       <section className="pv-section">
         <div className="section-title ledger">
-          <FaMoneyBillWave /> COD Settlement Ledger – Cash Received
+          <FaMoneyBillWave /> COD Settlement Ledger – Cash Records
         </div>
         <p style={{ color: "#666", marginBottom: "1.5rem" }}>
-          This is a read-only record of cash payments received directly from
-          collectors/distributors.
+          This is a read-only record of cash transactions (Received as Seller /
+          Paid as Buyer).
           <FaInfoCircle
             style={{ marginLeft: "5px", verticalAlign: "middle" }}
-            title="Cash received directly is not part of your online withdrawable wallet."
+            title="Cash transactions are handled offline and are not part of your online wallet balance."
           />
         </p>
 
@@ -346,43 +452,95 @@ const PaymentsView = () => {
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Partner</th>
                 <th>Order ID</th>
-                <th>Description</th>
-                <th>Payment Status</th>
-                <th>Amount Received</th>
+                <th>Cash Flow</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th>Remarks</th>
               </tr>
             </thead>
             <tbody>
               {codTransactions?.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="7"
                     style={{ textAlign: "center", padding: "2rem" }}
                   >
                     No COD records yet.
                   </td>
                 </tr>
               ) : (
-                codTransactions?.map((tx) => (
-                  <tr key={tx._id}>
-                    <td>{new Date(tx.createdAt).toLocaleDateString()}</td>
-                    <td className="order-id">{tx.orderID_Display}</td>
-                    <td>{tx.description}</td>
-                    <td>
-                      <span
-                        className={`status-pill ${tx.status.toLowerCase()}`}
+                paginatedCodTxns.map((tx) => {
+                  const isReceived =
+                    tx.sellerId === userID || tx.sellerId?._id === userID;
+                  const partner = isReceived ? tx.buyerId : tx.sellerId;
+                  return (
+                    <tr key={tx._id}>
+                      <td>
+                        {tx.status === "Completed"
+                          ? new Date(tx.updatedAt).toLocaleDateString()
+                          : new Date(tx.createdAt).toLocaleDateString()}
+                      </td>
+                      <td>
+                        {partner ? (
+                          <>
+                            {partner.name || "Unknown"}
+                            <div
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "#666",
+                                textTransform: "capitalize",
+                              }}
+                            >
+                              {partner.role ||
+                                (isReceived ? "Buyer" : "Seller")}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            System
+                            <div style={{ fontSize: "0.75rem", color: "#666" }}>
+                              Record
+                            </div>
+                          </>
+                        )}
+                      </td>
+                      <td className="order-id">{tx.orderID || "N/A"}</td>
+                      <td>
+                        <span
+                          className={`method-tag ${isReceived ? "khalti" : "esewa"}`}
+                        >
+                          {isReceived ? "Cash In" : "Cash Out"}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`status-pill ${tx.status.toLowerCase()}`}
+                        >
+                          {tx.status === "Completed" ? "Settled" : "Pending"}
+                        </span>
+                      </td>
+                      <td
+                        className={`pv-amount ${isReceived ? "credit" : "debit"}`}
                       >
-                        {tx.status === "Completed" ? "Paid (Cash)" : "Pending"}
-                      </span>
-                    </td>
-                    <td className="pv-amount credit">
-                      Rs. {tx.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))
+                        Rs. {tx.amount.toLocaleString()}
+                      </td>
+                      <td style={{ fontStyle: "italic" }}>{tx.description}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
+          {codTransactions?.length > itemsPerPage && (
+            <Pagination
+              currentPage={currentCodPage}
+              totalItems={codTransactions.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => setCurrentCodPage(page)}
+            />
+          )}
         </div>
       </section>
 

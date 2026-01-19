@@ -25,8 +25,13 @@ import {
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import "./Styles/DetailedAnalytics.css";
+import Pagination from "../../Common/Pagination";
+
 
 const DetailedAnalytics = () => {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 10;
+
   const salesData = [
     { name: "Jan", fruits: 400, vegetables: 240 },
     { name: "Feb", fruits: 300, vegetables: 139 },
@@ -98,6 +103,11 @@ const DetailedAnalytics = () => {
     { name: "Carrots", quantity: 620, confidence: "High", trend: "Up" },
     { name: "Bananas", quantity: 550, confidence: "Medium", trend: "Down" },
   ];
+
+  const paginatedPredictions = predictionList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   return (
     <div className="detailed-analytics">
@@ -201,7 +211,7 @@ const DetailedAnalytics = () => {
                </tr>
              </thead>
              <tbody>
-               {predictionList.map((item, i) => (
+               {paginatedPredictions.map((item, i) => (
                  <tr key={i}>
                    <td>{item.name}</td>
                    <td>{item.quantity}</td>
@@ -217,6 +227,14 @@ const DetailedAnalytics = () => {
                ))}
              </tbody>
            </table>
+           {predictionList.length > itemsPerPage && (
+             <Pagination
+               currentPage={currentPage}
+               totalItems={predictionList.length}
+               itemsPerPage={itemsPerPage}
+               onPageChange={(page) => setCurrentPage(page)}
+             />
+           )}
         </div>
       </div>
     </div>

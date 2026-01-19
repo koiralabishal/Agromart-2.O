@@ -12,7 +12,7 @@ import {
 import api from "../../../api/axiosConfig";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ConfirmationModal from "../../Common/ConfirmationModal";
+import Pagination from "../../Common/Pagination";
 
 const UserManagementView = ({
   role,
@@ -24,6 +24,7 @@ const UserManagementView = ({
   const [users, setUsers] = useState(cache || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(!cache);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState({
@@ -103,6 +104,12 @@ const UserManagementView = ({
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const itemsPerPage = 10;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
   );
 
   const showDocStatus = ["Farmer", "Collector", "Supplier"].includes(role);
@@ -195,7 +202,7 @@ const UserManagementView = ({
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((user) => (
+              {paginatedData.map((user) => (
                 <tr key={user._id}>
                   <td>
                     <div
@@ -282,6 +289,13 @@ const UserManagementView = ({
           </table>
         )}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredData.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
     </div>
   );
 };

@@ -14,54 +14,80 @@ import {
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import "./Styles/NotificationsView.css";
 
-const NotificationsView = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "order",
-      group: "Today",
-      title: "Order Received",
-      collector: "Green Harvest Co.",
-      items: ["Organic Carrots (50 kg)", "Fresh Lettuce (20 units)"],
-      time: "April 23, 2024, 10:30 AM",
-      relativeTime: "2 hours ago",
-    },
-    {
-      id: 2,
-      type: "payment",
-      group: "Today",
-      title: "Transaction Received",
-      description: "Transaction: Harvest Loan Repayment",
-      amount: "Rs. 1,25,000",
-      relativeTime: "3 hours ago",
-    },
-    {
-      id: 3,
-      type: "order",
-      group: "Earlier this week",
-      title: "Order Received",
-      collector: "Rural Fresh Markets",
-      items: ["Premium Tomatoes (100 kg)", "Bell Peppers (30 units)"],
-      time: "April 19, 2024, 02:00 PM",
-      relativeTime: "April 19, 2024, 02:00 PM",
-    },
-    {
-      id: 4,
-      type: "payment",
-      group: "Earlier this week",
-      title: "Transaction Received",
-      description: "Transaction: Seed Purchase",
-      amount: "Rs. 30,000",
-      relativeTime: "April 18, 2024, 11:00 AM",
-    },
-  ]);
+const NotificationsView = ({ orders = [], walletData = null }) => {
+  const [clearedIds, setClearedIds] = useState([]);
+
+  // Transform Orders and Transactions into Notifications
+  const generateNotifications = () => {
+    let allNotifs = [];
+
+    // 1. Process Orders
+    orders.forEach(order => {
+      const orderDate = new Date(order.createdAt);
+      allNotifs.push({
+        id: `order-${order._id}`,
+        type: "order",
+        title: "Order Received",
+        collector: order.buyerID?.name || "Unknown Buyer",
+        items: order.products.map(p => `${p.productName} (${p.quantity} ${p.unit || ''})`),
+        createdAt: orderDate,
+        reference: order.orderID,
+      });
+    });
+
+    // 2. Process Transactions (Payments)
+    if (walletData) {
+      const transactions = [
+        ...(walletData.onlineTransactions || []),
+        ...(walletData.codTransactions || [])
+      ];
+
+      transactions.forEach(t => {
+        const tDate = new Date(t.createdAt);
+        allNotifs.push({
+          id: `payment-${t._id}`,
+          type: "payment",
+          title: t.status === 'Locked' ? "Payment Locked (Pending Delivery)" : "Payment Received",
+          description: t.description,
+          amount: `Rs. ${t.amount.toLocaleString()}`,
+          createdAt: tDate,
+        });
+      });
+    }
+
+    // 3. Filter out cleared notifications
+    allNotifs = allNotifs.filter(n => !clearedIds.includes(n.id));
+
+    // 4. Sort by date (latest first)
+    allNotifs.sort((a, b) => b.createdAt - a.createdAt);
+
+    // 5. Group and Format
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return allNotifs.map(n => {
+      const nDate = new Date(n.createdAt);
+      const isToday = nDate >= today;
+      
+      return {
+        ...n,
+        group: isToday ? "Today" : "Earlier",
+        time: nDate.toLocaleString(),
+        relativeTime: nDate.toLocaleDateString() === now.toLocaleDateString() 
+          ? nDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : nDate.toLocaleDateString(),
+      };
+    });
+  };
+
+  const notifications = generateNotifications();
 
   const removeNotification = (id) => {
-    setNotifications(notifications.filter((n) => n.id !== id));
+    setClearedIds(prev => [...prev, id]);
   };
 
   const clearAll = () => {
-    setNotifications([]);
+    setClearedIds(notifications.map(n => n.id));
   };
 
   const getIcon = (type) => {
