@@ -18,10 +18,12 @@ import "./Styles/InventoryManagement.css";
 import "../Common/Styles/EditInventoryModal.css";
 import "./Styles/AddInventoryView.css"; // Reuse some styles
 
-const InventoryManagement = ({ onAddInventory }) => {
+const InventoryManagement = ({ onAddInventory, initialInventory }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  // Immediate data: Use local storage cache for the collector's inventory
+  // Immediate data: Use props if available, otherwise local storage cache
   const [inventory, setInventory] = useState(() => {
+    if (initialInventory && initialInventory.length > 0)
+      return initialInventory;
     const cached = localStorage.getItem("cached_inventory");
     return cached ? JSON.parse(cached) : null;
   });
@@ -47,7 +49,7 @@ const InventoryManagement = ({ onAddInventory }) => {
   const [editLoading, setEditLoading] = useState(false);
   const [editErrors, setEditErrors] = useState({});
   const [editSuccessPopup, setEditSuccessPopup] = useState(false);
-  
+
   const editFileInputRef = React.useRef(null);
 
   const toggleDescription = (id) => {
@@ -81,13 +83,30 @@ const InventoryManagement = ({ onAddInventory }) => {
       setError(null);
     } catch (err) {
       console.error("Error fetching inventory:", err);
-      setError(err.response?.data?.message || err.message || "Failed to fetch inventory");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to fetch inventory",
+      );
       setInventory((prev) => prev || []); // Fallback to empty if no cache
     }
   };
 
+  // Sync internal state when props change
+  useEffect(() => {
+    if (initialInventory) {
+      setInventory(initialInventory);
+      localStorage.setItem(
+        "cached_inventory",
+        JSON.stringify(initialInventory),
+      );
+    }
+  }, [initialInventory]);
+
   useEffect(() => {
     if (userID) {
+      // If props already provided data, skip initial fetch
+      if (initialInventory?.length > 0) return;
       fetchInventory();
     }
   }, [userID]);
@@ -110,7 +129,9 @@ const InventoryManagement = ({ onAddInventory }) => {
       fetchInventory(); // Refresh list
     } catch (err) {
       console.error("Error deleting inventory item:", err);
-      alert("Error deleting item: " + (err.response?.data?.message || err.message));
+      alert(
+        "Error deleting item: " + (err.response?.data?.message || err.message),
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -196,7 +217,7 @@ const InventoryManagement = ({ onAddInventory }) => {
   };
 
   const filteredInventory = (inventory || []).filter((item) =>
-    item.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    item.productName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -220,18 +241,12 @@ const InventoryManagement = ({ onAddInventory }) => {
         </div>
       </div>
 
-      {inventory === null ? (
-        <div className="im-empty">
-          {/* Subtle placeholder while fetching */}
-        </div>
-      ) : inventory.length === 0 ? (
+      {inventory?.length === 0 ? (
         <div className="im-empty">
           <FaBox className="empty-icon" />
-          <p>
-            Your inventory is empty! Start adding stock items to manage your
-            collection center.
-          </p>
-          <button onClick={onAddInventory} className="im-empty-add-btn">
+          <h3>No Inventory Items Found</h3>
+          <p>You haven't added any products to your inventory yet.</p>
+          <button className="im-add-btn" onClick={onAddInventory}>
             <FaPlus /> Add Your First Item
           </button>
         </div>
@@ -254,8 +269,8 @@ const InventoryManagement = ({ onAddInventory }) => {
                     <p className="inventory-category">{item.category}</p>
                   </div>
                   <div className="inventory-actions">
-                    <button 
-                      className="im-action-btn edit-btn" 
+                    <button
+                      className="im-action-btn edit-btn"
                       title="Edit"
                       onClick={() => handleEditClick(item)}
                     >
@@ -359,18 +374,21 @@ const InventoryManagement = ({ onAddInventory }) => {
       {/* Edit Inventory Modal */}
       {showEditModal && (
         <div className="edit-modal-overlay">
-          <div className="edit-modal-content ap-form"> {/* Reuse ap-form styles */}
+          <div className="edit-modal-content ap-form">
+            {" "}
+            {/* Reuse ap-form styles */}
             <div className="edit-modal-header">
               <h2>Edit Inventory</h2>
-              <button className="close-modal-btn" onClick={() => setShowEditModal(false)}>
+              <button
+                className="close-modal-btn"
+                onClick={() => setShowEditModal(false)}
+              >
                 <FaTimes />
               </button>
             </div>
-
             {editErrors.submit && (
               <div className="ap-error-message">{editErrors.submit}</div>
             )}
-
             <form className="ap-form" onSubmit={handleUpdateSubmit} noValidate>
               <div className="ap-form-grid">
                 <div className="ap-form-group">
@@ -480,7 +498,9 @@ const InventoryManagement = ({ onAddInventory }) => {
                           </button>
                           <div className="ap-file-info">
                             <span className="ap-file-name">
-                              {editImageFile ? editImageFile.name : "Current Image"}
+                              {editImageFile
+                                ? editImageFile.name
+                                : "Current Image"}
                             </span>
                           </div>
                         </div>
@@ -511,7 +531,11 @@ const InventoryManagement = ({ onAddInventory }) => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="ap-submit-btn" disabled={editLoading}>
+                <button
+                  type="submit"
+                  className="ap-submit-btn"
+                  disabled={editLoading}
+                >
                   {editLoading ? "Updating..." : "Save Changes"}
                 </button>
               </div>
@@ -527,8 +551,8 @@ const InventoryManagement = ({ onAddInventory }) => {
             <FaCheckCircle className="ep-success-icon" />
             <h3>Updated!</h3>
             <p>Your inventory has been updated successfully.</p>
-            <button 
-              className="ep-success-btn" 
+            <button
+              className="ep-success-btn"
               onClick={() => {
                 setEditSuccessPopup(false);
                 setShowEditModal(false);

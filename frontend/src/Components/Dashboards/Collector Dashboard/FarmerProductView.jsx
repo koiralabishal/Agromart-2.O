@@ -13,8 +13,10 @@ import {
 import "./Styles/FarmerProductView.css";
 
 import api from "../../../api/axiosConfig";
+import { useSocket } from "../../../context/SocketContext";
 
 const FarmerProductView = ({ farmer, onBack, onAddToCart }) => {
+  const socket = useSocket();
   const [searchTerm, setSearchTerm] = useState("");
   // Immediate data: Use local storage cache for this specific farmer
   const [products, setProducts] = useState(() => {
@@ -32,7 +34,16 @@ const FarmerProductView = ({ farmer, onBack, onAddToCart }) => {
       // Re-fetch to ensure data is fresh, while the cached data is already visible
       fetchProducts();
     }
-  }, [farmer]);
+
+    if (socket) {
+      const handleUpdate = () => {
+        console.log(">>> [FarmerProduct Socket] Refreshing products");
+        fetchProducts();
+      };
+      socket.on("dashboard:update", handleUpdate);
+      return () => socket.off("dashboard:update", handleUpdate);
+    }
+  }, [farmer, socket]);
 
   const fetchProducts = async () => {
     try {
@@ -94,11 +105,7 @@ const FarmerProductView = ({ farmer, onBack, onAddToCart }) => {
               Retry
             </button>
           </div>
-        ) : products === null ? (
-          <div className="im-empty">
-            {/* Subtle empty space while loading */}
-          </div>
-        ) : filteredProducts.length > 0 ? (
+        ) : products?.length > 0 ? (
           filteredProducts.map((product) => {
             const isOutOfStock = product.quantity === 0;
 

@@ -26,6 +26,13 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
     order?.status || "Pending"
   );
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  // Sync internal state with prop changes (for real-time socket updates)
+  React.useEffect(() => {
+    if (order?.status) {
+      setCurrentStatus(order.status);
+    }
+  }, [order?.status]);
   const [confModal, setConfModal] = useState({
     isOpen: false,
     newStatus: "",
@@ -34,7 +41,7 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
     message: "",
   });
 
-  if (!order) return <div className="order-detail-view">Loading...</div>;
+  if (!order) return null;
 
   const statusOptions = [
     "Pending",

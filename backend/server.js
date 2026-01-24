@@ -1,7 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import { createServer } from "http";
 import connectDB from "./config/db.js";
+import { initSocket } from "./socket.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
@@ -16,6 +18,10 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.io
+initSocket(httpServer);
 
 // Middleware
 app.use(cors());
@@ -33,15 +39,15 @@ app.use("/api/admin", adminRoutes);
 
 // Health Check
 app.get("/", (req, res) => {
-  res.send("Agromart API is running...");
+  res.send("Agromart API is running with Real-Time support...");
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(
     `Server running in ${
       process.env.NODE_ENV || "development"
-    } mode on port ${PORT}`
+    } mode on port ${PORT}`,
   );
 });

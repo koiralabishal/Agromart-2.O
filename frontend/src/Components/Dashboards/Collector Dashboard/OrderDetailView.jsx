@@ -19,12 +19,15 @@ import broccoliImg from "../../../assets/products/broccoli.jpeg";
 import api from "../../../api/axiosConfig";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
+import StockOrderModal from "../../Common/StockOrderModal";
+import StockSuccessModal from "../../Common/StockSuccessModal";
 
 const OrderDetailView = ({
   order,
   onBack,
   orderType = "received",
   onOrderUpdate,
+  onInventoryRedirect,
 }) => {
   const [currentStatus, setCurrentStatus] = useState(
     order?.status || "Pending"
@@ -39,8 +42,19 @@ const OrderDetailView = ({
     orderID_Display: "",
   });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [isStockingLoading, setIsStockingLoading] = useState(false);
+  const [showStockSuccess, setShowStockSuccess] = useState(false);
+  const [stockedProductsList, setStockedProductsList] = useState([]);
 
-  if (!order) return <div className="order-detail-view">Loading...</div>;
+  // Sync internal state with prop changes (for real-time socket updates)
+  React.useEffect(() => {
+    if (order?.status) {
+      setCurrentStatus(order.status);
+    }
+  }, [order?.status]);
+
+  if (!order) return null;
 
   const statusOptions = [
     "Pending",
@@ -184,6 +198,46 @@ const OrderDetailView = ({
     }
   };
 
+  const handleStockConfirm = async (stockedItems) => {
+    try {
+      setIsStockingLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userID = user?._id || user?.id;
+
+      await api.post("/inventory/stock-order", {
+        orderId: order._id,
+        items: stockedItems,
+        userID
+      });
+
+      setIsStockModalOpen(false);
+      if (onOrderUpdate) {
+        onOrderUpdate({ ...order, isStocked: true });
+      }
+      
+      // Update Cache
+      const cacheKey = orderType === "received" ? "collectorOrdersReceived" : "collectorOrdersPlaced";
+      const cachedOrders = sessionStorage.getItem(cacheKey);
+      if (cachedOrders) {
+        const orders = JSON.parse(cachedOrders);
+        const updatedOrders = orders.map(o => o._id === order._id ? { ...o, isStocked: true } : o);
+        sessionStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
+      }
+
+      setStockedProductsList(stockedItems.map(item => ({
+        name: item.productName,
+        quantity: item.quantity,
+        unit: item.unit
+      })));
+      setShowStockSuccess(true);
+    } catch (error) {
+      console.error("Error stocking items:", error);
+      alert(error.response?.data?.message || "Failed to add items to inventory");
+    } finally {
+      setIsStockingLoading(false);
+    }
+  };
+
   // Map real order data
   const buyer = order.buyerID;
   const buyerName = buyer?.name || "Unknown Buyer";
@@ -303,6 +357,30 @@ const OrderDetailView = ({
                 onClick={() => handleStatusChange("Confirm Cash Paid")}
               >
                 <FaCheckCircle /> Confirm Cash Paid
+              </button>
+            )}
+          {orderType === "placed" &&
+            currentStatus === "Delivered" &&
+            order.paymentStatus === "Paid" &&
+            !order.isStocked && (
+              <button
+                className="add-to-inventory-btn"
+                style={{
+                  backgroundColor: "#1dc956",
+                  color: "white",
+                  padding: "10px 18px",
+                  borderRadius: "8px",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                }}
+                onClick={() => setIsStockModalOpen(true)}
+              >
+                <FaBox /> Add to Inventory
               </button>
             )}
           <button className="download-invoice-btn">
@@ -656,6 +734,21 @@ const OrderDetailView = ({
         title="Payment Confirmed!"
         message="You have successfully confirmed the cash payment for this order."
         showPaymentNote={false}
+      />
+      <StockOrderModal
+        isOpen={isStockModalOpen}
+        onClose={() => setIsStockModalOpen(false)}
+        onConfirm={handleStockConfirm}
+        order={order}
+        isLoading={isStockingLoading}
+      />
+      <StockSuccessModal
+        isOpen={showStockSuccess}
+        onClose={() => {
+          setShowStockSuccess(false);
+          if (onInventoryRedirect) onInventoryRedirect();
+        }}
+        products={stockedProductsList}
       />
     </div>
   );

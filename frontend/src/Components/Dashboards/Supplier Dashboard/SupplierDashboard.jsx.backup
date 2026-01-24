@@ -1,0 +1,848 @@
+import React, { useState, useEffect } from "react";
+import {
+  FaLeaf,
+  FaHome,
+  FaUsers,
+  FaShoppingCart,
+  FaChartBar,
+  FaCog,
+  FaBell,
+  FaSignOutAlt,
+  FaStar,
+  FaFacebookF,
+  FaTwitter,
+  FaLinkedinIn,
+  FaCommentDots,
+  FaBars,
+  FaTimes,
+  FaBoxes,
+  FaUser,
+  FaEnvelope,
+  FaWallet,
+} from "react-icons/fa";
+import { TbCurrencyRupeeNepalese } from "react-icons/tb";
+import api from "../../../api/axiosConfig";
+import { useNavigate } from "react-router-dom";
+import { useSocket } from "../../../context/SocketContext";
+import CollectorsView from "./CollectorsView";
+import CollectorProductView from "./CollectorProductView";
+import InventoryManagement from "./InventoryManagement";
+import SupplierAddInventoryView from "./SupplierAddInventoryView";
+import OrderManagement from "./OrderManagement";
+import OrderDetailView from "./OrderDetailView";
+import DetailedAnalytics from "./DetailedAnalytics";
+import SettingsView from "./SettingsView";
+import NotificationsView from "./NotificationsView";
+import ChatView from "./ChatView";
+import PaymentsView from "./PaymentsView";
+import CartView from "./CartView";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+import "./Styles/SupplierDashboard.css";
+
+const SupplierDashboard = () => {
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("user");
+      return saved ? JSON.parse(saved) : { name: "John Doe" };
+    } catch (e) {
+      console.error("User parse error:", e);
+      return { name: "John Doe" };
+    }
+  });
+  const userID = user?._id || user?.id;
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeView, setActiveView] = useState(
+    sessionStorage.getItem("supplierActiveView") || "dashboard"
+  );
+  const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("cartItems");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing cartItems", e);
+      return [];
+    }
+  });
+  const [hasViewedCart, setHasViewedCart] = useState(() => {
+    return sessionStorage.getItem("hasViewedCart") === "true";
+  });
+  const [selectedCollector, setSelectedCollector] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("selectedCollector");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error("Error parsing selectedCollector", e);
+      return null;
+    }
+  });
+  const [selectedOrder, setSelectedOrder] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("supplierSelectedOrder");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [orderType, setOrderType] = useState(
+    sessionStorage.getItem("supplierOrderType") || "received"
+  );
+  const [inventorySubView, setInventorySubView] = useState("list");
+  const [inventoryState, setInventoryState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("supplierInventory_cache");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [preFetchedCollectors, setPreFetchedCollectors] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cached_active_collectors");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [orders, setOrders] = useState(() => {
+    try {
+      const saved = userID ? localStorage.getItem(`cached_supplier_orders_${userID}`) : null;
+      return saved ? JSON.parse(saved) : { placed: [], received: [] };
+    } catch (e) {
+      return { placed: [], received: [] };
+    }
+  });
+  const [wallet, setWallet] = useState(() => {
+    try {
+      const saved = userID ? localStorage.getItem(`cached_supplier_wallet_${userID}`) : null;
+      return saved ? JSON.parse(saved).wallet : {};
+    } catch (e) {
+      return {};
+    }
+  });
+  const [walletData, setWalletData] = useState(() => {
+    try {
+      const saved = userID ? localStorage.getItem(`cached_supplier_wallet_${userID}`) : null;
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [loading, setLoading] = useState(
+    userID && (
+      !inventoryState || 
+      !preFetchedCollectors || 
+      !walletData || 
+      ((orders?.placed || []).length === 0 && (orders?.received || []).length === 0)
+    )
+  );
+
+  const socket = useSocket();
+  const navigate = useNavigate();
+
+  // Sync user state from localStorage and background fetch
+  useEffect(() => {
+    const handleSync = () => {
+      setUser(JSON.parse(localStorage.getItem("user")) || { name: "John Doe" });
+    };
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("userUpdated", handleSync);
+    return () => {
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("userUpdated", handleSync);
+    };
+  }, []);
+
+  // Background data fetching for high performance (Zero-Loading feel)
+  const preFetchDashboardData = React.useCallback(async (isSilent = false) => {
+    if (!userID || userID === "admin-id") {
+      setLoading(false);
+      return;
+    }
+
+    if (!isSilent) setLoading(true);
+
+    try {
+      // Parallel fetch for speed - added cache busting
+      const ts = Date.now();
+      const results = await Promise.allSettled([
+        api.get(`/inventory?userID=${userID}&v=${ts}`),
+        api.get(`/users/active-collectors?v=${ts}`),
+        api.get(`/users/profile/${userID}?v=${ts}`),
+        api.get(`/wallet/${userID}?v=${ts}`),
+        api.get("/orders", { params: { userID, role: "buyer", v: ts } }),
+        api.get("/orders", { params: { userID, role: "seller", v: ts } })
+      ]);
+
+      const [invRes, collRes, profileRes, walletRes, ordersBuyerRes, ordersSellerRes] = results;
+
+      // 1. Handle Inventory Data
+      if (invRes.status === 'fulfilled') {
+        setInventoryState(invRes.value.data);
+        localStorage.setItem("supplierInventory_cache", JSON.stringify(invRes.value.data));
+      }
+
+      // 2. Handle Collectors Data
+      if (collRes.status === 'fulfilled') {
+        setPreFetchedCollectors(collRes.value.data);
+        localStorage.setItem("cached_active_collectors", JSON.stringify(collRes.value.data));
+      }
+
+      // 3. Handle Profile Sync
+      if (profileRes.status === 'fulfilled') {
+        const updatedUser = { ...user, ...profileRes.value.data };
+        if (JSON.stringify(updatedUser) !== JSON.stringify(user)) {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+      }
+
+      // 4. Handle Wallet Data
+      if (walletRes.status === 'fulfilled') {
+        setWallet(walletRes.value.data.wallet);
+        setWalletData(walletRes.value.data);
+        localStorage.setItem(`cached_supplier_wallet_${userID}`, JSON.stringify(walletRes.value.data));
+      }
+
+      // 5. Handle Orders
+      let buyerOrders = ordersBuyerRes.status === 'fulfilled' ? ordersBuyerRes.value.data : [];
+      let sellerOrders = ordersSellerRes.status === 'fulfilled' ? ordersSellerRes.value.data : [];
+      const updatedOrders = { placed: buyerOrders, received: sellerOrders };
+      setOrders(updatedOrders);
+      localStorage.setItem(`cached_supplier_orders_${userID}`, JSON.stringify(updatedOrders));
+
+      console.log(`>>> Supplier Dashboard sync complete (${isSilent ? "Silent" : "Full"})`);
+    } catch (err) {
+      console.error("Error pre-fetching supplier data:", err);
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
+  }, [userID, user]);
+
+  useEffect(() => {
+    preFetchDashboardData(!!inventoryState && !!preFetchedCollectors && !!walletData);
+
+    if (socket) {
+      const handleUpdate = (data) => {
+        console.log(">>> [Socket] Received refresh event:", data);
+        preFetchDashboardData(true); // Silent sync
+
+        // If user is currently viewing the updated order, sync it
+        const incomingOrder = data?.order || (data?._id ? data : null);
+        if (incomingOrder && selectedOrder?._id === incomingOrder._id) {
+          console.log(">>> Syncing viewed order detail");
+          setSelectedOrder(incomingOrder);
+        }
+      };
+
+      socket.on("order:new", handleUpdate);
+      socket.on("dashboard:update", handleUpdate);
+
+      return () => {
+        socket.off("order:new", handleUpdate);
+        socket.off("dashboard:update", handleUpdate);
+      };
+    }
+  }, [userID, socket]);
+
+  useEffect(() => {
+    sessionStorage.setItem("supplierActiveView", activeView);
+    sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
+    sessionStorage.setItem("hasViewedCart", hasViewedCart);
+
+    if (selectedCollector) {
+      sessionStorage.setItem(
+        "selectedCollector",
+        JSON.stringify(selectedCollector)
+      );
+    } else {
+      sessionStorage.removeItem("selectedCollector");
+    }
+
+    if (selectedOrder) {
+      sessionStorage.setItem("selectedOrder", JSON.stringify(selectedOrder));
+    } else {
+      sessionStorage.removeItem("selectedOrder");
+    }
+
+    if (orderType) {
+      sessionStorage.setItem("orderType", orderType);
+    }
+  }, [activeView, selectedCollector, cartItems, selectedOrder, orderType]);
+
+  const handleAddToCart = async (product) => {
+    const productId = product._id;
+    try {
+      // 1. Update database quantity (decrease by 1)
+      // Since it's from collector's inventory, we use /api/inventory
+      await api.patch(`/inventory/${productId}/quantity`, { delta: -1 });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => {
+        const existingItem = prevItems.find((item) => item._id === productId);
+        if (existingItem) {
+          return prevItems.map((item) =>
+            item._id === productId
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        } else {
+          return [...prevItems, { ...product, quantity: 1 }];
+        }
+      });
+      setHasViewedCart(false);
+      console.log(
+        `>>> Database updated: ${product.productName} quantity decreased by 1 in inventory`
+      );
+    } catch (err) {
+      console.error("Failed to update database quantity on add:", err);
+      alert(
+        err.response?.data?.message ||
+          "Failed to update stock. Please try again."
+      );
+    }
+  };
+
+  const handleUpdateQuantity = async (id, delta) => {
+    try {
+      // 1. Update database quantity (inverse of cart delta)
+      await api.patch(`/inventory/${id}/quantity`, { delta: -delta });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === id
+            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+            : item
+        )
+      );
+      console.log(
+        `>>> Database updated: inventory item ${id} quantity changed by ${-delta}`
+      );
+    } catch (err) {
+      console.error("Failed to update database quantity on update:", err);
+      alert(
+        err.response?.data?.message ||
+          "Failed to update stock. Please try again."
+      );
+    }
+  };
+
+  const handleRemoveItem = async (id) => {
+    const itemToRemove = cartItems.find((item) => item._id === id);
+    if (!itemToRemove) return;
+
+    try {
+      // 1. Restore database quantity
+      await api.patch(`/inventory/${id}/quantity`, {
+        delta: itemToRemove.quantity,
+      });
+
+      // 2. Update local cart state
+      setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
+      console.log(
+        `>>> Database restored: ${itemToRemove.productName} quantity restored by ${itemToRemove.quantity}`
+      );
+    } catch (err) {
+      console.error("Failed to update database quantity on remove:", err);
+      // Fallback: still remove locally to not block user
+      setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
+    }
+  };
+
+  const cartCount = cartItems.length;
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      localStorage.removeItem("user");
+      window.dispatchEvent(new Event("userUpdated")); // Signal socket disconnect
+      sessionStorage.removeItem("supplierActiveView");
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed", err);
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("supplierActiveView");
+      navigate("/");
+    }
+  };
+
+  const handleViewOrder = (order, type) => {
+    setSelectedOrder(order);
+    setOrderType(type);
+    setActiveView("orderDetail");
+  };
+
+  const handleOrderUpdate = (updatedOrder) => {
+    setSelectedOrder(updatedOrder);
+    // Proactively refresh dashboard data when an order is updated locally
+    preFetchDashboardData(true);
+  };
+
+  const handleViewProfile = (collector) => {
+    setSelectedCollector(collector);
+    setActiveView("collectorProduct");
+  };
+
+  const totalPurchasesAmount = (orders?.placed || [])
+    .filter(o => o.status === "Delivered" && o.paymentStatus === "Paid")
+    .reduce((sum, o) => sum + o.totalAmount, 0);
+
+  const activeOrdersCount = (orders?.placed || [])
+    .filter(o => !["Delivered", "Canceled", "Rejected"].includes(o.status))
+    .length;
+
+  const inventoryCount = (inventoryState || []).length;
+
+  // Simple processors for Dashboard Overview
+  const getOverviewSalesData = () => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const data = months.map(m => ({ name: m, fruits: 0, vegetables: 0 }));
+    
+    (orders?.placed || []).forEach(order => {
+      if (order.status !== "Delivered" || order.paymentStatus !== "Paid") return;
+      const m = new Date(order.createdAt).getMonth();
+      order.products.forEach(p => {
+        if ((p.category || "").toLowerCase().includes("fruit")) data[m].fruits += p.quantity;
+        else data[m].vegetables += p.quantity;
+      });
+    });
+    return data;
+  };
+
+  const getOverviewDemandData = () => {
+    const map = {};
+    (orders?.placed || []).forEach(order => {
+      order.products.forEach(p => {
+        map[p.productName] = (map[p.productName] || 0) + p.quantity;
+      });
+    });
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a,b) => b.value - a.value)
+      .slice(0, 5);
+  };
+
+  const overviewSalesData = getOverviewSalesData();
+  const overviewDemandData = getOverviewDemandData();
+
+  return (
+    <div className="supplier-dashboard-container">
+      {/* Header */}
+      <header className="sd-header">
+        <div className="sd-logo">
+          <FaLeaf /> <span>AgroMart</span>
+        </div>
+
+        <nav className={`sd-nav ${isSidebarOpen ? "sidebar-open" : ""}`}>
+          <div className="sd-mobile-logo">
+            <FaLeaf /> <span>AgroMart</span>
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "dashboard" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("dashboard");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaHome /> Dashboard
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "collectors" || activeView === "collectorProduct"
+                ? "active"
+                : ""
+            }`}
+            onClick={() => {
+              setActiveView("collectors");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaUsers /> Collectors
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "orders" || activeView === "orderDetail"
+                ? "active"
+                : ""
+            }`}
+            onClick={() => {
+              setActiveView("orders");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaShoppingCart /> Orders
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "payments" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("payments");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaWallet /> Payments
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "analytics" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("analytics");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaChartBar /> Analytics
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "inventory" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("inventory");
+              setSelectedCollector(null);
+              setInventorySubView("list");
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaBoxes /> Inventory
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "settings" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("settings");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaCog /> Settings
+          </div>
+        </nav>
+
+        <div className="sd-profile-actions">
+          <button className="sidebar-toggle" onClick={toggleSidebar}>
+            {isSidebarOpen ? <FaTimes /> : <FaBars />}
+          </button>
+
+          <div
+            className="sd-icon-btn cart-icon-wrapper"
+            onClick={() => {
+              setActiveView("cart");
+              setHasViewedCart(true);
+            }}
+            title="Cart"
+            style={{
+              cursor: "pointer",
+              color: activeView === "cart" ? "#1dc956" : "inherit",
+              position: "relative",
+            }}
+          >
+            <FaShoppingCart />
+            {cartCount > 0 && !hasViewedCart && (
+              <span className="cart-counter">{cartCount}</span>
+            )}
+          </div>
+
+          <div
+            className="sd-icon-btn"
+            onClick={() => setActiveView("notifications")}
+            style={{
+              cursor: "pointer",
+              color: activeView === "notifications" ? "#1dc956" : "inherit",
+              position: "relative",
+            }}
+            title="Notifications"
+          >
+            <FaBell />
+            <span className="notif-counter">2</span>
+          </div>
+          <div className="sd-profile-container">
+            <img
+              src={
+                user.profileImage ||
+                "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"
+              }
+              alt="Profile"
+              className="sd-profile-pic"
+            />
+            <div className="sd-profile-tooltip">
+              <div className="tooltip-item">
+                <FaUser className="tooltip-icon" />
+                <span>{user.name}</span>
+              </div>
+              <div className="tooltip-item">
+                <FaEnvelope className="tooltip-icon" />
+                <span>{user.email}</span>
+              </div>
+            </div>
+          </div>
+          <div className="sd-icon-btn" onClick={handleLogout} title="Logout">
+            <FaSignOutAlt />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="sd-main-content">
+        {activeView === "dashboard" && (
+          <>
+            <section className="sd-hero">
+              <h1>Welcome To AgroMart, {user.name}!</h1>
+              <p>Manage your supply chain, inventory and orders efficiently.</p>
+            </section>
+
+            <section className="sd-stats-grid">
+              <div className="sd-stat-card sd-card-green">
+                <div className="sd-stat-header">
+                  <span className="sd-stat-title">Total Purchases</span>
+                  <TbCurrencyRupeeNepalese className="sd-stat-icon" />
+                </div>
+                <div className="sd-stat-value">Rs. {totalPurchasesAmount.toLocaleString()}</div>
+                <div className="sd-stat-footer">Life-time delivered</div>
+              </div>
+
+              <div className="sd-stat-card sd-card-yellow">
+                <div className="sd-stat-header">
+                  <span className="sd-stat-title">Active Orders</span>
+                  <FaShoppingCart className="sd-stat-icon" />
+                </div>
+                <div className="sd-stat-value">{activeOrdersCount}</div>
+                <div className="sd-stat-footer">In transit or pending</div>
+              </div>
+
+              <div className="sd-stat-card sd-card-light-green">
+                <div className="sd-stat-header">
+                  <span className="sd-stat-title">Inventory Items</span>
+                  <FaBoxes className="sd-stat-icon" />
+                </div>
+                <div className="sd-stat-value">{inventoryCount}</div>
+                <div className="sd-stat-footer">Live stock listings</div>
+              </div>
+
+              <div className="sd-stat-card sd-card-green">
+                <div className="sd-stat-header">
+                  <span className="sd-stat-title">Wallet Balance</span>
+                  <FaWallet className="sd-stat-icon" />
+                </div>
+                <div className="sd-stat-value">Rs. {(wallet?.availableBalance || 0).toLocaleString()}</div>
+                <div className="sd-stat-footer">Available for withdrawal</div>
+              </div>
+            </section>
+
+            <section className="sd-analytics">
+              <div className="sd-analytics-header">
+                <h2>Supply Overview</h2>
+              </div>
+              <div className="sd-charts-grid">
+                <div className="sd-chart-container">
+                  <div className="sd-chart-title">Purchase Trends</div>
+                  <div style={{ width: "100%", height: 350 }}>
+                    <ResponsiveContainer>
+                      <LineChart
+                        data={overviewSalesData}
+                        margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: "#888", fontSize: 12 }}
+                        />
+                        <YAxis tick={{ fill: "#888", fontSize: 12 }} />
+                        <Tooltip />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="fruits"
+                          stroke="#F5A623"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="vegetables"
+                          stroke="#1DC956"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="sd-chart-container">
+                  <div className="sd-chart-title">Top 5 Demanded Items</div>
+                  <div style={{ width: "100%", height: 350 }}>
+                    <ResponsiveContainer>
+                      <BarChart
+                        layout="vertical"
+                        data={overviewDemandData}
+                        margin={{ top: 5, right: 30, left: 10, bottom: 30 }}
+                      >
+                        <XAxis
+                          type="number"
+                          tick={{ fill: "#888", fontSize: 12 }}
+                        />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#555", fontSize: 12 }}
+                          width={100}
+                        />
+                        <Tooltip cursor={{ fill: "transparent" }} />
+                        <Bar
+                          dataKey="value"
+                          fill="#1DC956"
+                          radius={[0, 4, 4, 0]}
+                          barSize={20}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeView === "collectors" && (
+          <div className="collectors-view-wrapper">
+            <CollectorsView
+              onViewProfile={handleViewProfile}
+              preFetchedCollectors={preFetchedCollectors}
+            />
+          </div>
+        )}
+        {activeView === "collectorProduct" && selectedCollector && (
+          <CollectorProductView
+            collector={selectedCollector}
+            onBack={() => setActiveView("collectors")}
+            onAddToCart={handleAddToCart}
+          />
+        )}
+        {activeView === "inventory" &&
+          (inventorySubView === "list" ? (
+            <InventoryManagement
+              onAddInventory={() => setInventorySubView("add")}
+              initialData={inventoryState}
+              onRefresh={() => {
+                // Background refresh
+                api
+                  .get(`/inventory?userID=${userID}`)
+                  .then((res) => setInventoryState(res.data));
+              }}
+            />
+          ) : (
+            <SupplierAddInventoryView
+              onBack={() => setInventorySubView("list")}
+              onItemAdded={() => {
+                // Background refresh
+                api
+                  .get(`/inventory?userID=${userID}`)
+                  .then((res) => setInventoryState(res.data));
+              }}
+            />
+          ))}
+        {activeView === "orders" && (
+          <OrderManagement 
+            onViewOrder={handleViewOrder} 
+            ordersPlacedProp={orders.placed}
+            ordersReceivedProp={orders.received}
+            onInventoryRedirect={() => {
+              setActiveView("inventory");
+              setInventorySubView("list");
+            }}
+          />
+        )}
+        {activeView === "orderDetail" && (
+          <OrderDetailView
+            order={selectedOrder}
+            orderType={orderType}
+            onBack={() => setActiveView("orders")}
+            onOrderUpdate={handleOrderUpdate}
+            onInventoryRedirect={() => {
+              setActiveView("inventory");
+              setInventorySubView("list");
+            }}
+          />
+        )}
+        {activeView === "payments" && <PaymentsView walletDataProp={walletData} />}
+        {activeView === "analytics" && (
+          <DetailedAnalytics
+            orders={orders}
+            wallet={wallet}
+            walletData={walletData}
+            inventory={inventoryState}
+          />
+        )}
+        {activeView === "settings" && <SettingsView />}
+        {activeView === "notifications" && <NotificationsView />}
+        {activeView === "cart" && (
+          <CartView
+            cartItems={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onBack={() => setActiveView("collectors")}
+            onClearCart={() => {
+              setCartItems([]);
+              sessionStorage.removeItem("cartItems");
+              sessionStorage.removeItem("hasViewedCart");
+            }}
+            onOrderComplete={() => setActiveView("orders")}
+          />
+        )}
+        {activeView === "chat" && <ChatView />}
+      </main>
+
+      <footer className="sd-footer">
+        <div className="sd-footer-text">
+          &copy; {new Date().getFullYear()} AgroMart. All rights reserved.
+        </div>
+        <div className="sd-socials">
+          <FaFacebookF /> <FaTwitter /> <FaLinkedinIn />
+        </div>
+      </footer>
+
+      {isChatPopupOpen && (
+        <div className="chat-popup-overlay">
+          <div className="chat-popup-content">
+            <ChatView onClose={() => setIsChatPopupOpen(false)} />
+          </div>
+        </div>
+      )}
+      <div
+        className="chat-fab"
+        onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}
+      >
+        <FaCommentDots />
+      </div>
+    </div>
+  );
+};
+
+export default SupplierDashboard;

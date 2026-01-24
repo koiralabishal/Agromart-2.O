@@ -19,10 +19,17 @@ const AdminOrdersView = ({ cache, onCacheUpdate }) => {
 
   useEffect(() => {
     if (cache) {
+      setOrders(cache);
       processUsers(cache);
+      
+      if (selectedOrder) {
+        const updated = cache.find(o => o._id === selectedOrder._id);
+        if (updated) setSelectedOrder(updated);
+      }
     }
-    fetchOrders();
-  }, []);
+    // Only fetch if no cache
+    if (!cache) fetchOrders();
+  }, [cache]);
 
   const fetchOrders = async () => {
     if (!cache) setLoading(true);

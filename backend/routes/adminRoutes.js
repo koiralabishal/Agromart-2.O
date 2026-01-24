@@ -18,6 +18,7 @@ import {
   getWithdrawals,
   processWithdrawal,
   getCODTransactions,
+  getOnlineTransactions,
   settleCOD,
   getDisputes,
   resolveDispute,
@@ -60,6 +61,9 @@ router.put("/withdrawals/:id", processWithdrawal);
 // 6. COD Ledger
 router.get("/cod-ledger", getCODTransactions);
 router.put("/cod-ledger/:id/settle", settleCOD);
+
+// 6.5 Online Transactions
+router.get("/online-transactions", getOnlineTransactions);
 
 // 7. Disputes
 router.get("/disputes", getDisputes);

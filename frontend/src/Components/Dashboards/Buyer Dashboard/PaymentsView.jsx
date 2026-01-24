@@ -9,21 +9,36 @@ import "./Styles/PaymentsView.css";
 import api from "../../../api/axiosConfig";
 import Pagination from "../../Common/Pagination";
 
-const PaymentsView = () => {
+const PaymentsView = ({ walletDataProp }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
 
-  const [walletData, setWalletData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [walletData, setWalletData] = useState(() => {
+    if (walletDataProp) return walletDataProp;
+    try {
+      const saved = userID
+        ? localStorage.getItem(`cached_buyer_wallet_${userID}`)
+        : null;
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [loading, setLoading] = useState(!walletData);
   const [currentOnlinePage, setCurrentOnlinePage] = useState(1);
   const [currentCodPage, setCurrentCodPage] = useState(1);
   const itemsPerPage = 8;
 
-  const fetchWalletData = async () => {
+  const fetchWalletData = async (isSilent = false) => {
     try {
-      setLoading(true);
-      const response = await api.get(`/wallet/${userID}`);
+      if (!isSilent) setLoading(true);
+      const response = await api.get(`/wallet/${userID}?v=${Date.now()}`);
       setWalletData(response.data);
+      localStorage.setItem(
+        `cached_buyer_wallet_${userID}`,
+        JSON.stringify(response.data),
+      );
     } catch (error) {
       console.error("Error fetching payment data:", error);
     } finally {
@@ -31,13 +46,21 @@ const PaymentsView = () => {
     }
   };
 
+  // Sync internal state when props change
+  useEffect(() => {
+    if (walletDataProp) {
+      setWalletData(walletDataProp);
+      setLoading(false);
+    }
+  }, [walletDataProp]);
+
   useEffect(() => {
     if (userID) {
-      fetchWalletData();
+      fetchWalletData(!!walletData); // Silent if we have cache or prop
     }
   }, [userID]);
 
-  if (loading) {
+  if (loading && !walletData) {
     return (
       <div
         className="payments-view"

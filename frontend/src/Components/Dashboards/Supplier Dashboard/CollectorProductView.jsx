@@ -12,8 +12,10 @@ import {
 } from "react-icons/fa";
 import "./Styles/CollectorProductView.css";
 import api from "../../../api/axiosConfig";
+import { useSocket } from "../../../context/SocketContext";
 
 const CollectorProductView = ({ collector, onBack, onAddToCart }) => {
+  const socket = useSocket();
   const [searchTerm, setSearchTerm] = useState("");
   // Immediate data: Use local storage cache for this specific collector
   const [products, setProducts] = useState(() => {
@@ -31,7 +33,16 @@ const CollectorProductView = ({ collector, onBack, onAddToCart }) => {
       // Re-fetch to ensure data is fresh, while the cached data is already visible
       fetchProducts();
     }
-  }, [collector]);
+
+    if (socket) {
+      const handleUpdate = () => {
+        console.log(">>> [CollectorProduct Socket] Refreshing products");
+        fetchProducts();
+      };
+      socket.on("dashboard:update", handleUpdate);
+      return () => socket.off("dashboard:update", handleUpdate);
+    }
+  }, [collector, socket]);
 
   const fetchProducts = async () => {
     try {

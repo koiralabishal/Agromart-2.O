@@ -47,6 +47,8 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
 
       // Store user data and token
       localStorage.setItem("user", JSON.stringify(data));
+      window.dispatchEvent(new Event("userUpdated"));
+      window.dispatchEvent(new Event("userUpdated"));
 
       // Close popup
       toggleLoginPopup();
@@ -111,31 +113,14 @@ const LoginPopup = ({ toggleLoginPopup, toggleSignupPopup }) => {
             </div>
           </div>
 
-          {error && (
-            <p
-              className="error-message"
-              style={{
-                color: "#ff4444",
-                fontSize: "0.85rem",
-                marginBottom: "1rem",
-                textAlign: "center",
-                width: "100%",
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {error && <p className="error-message">{error}</p>}
 
           <a href="#" className="forgot-password">
             Forgot password?
           </a>
 
           <button type="submit" className="login-submit-btn" disabled={loading}>
-            {loading ? (
-              "Logging..."
-            ) : (
-              "Login"
-            )}
+            {loading ? "Logging..." : "Login"}
           </button>
 
           <button

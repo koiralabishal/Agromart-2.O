@@ -1,10 +1,12 @@
-/* DetailedAnalytics.css */
+/* DetailedAnalytics.css - Synchronized with Farmer Dashboard */
+
 .detailed-analytics {
-  padding: 1rem 0;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  background-color: transparent;
+  gap: 2.5rem;
+  background-color: #fafafa;
+  border-radius: 20px;
 }
 
 .da-header {
@@ -14,10 +16,11 @@
 }
 
 .da-header h1 {
-  font-size: 1.85rem;
+  font-size: 2rem;
   font-weight: 800;
-  color: #111827;
+  color: #1a1a1a;
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .da-actions {
@@ -28,58 +31,70 @@
 .da-btn {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .da-white {
   background: white;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  border: 1px solid #edf2f7;
+  color: #4a5568;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .da-white:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #f7fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .da-green {
   background: #1dc956;
   border: none;
   color: white;
+  box-shadow: 0 4px 14px rgba(29, 201, 86, 0.25);
 }
 
 .da-green:hover {
-  background: #16a34a;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(29, 201, 86, 0.2);
+  background: #15a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(29, 201, 86, 0.35);
 }
 
+.da-btn.active {
+  background: #16a34a !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4) !important;
+}
+
+/* Stats Grid */
 .da-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* 3 cols = 2 rows for 5 items */
   gap: 1.5rem;
 }
 
 .da-stat-card {
-  background: #1dc956;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 20px;
+  padding: 1.75rem;
   color: white;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  transition: transform 0.3s ease;
-  min-height: 140px;
+  align-items: center;
+  transition: all 0.3s ease;
+  min-height: 150px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .da-stat-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .da-stat-info {
@@ -89,214 +104,174 @@
 }
 
 .da-stat-title {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  opacity: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
 }
 
 .da-stat-value {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 800;
   margin: 0;
+  line-height: 1.2;
 }
 
 .da-stat-change {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .da-stat-icon-wrapper {
-  background: rgba(255, 255, 255, 0.15);
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  backdrop-filter: blur(4px);
 }
 
-.da-charts-container {
+/* Layout Rows */
+.da-charts-main-row {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 2fr 1.2fr;
+  gap: 2rem;
 }
 
-.da-chart-box {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+.da-charts-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
-.da-chart-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
+.da-charts-full-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: 2rem;
 }
 
-.da-chart-subtitle {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin-bottom: 2rem;
-}
-
-/* AI Prediction Section */
-.ai-prediction-section {
-  display: flex;
-  flex-direction: column;
+.da-charts-dual-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-top: 2rem;
 }
 
-.ai-prediction-section h2 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #111827;
+.da-demand-chart-container {
+  width: 100%;
+  padding: 2rem;
+  margin: 0;
 }
 
-.prediction-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.da-chart-box {
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
-.prediction-card {
-  padding: 1.5rem;
-  border-radius: 16px;
+.da-chart-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.25rem 0;
+}
+
+.da-chart-header p {
+  font-size: 0.9rem;
+  color: #718096;
+  margin: 0;
+}
+
+.da-empty-chart {
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  color: white;
-  transition: transform 0.3s;
-}
-
-.prediction-card.green {
-  background: #1dc956;
-}
-
-.prediction-card.red {
-  background: #f87171;
-}
-
-.prediction-card:hover {
-  transform: translateY(-5px);
-}
-
-.p-card-icon {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-}
-
-.p-card-val {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: 0.5rem;
-}
-
-.prediction-card h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-}
-
-.prediction-card p {
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-.prediction-chart-box {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 2rem;
-}
-
-.pc-header {
-  margin-bottom: 2rem;
-}
-
-.pc-header h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.pc-header p {
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-.predicted-list-box {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 2rem;
-}
-
-.predicted-list-box h3 {
-  margin-bottom: 1.5rem;
-  font-size: 1.2rem;
-}
-
-.prediction-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.prediction-table th {
-  text-align: left;
-  padding: 1rem;
-  border-bottom: 2px solid #f1f5f9;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.prediction-table td {
-  padding: 1.2rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.95rem;
-  color: #111827;
-}
-
-.conf-badge {
-  padding: 0.3rem 0.8rem;
+  justify-content: center;
+  color: #a0aec0;
+  font-weight: 500;
+  font-size: 1rem;
+  background: #f8fafc;
   border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border: 2px dashed #cbd5e0;
+  padding: 2rem;
+  text-align: center;
 }
 
-.conf-badge.high {
-  background: #dcfce7;
-  color: #166534;
-}
-.conf-badge.medium {
-  background: #fef9c3;
-  color: #854d0e;
-}
-.conf-badge.low {
-  background: #fee2e2;
-  color: #991b1b;
+/* Recharts Customization */
+.recharts-tooltip-cursor {
+  stroke: #f1f5f9;
 }
 
-.trend-badge {
-  display: flex;
+.recharts-legend-item {
+  display: inline-flex !important;
   align-items: center;
-  gap: 0.4rem;
-  font-weight: 600;
+  margin-right: 20px !important;
 }
 
-.trend-badge.up {
-  color: #1dc956;
-}
-.trend-badge.down {
-  color: #f87171;
+/* Responsive */
+@media (max-width: 1200px) {
+  .da-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-@media (max-width: 1024px) {
-  .prediction-summary-grid {
+@media (max-width: 650px) {
+  .da-stats-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .da-charts-main-row {
+    grid-template-columns: 1fr;
+  }
+  .da-charts-dual-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .detailed-analytics {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .da-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .da-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .da-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .da-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .da-stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .da-chart-box {
+    padding: 1rem;
   }
 }

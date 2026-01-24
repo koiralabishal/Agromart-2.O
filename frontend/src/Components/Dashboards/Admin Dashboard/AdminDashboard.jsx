@@ -28,22 +28,24 @@ import AdminWalletView from "./AdminWalletView";
 import AdminDisputesView from "./AdminDisputesView";
 
 import api from "../../../api/axiosConfig";
+import { useSocket } from "../../../context/SocketContext";
 
 const AdminDashboard = () => {
+  const socket = useSocket();
   // ... (state lines)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState(
-    sessionStorage.getItem("adminActiveView") || "dashboard",
+    localStorage.getItem("adminActiveView") || "dashboard",
   );
   const [selectedUser, setSelectedUser] = useState(null);
   const [stats, setStats] = useState(() => {
-    const saved = sessionStorage.getItem("adminStats");
+    const saved = localStorage.getItem("adminStats");
     return saved ? JSON.parse(saved) : null;
   });
 
   // Global Dashboard Cache
   const [dataCache, setDataCache] = useState(() => {
-    const saved = sessionStorage.getItem("adminDataCache");
+    const saved = localStorage.getItem("adminDataCache");
     return saved
       ? JSON.parse(saved)
       : {
@@ -74,7 +76,7 @@ const AdminDashboard = () => {
 
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState(
-    JSON.parse(sessionStorage.getItem("adminExpandedSections")) || {
+    JSON.parse(localStorage.getItem("adminExpandedSections")) || {
       management: false,
       operations: false,
       financial: false,
@@ -92,63 +94,126 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    sessionStorage.setItem("adminActiveView", activeView);
-    sessionStorage.setItem(
+    localStorage.setItem("adminActiveView", activeView);
+    localStorage.setItem(
       "adminExpandedSections",
       JSON.stringify(expandedSections),
     );
-    sessionStorage.setItem("adminDataCache", JSON.stringify(dataCache));
+    localStorage.setItem("adminDataCache", JSON.stringify(dataCache));
     if (stats) {
-      sessionStorage.setItem("adminStats", JSON.stringify(stats));
+      localStorage.setItem("adminStats", JSON.stringify(stats));
     }
   }, [activeView, expandedSections, dataCache, stats]);
 
-  useEffect(() => {
-    const prefetchAll = async () => {
-      try {
-        // 1. Stats
-        const statsRes = await api.get("/admin/stats");
-        setStats(statsRes.data);
-
-        // 2. Background prefetch other core sections
-        api
-          .get("/admin/users?role=farmer")
-          .then((res) => updateCache("farmers", res.data));
-        api
-          .get("/admin/users?role=collector")
-          .then((res) => updateCache("collectors", res.data));
-        api
-          .get("/admin/users?role=supplier")
-          .then((res) => updateCache("suppliers", res.data));
-        api
-          .get("/admin/users?role=buyer")
-          .then((res) => updateCache("buyers", res.data));
-        api.get("/admin/orders").then((res) => updateCache("orders", res.data));
-        api
-          .get("/admin/products")
-          .then((res) => updateCache("products", res.data));
-        api
-          .get("/admin/inventory")
-          .then((res) => updateCache("inventory", res.data));
-        api
-          .get("/admin/wallets")
-          .then((res) => updateCache("wallets", res.data));
-        api
-          .get("/admin/cod-ledger")
-          .then((res) => updateCache("codLedger", res.data));
-        api
-          .get("/admin/withdrawals")
-          .then((res) => updateCache("withdrawals", res.data));
-        api
-          .get("/admin/disputes")
-          .then((res) => updateCache("disputes", res.data));
-      } catch (err) {
-        console.error("Error prefetching admin data", err);
+  // Optimized Prefetch Logic
+  const preFetchAdminData = React.useCallback(async (isSilent = false) => {
+    try {
+      if (!isSilent && !stats) {
+        // Only show major loading if we have literally no data
       }
-    };
 
-    prefetchAll();
-  }, [refreshTrigger]);
+      const ts = Date.now();
+
+      // 1. Stats with cache busting
+      const statsRes = await api.get(`/admin/stats?v=${ts}`);
+      setStats(statsRes.data);
+      localStorage.setItem("adminStats", JSON.stringify(statsRes.data));
+
+      // 2. Parallel Background Fetch
+      Promise.allSettled([
+        api
+          .get(`/admin/users?role=farmer&v=${ts}`)
+          .then((res) => updateCache("farmers", res.data)),
+        api
+          .get(`/admin/users?role=collector&v=${ts}`)
+          .then((res) => updateCache("collectors", res.data)),
+        api
+          .get(`/admin/users?role=supplier&v=${ts}`)
+          .then((res) => updateCache("suppliers", res.data)),
+        api
+          .get(`/admin/users?role=buyer&v=${ts}`)
+          .then((res) => updateCache("buyers", res.data)),
+        api
+          .get(`/admin/orders?v=${ts}`)
+          .then((res) => updateCache("orders", res.data)),
+        api
+          .get(`/admin/products?v=${ts}`)
+          .then((res) => updateCache("products", res.data)),
+        api
+          .get(`/admin/inventory?v=${ts}`)
+          .then((res) => updateCache("inventory", res.data)),
+        api
+          .get(`/admin/wallets?v=${ts}`)
+          .then((res) => updateCache("wallets", res.data)),
+        api
+          .get(`/admin/cod-ledger?v=${ts}`)
+          .then((res) => updateCache("codLedger", res.data)),
+        api
+          .get(`/admin/withdrawals?v=${ts}`)
+          .then((res) => updateCache("withdrawals", res.data)),
+        api
+          .get(`/admin/disputes?v=${ts}`)
+          .then((res) => updateCache("disputes", res.data)),
+        api
+          .get(`/admin/online-transactions?v=${ts}`)
+          .then((res) => updateCache("onlineTransactions", res.data)),
+      ]);
+
+      console.log(
+        `>>> Admin sync complete (${isSilent ? "Silent" : "Full"}) - ${new Date().toLocaleTimeString()}`,
+      );
+    } catch (err) {
+      console.error("Error prefetching admin data", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial fetch
+    preFetchAdminData(!!stats); // Silent if we already have stats
+
+    // Real-time socket updates
+    if (socket) {
+      // 1. Enforce Admin Room Join (in case Provider missed it or role changed)
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user?.role === "admin") {
+        socket.emit("join-room", { userId: user._id, role: "admin" });
+        console.log(">>> [Admin Dashboard] Explicitly joined 'admin' room");
+      }
+
+      const handleGlobalUpdate = (data) => {
+        console.log(
+          ">>> [Admin Socket] Global update received:",
+          data.type,
+          data,
+        );
+
+        // Instant Update for Recent Activities
+        if (data.type === "ACTIVITY_LOGGED" && data.activity) {
+          setStats((prevStats) => {
+            if (!prevStats) return prevStats;
+            const newActivities = [
+              data.activity,
+              ...(prevStats.recentActivity || []),
+            ].slice(0, 20);
+            return { ...prevStats, recentActivity: newActivities };
+          });
+        }
+
+        // Trigger full data refresh (silent)
+        preFetchAdminData(true);
+      };
+
+      socket.on("order:new", handleGlobalUpdate);
+      socket.on("dashboard:update", handleGlobalUpdate);
+      socket.on("user:register", handleGlobalUpdate);
+
+      return () => {
+        socket.off("order:new", handleGlobalUpdate);
+        socket.off("dashboard:update", handleGlobalUpdate);
+        socket.off("user:register", handleGlobalUpdate);
+      };
+    }
+  }, [socket, preFetchAdminData]);
 
   const handleLogout = async () => {
     try {
@@ -380,6 +445,7 @@ const AdminDashboard = () => {
               walletsCache={dataCache.wallets}
               codCache={dataCache.codLedger}
               withdrawalsCache={dataCache.withdrawals}
+              onlineCache={dataCache.onlineTransactions}
               onCacheUpdate={updateCache}
             />
           )}

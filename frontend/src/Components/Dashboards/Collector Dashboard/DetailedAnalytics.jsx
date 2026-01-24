@@ -1,15 +1,20 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
   LineChart,
   Line,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Label,
+  LabelList,
 } from "recharts";
 import {
   FaRegCalendarAlt,
@@ -18,227 +23,684 @@ import {
   FaLeaf,
   FaUsers,
   FaChartLine,
-  FaArrowUp,
-  FaArrowDown,
-  FaDatabase,
-  FaBullseye,
+  FaChartBar,
+  FaShoppingCart,
+  FaChartPie,
+  FaShoppingBag,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import "./Styles/DetailedAnalytics.css";
-import Pagination from "../../Common/Pagination";
 
+const DetailedAnalytics = ({
+  orders = { received: [], placed: [] },
+  wallet = {},
+  walletData = null,
+  products: farmers = [],
+}) => {
+  const [timeFilter, setTimeFilter] = useState("current"); // "current" or "last"
+  const activeFarmersCount = farmers?.length || 0;
 
-const DetailedAnalytics = () => {
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 10;
+  // Filter logic for monthly analytics
+  const filterOrdersByMonth = (orderList) => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-  const salesData = [
-    { name: "Jan", fruits: 400, vegetables: 240 },
-    { name: "Feb", fruits: 300, vegetables: 139 },
-    { name: "Mar", fruits: 200, vegetables: 980 },
-    { name: "Apr", fruits: 278, vegetables: 390 },
-    { name: "May", fruits: 189, vegetables: 480 },
-    { name: "Jun", fruits: 239, vegetables: 380 },
-    { name: "Jul", fruits: 349, vegetables: 430 },
-    { name: "Aug", fruits: 200, vegetables: 500 },
-    { name: "Sep", fruits: 278, vegetables: 390 },
-    { name: "Oct", fruits: 189, vegetables: 480 },
-    { name: "Nov", fruits: 239, vegetables: 380 },
-    { name: "Dec", fruits: 349, vegetables: 430 },
-  ];
+    let targetMonth, targetYear;
+    if (timeFilter === "current") {
+      targetMonth = currentMonth;
+      targetYear = currentYear;
+    } else {
+      targetMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      targetYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    }
 
-  const demandData = [
-    { name: "Tomatoes", value: 500 },
-    { name: "Potatoes", value: 450 },
-    { name: "Onions", value: 400 },
-    { name: "Bell Peppers", value: 370 },
-    { name: "Apples", value: 350 },
-  ];
+    return (orderList || []).filter((order) => {
+      const d = new Date(order.createdAt);
+      return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+    });
+  };
 
-  const predictedDemandData = [
-    { name: "Jan", value: 420 },
-    { name: "Feb", value: 480 },
-    { name: "Mar", value: 550 },
-  ];
-
-  const stats = [
-    {
-      title: "Total Sales Revenue",
-      value: "Rs. 28,450",
-      change: "+12.5% from last month",
-      icon: <TbCurrencyRupeeNepalese />,
-    },
-    {
-      title: "Products Sold",
-      value: "7,890 units",
-      change: "+8.1% from last month",
-      icon: <FaLeaf />,
-    },
-    {
-      title: "New Customers",
-      value: "145",
-      change: "+18% from last month",
-      icon: <FaUsers />,
-    },
-    {
-      title: "Average Order Value",
-      value: "Rs. 1,200.50",
-      change: "+3.2% from last month",
-      icon: <FaChartLine />,
-    },
-  ];
-
-  const predictions = [
-    { title: "High Demand", value: "15", description: "Products predicted to sell rapidly.", color: "green", icon: <FaArrowUp /> },
-    { title: "Average Demand", value: "30", description: "Products with stable, predictable sales.", color: "green", icon: <FaDatabase /> },
-    { title: "Low Demand", value: "8", description: "Products requiring attention or promotion.", color: "red", icon: <FaArrowDown /> },
-  ];
-
-  const predictionList = [
-    { name: "Tomatoes", quantity: 1200, confidence: "High", trend: "Up" },
-    { name: "Apples", quantity: 1100, confidence: "Medium", trend: "Up" },
-    { name: "Spinach", quantity: 800, confidence: "High", trend: "Up" },
-    { name: "Potatoes", quantity: 950, confidence: "Medium", trend: "Down" },
-    { name: "Oranges", quantity: 700, confidence: "Low", trend: "Down" },
-    { name: "Carrots", quantity: 620, confidence: "High", trend: "Up" },
-    { name: "Bananas", quantity: 550, confidence: "Medium", trend: "Down" },
-  ];
-
-  const paginatedPredictions = predictionList.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+  const filteredReceived = useMemo(
+    () => filterOrdersByMonth(orders.received),
+    [orders.received, timeFilter],
   );
+  const filteredPlaced = useMemo(
+    () => filterOrdersByMonth(orders.placed),
+    [orders.placed, timeFilter],
+  );
+
+  // Helper for Daily Trend Logic
+  const getDailyTrendData = (orderList, isReviewingOrders = false) => {
+    const now = new Date();
+    let targetMonth, targetYear;
+    if (timeFilter === "current") {
+      targetMonth = now.getMonth();
+      targetYear = now.getFullYear();
+    } else {
+      targetMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+      targetYear =
+        now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    }
+
+    const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+    const data = Array.from({ length: daysInMonth }, (_, i) => ({
+      name: (i + 1).toString(),
+      fruits: 0,
+      vegetables: 0,
+    }));
+
+    orderList.forEach((order) => {
+      // For Sales (Received): Must be Delivered & Paid
+      // For Purchases (Placed): Must be Delivered
+      const isValid =
+        order.status === "Delivered" &&
+        (isReviewingOrders
+          ? true
+          : order.paymentStatus === "Paid" ||
+            order.paymentStatus === "Completed");
+
+      if (!isValid) return;
+
+      const day = new Date(order.createdAt).getDate();
+      if (day > daysInMonth) return;
+
+      order.products.forEach((item) => {
+        const category = item.category
+          ? item.category.toLowerCase()
+          : "vegetables";
+        if (category.includes("fruit")) {
+          data[day - 1].fruits += item.quantity;
+        } else {
+          data[day - 1].vegetables += item.quantity;
+        }
+      });
+    });
+    return data;
+  };
+
+  // 1. Sales Trend (Sold to Buyers)
+  const salesTrendData = useMemo(
+    () => getDailyTrendData(filteredReceived, false),
+    [filteredReceived, timeFilter],
+  );
+
+  // 2. Purchase Trend (Bought from Farmers)
+  const purchaseTrendData = useMemo(
+    () => getDailyTrendData(filteredPlaced, true),
+    [filteredPlaced, timeFilter],
+  );
+
+
+  // Helper for Top Sales Products (Delivered + Paid only)
+  const getTopSalesData = (orderList) => {
+    const productMap = {};
+    orderList.forEach((order) => {
+      // Only count Delivered orders with Paid/Completed payment
+      if (
+        order.status !== "Delivered" ||
+        (order.paymentStatus !== "Paid" && order.paymentStatus !== "Completed")
+      )
+        return;
+      order.products.forEach((item) => {
+        productMap[item.productName] =
+          (productMap[item.productName] || 0) + item.quantity;
+      });
+    });
+    return Object.keys(productMap)
+      .map((name) => ({ name, value: productMap[name] }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  };
+
+  // Helper for Top Purchase Products (Delivered only)
+  const getTopPurchaseData = (orderList) => {
+    const productMap = {};
+    orderList.forEach((order) => {
+      // Only count Delivered orders
+      if (order.status !== "Delivered") return;
+      order.products.forEach((item) => {
+        productMap[item.productName] =
+          (productMap[item.productName] || 0) + item.quantity;
+      });
+    });
+    return Object.keys(productMap)
+      .map((name) => ({ name, value: productMap[name] }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  };
+
+  // 3. Top Sales Products
+  const topSalesData = useMemo(
+    () => getTopSalesData(filteredReceived),
+    [filteredReceived],
+  );
+  // 4. Top Purchase Products
+  const topPurchaseData = useMemo(
+    () => getTopPurchaseData(filteredPlaced),
+    [filteredPlaced],
+  );
+
+  // 5. Unified Order Status (Placed + Received)
+  const orderStatusData = useMemo(() => {
+    let pending = 0;
+    let active = 0;
+    let delivered = 0;
+    let canceled = 0;
+
+    const countStatus = (list) => {
+      list.forEach((order) => {
+        const s = order.status;
+        if (s === "Delivered") delivered++;
+        else if (s === "Canceled" || s === "Rejected") canceled++;
+        else if (s === "Accepted" || s === "Processing" || s === "Shipping")
+          active++;
+        else pending++;
+      });
+    };
+
+    countStatus(filteredReceived);
+    countStatus(filteredPlaced);
+
+    if (pending === 0 && active === 0 && delivered === 0 && canceled === 0)
+      return [];
+
+    return [
+      { name: "Pending", value: pending, color: "#f39c12" },
+      { name: "Active", value: active, color: "#3498db" },
+      { name: "Delivered", value: delivered, color: "#1dc956" },
+      { name: "Canceled", value: canceled, color: "#e74c3c" },
+    ];
+  }, [filteredReceived, filteredPlaced]);
+
+  // 6. Statistics Calculation
+  const stats = useMemo(() => {
+    // Sales Logic
+    const finalSales = filteredReceived.filter(
+      (o) =>
+        o.status === "Delivered" &&
+        (o.paymentStatus === "Paid" || o.paymentStatus === "Completed"),
+    );
+    const totalRevenue = finalSales.reduce(
+      (sum, o) => sum + Number(o.totalAmount || 0),
+      0,
+    );
+
+    const totalProductsSold = finalSales.reduce((acc, order) => {
+      return acc + order.products.reduce((sum, p) => sum + p.quantity, 0);
+    }, 0);
+
+    // Purchases Logic
+    const finalPurchases = filteredPlaced.filter(
+      (o) => o.status === "Delivered",
+    ); // Considering delivered as purchased
+    const totalPurchases = finalPurchases.reduce(
+      (sum, o) => sum + Number(o.totalAmount || 0),
+      0,
+    );
+    const itemPurchases = finalPurchases.reduce(
+      (acc, order) =>
+        acc + order.products.reduce((sum, p) => sum + p.quantity, 0),
+      0,
+    );
+
+    // Unique Buyers Logic (From Delivered + Paid Sales only)
+    const uniqueBuyers = new Set(
+      finalSales.map((o) => o.buyerID?._id || o.buyerID),
+    ).size;
+
+    const currentMonthName = new Date().toLocaleString("default", {
+      month: "long",
+    });
+    const lastMonthName = new Date(
+      new Date().setMonth(new Date().getMonth() - 1),
+    ).toLocaleString("default", { month: "long" });
+    const periodName =
+      timeFilter === "current" ? currentMonthName : lastMonthName;
+
+    return [
+      {
+        title: "Total Sales",
+        value: `Rs. ${totalRevenue.toLocaleString()}`,
+        subtitle: `${periodName} Revenue`,
+        icon: <TbCurrencyRupeeNepalese />,
+        color: "#1dc956",
+      },
+      {
+        title: "Items Sold",
+        value: `${totalProductsSold.toLocaleString()}`,
+        subtitle: `${periodName} Units`,
+        icon: <FaLeaf />,
+        color: "#1dc956",
+      },
+      {
+        title: "Total Purchases",
+        value: `Rs. ${totalPurchases.toLocaleString()}`,
+        subtitle: `${periodName} Spend`,
+        icon: <FaShoppingBag />,
+        color: "#1dc956",
+      },
+      {
+        title: "Item Purchases",
+        value: `${itemPurchases.toLocaleString()}`,
+        subtitle: "Units Bought",
+        icon: <FaShoppingCart />,
+        color: "#1dc956",
+      },
+      {
+        title: "Unique Buyers",
+        value: `${uniqueBuyers}`,
+        subtitle: "Active Customers",
+        icon: <FaUsers />,
+        color: "#1dc956",
+      },
+    ];
+  }, [filteredReceived, filteredPlaced, timeFilter]);
 
   return (
     <div className="detailed-analytics">
       <div className="da-header">
         <h1>Detailed Analytics</h1>
         <div className="da-actions">
-          <button className="da-btn da-white"><FaRegCalendarAlt /> Last 30 Days</button>
-          <button className="da-btn da-white"><FaFilter /> Metric: Quantity</button>
-          <button className="da-btn da-green"><FaDownload /> Export Data</button>
+          <button
+            className={`da-btn ${timeFilter === "current" ? "da-green active" : "da-white"}`}
+            onClick={() => setTimeFilter("current")}
+          >
+            <FaRegCalendarAlt /> Current Month
+          </button>
+          <button
+            className={`da-btn ${timeFilter === "last" ? "da-green active" : "da-white"}`}
+            onClick={() => setTimeFilter("last")}
+          >
+            <FaRegCalendarAlt /> Last Month
+          </button>
+          <button className="da-btn da-white">
+            <FaDownload /> Export
+          </button>
         </div>
       </div>
 
+      {/* Metric Cards */}
       <div className="da-stats-grid">
         {stats.map((stat, index) => (
-          <div key={index} className="da-stat-card">
+          <div
+            key={index}
+            className="da-stat-card"
+            style={{ background: stat.color }}
+          >
             <div className="da-stat-info">
               <span className="da-stat-title">{stat.title}</span>
               <h2 className="da-stat-value">{stat.value}</h2>
-              <span className="da-stat-change">{stat.change}</span>
+              <span className="da-stat-change">{stat.subtitle}</span>
             </div>
             <div className="da-stat-icon-wrapper">{stat.icon}</div>
           </div>
         ))}
       </div>
 
-      <div className="da-charts-container">
-        <div className="da-chart-box">
-          <div className="da-chart-title">Monthly Sales Trend</div>
-          <div className="da-chart-subtitle">Sales quantity of Fruits vs. Vegetables.</div>
-          <div style={{ width: "100%", height: 350 }}>
-            <ResponsiveContainer>
-              <LineChart data={salesData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 12 }} />
-                <YAxis tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="fruits" name="Fruits" stroke="#F5A623" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="vegetables" name="Vegetables" stroke="#1DC956" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+      {/* Row 1: Sales Trend + Combined Pie Chart */}
+      <div className="da-charts-main-row">
+        <div className="da-chart-box large-chart">
+          <div className="da-chart-header">
+            <h3>Daily Sales Trend</h3>
+            <p>Sales distribution (Sold to Buyers) for the selected month</p>
+          </div>
+          <div style={{ width: "100%", height: 400 }}>
+            {salesTrendData.some((d) => d.fruits > 0 || d.vegetables > 0) ? (
+              <ResponsiveContainer>
+                <LineChart
+                  data={salesTrendData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#666" }}
+                    height={50}
+                  >
+                    <Label
+                      value="Day"
+                      offset={0}
+                      position="insideBottom"
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        fill: "#4a5568",
+                      }}
+                    />
+                  </XAxis>
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#666" }}
+                    width={60}
+                    allowDecimals={false}
+                  >
+                    <Label
+                      value="Quantity"
+                      angle={-90}
+                      position="insideLeft"
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        fill: "#4a5568",
+                        textAnchor: "middle",
+                      }}
+                    />
+                  </YAxis>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                    }}
+                  />
+                  <Legend verticalAlign="top" align="right" iconType="circle" />
+                  <Line
+                    type="monotone"
+                    dataKey="vegetables"
+                    name="Vegetables"
+                    stroke="#1dc956"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="fruits"
+                    name="Fruits"
+                    stroke="#f1c40f"
+                    strokeWidth={3}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="da-empty-chart">
+                <FaChartLine size={40} style={{ marginBottom: "1rem" }} />
+                <span>No sales data for this period</span>
+              </div>
+            )}
           </div>
         </div>
-        <div className="da-chart-box">
-          <div className="da-chart-title">Top 5 Product Demand</div>
-          <div className="da-chart-subtitle">Top demanded vegetables and fruits by quantity.</div>
+
+        <div className="da-chart-box side-chart">
+          <div className="da-chart-header">
+            <h3>Order Status</h3>
+            <p>Overall (Sales & Purchases)</p>
+          </div>
           <div style={{ width: "100%", height: 350 }}>
-            <ResponsiveContainer>
-              <BarChart layout="vertical" data={demandData} margin={{ top: 5, right: 30, left: 10, bottom: 30 }}>
-                <XAxis type="number" tick={{ fill: "#888", fontSize: 12 }} />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: "#555", fontSize: 12 }} width={100} />
-                <Tooltip cursor={{ fill: "transparent" }} />
-                <Bar dataKey="value" fill="#1DC956" radius={[0, 4, 4, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+            {orderStatusData.length > 0 ? (
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={orderStatusData}
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {orderStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: "12px", border: "none" }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="da-empty-chart">
+                <FaChartPie size={40} style={{ marginBottom: "1rem" }} />
+                <span>No order data found</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* AI Demand Prediction Section */}
-      <div className="ai-prediction-section">
-        <h2>AI Demand Prediction</h2>
-        <div className="prediction-summary-grid">
-           {predictions.map((p, i) => (
-             <div key={i} className={`prediction-card ${p.color}`}>
-                <div className="p-card-icon">{p.icon}</div>
-                <div className="p-card-val">{p.value}</div>
-                <h3>{p.title}</h3>
-                <p>{p.description}</p>
-             </div>
-           ))}
+      {/* Row 2: Purchase Trend (Full Width or Split) - Keeping structure standard */}
+      <div className="da-charts-full-row">
+        <div className="da-chart-box">
+          <div className="da-chart-header">
+            <h3>Daily Purchase Trend</h3>
+            <p>
+              Purchase distribution (Bought from Farmers) for the selected month
+            </p>
+          </div>
+          <div style={{ width: "100%", height: 400 }}>
+            {purchaseTrendData.some((d) => d.fruits > 0 || d.vegetables > 0) ? (
+              <ResponsiveContainer>
+                <LineChart
+                  data={purchaseTrendData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#666" }}
+                    height={50}
+                  >
+                    <Label
+                      value="Day"
+                      offset={0}
+                      position="insideBottom"
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        fill: "#4a5568",
+                      }}
+                    />
+                  </XAxis>
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#666" }}
+                    width={60}
+                    allowDecimals={false}
+                  >
+                    <Label
+                      value="Quantity"
+                      angle={-90}
+                      position="insideLeft"
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        fill: "#4a5568",
+                        textAnchor: "middle",
+                      }}
+                    />
+                  </YAxis>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                    }}
+                  />
+                  <Legend verticalAlign="top" align="right" iconType="circle" />
+                  <Line
+                    type="monotone"
+                    dataKey="vegetables"
+                    name="Vegetables"
+                    stroke="#3498db"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="fruits"
+                    name="Fruits"
+                    stroke="#e67e22"
+                    strokeWidth={3}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="da-empty-chart">
+                <FaShoppingBag size={40} style={{ marginBottom: "1rem" }} />
+                <span>No purchase data for this period</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: Top Sales & Top Purchases (Side by Side) */}
+      <div className="da-charts-dual-row">
+        {/* Top Sales */}
+        <div className="da-chart-box">
+          <div className="da-chart-header">
+            <h3>Top Products Sold</h3>
+            <p>Highest quantity sold to buyers</p>
+          </div>
+          <div className="da-demand-chart-container">
+            {topSalesData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  layout="vertical"
+                  data={topSalesData}
+                  margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
+                  barCategoryGap="15%"
+                >
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    horizontal={true}
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    type="number"
+                    axisLine={true}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#666" }}
+                    allowDecimals={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#4a5568", fontWeight: "600" }}
+                    width={90}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#f8f8f8" }}
+                    contentStyle={{ borderRadius: "12px", border: "none" }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="#1dc956"
+                    radius={[0, 6, 6, 0]}
+                    barSize={20}
+                  >
+                    <LabelList
+                      dataKey="value"
+                      position="right"
+                      fill="#666"
+                      fontSize={11}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="da-empty-chart">
+                <FaLeaf size={32} style={{ marginBottom: "1rem" }} />
+                <span>No sales data</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="prediction-chart-box">
-           <div className="pc-header">
-              <h3>Vegetables Predicted Demand (Next 3 Months)</h3>
-              <p>Seasonal demand forecast.</p>
-           </div>
-           <div style={{ width: "100%", height: 300 }}>
-             <ResponsiveContainer>
-               <BarChart data={predictedDemandData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                 <XAxis dataKey="name" />
-                 <YAxis />
-                 <Tooltip />
-                 <Bar dataKey="value" fill="#1DC956" radius={[4, 4, 0, 0]} barSize={60} />
-               </BarChart>
-             </ResponsiveContainer>
-           </div>
-        </div>
-
-        <div className="predicted-list-box">
-           <h3>Predicted Products List</h3>
-           <table className="prediction-table">
-             <thead>
-               <tr>
-                 <th>Product Name</th>
-                 <th>Predicted Quantity</th>
-                 <th>Confidence Level</th>
-                 <th>Trend</th>
-               </tr>
-             </thead>
-             <tbody>
-               {paginatedPredictions.map((item, i) => (
-                 <tr key={i}>
-                   <td>{item.name}</td>
-                   <td>{item.quantity}</td>
-                   <td>
-                     <span className={`conf-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span>
-                   </td>
-                   <td>
-                     <span className={`trend-badge ${item.trend.toLowerCase()}`}>
-                       {item.trend === "Up" ? <FaArrowUp /> : <FaArrowDown />} {item.trend}
-                     </span>
-                   </td>
-                 </tr>
-               ))}
-             </tbody>
-           </table>
-           {predictionList.length > itemsPerPage && (
-             <Pagination
-               currentPage={currentPage}
-               totalItems={predictionList.length}
-               itemsPerPage={itemsPerPage}
-               onPageChange={(page) => setCurrentPage(page)}
-             />
-           )}
+        {/* Top Purchases */}
+        <div className="da-chart-box">
+          <div className="da-chart-header">
+            <h3>Top Products Purchased</h3>
+            <p>Highest quantity bought from farmers</p>
+          </div>
+          <div className="da-demand-chart-container">
+            {topPurchaseData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  layout="vertical"
+                  data={topPurchaseData}
+                  margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
+                  barCategoryGap="15%"
+                >
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    horizontal={true}
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    type="number"
+                    axisLine={true}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#666" }}
+                    allowDecimals={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#4a5568", fontWeight: "600" }}
+                    width={90}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#f8f8f8" }}
+                    contentStyle={{ borderRadius: "12px", border: "none" }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="#3498db"
+                    radius={[0, 6, 6, 0]}
+                    barSize={20}
+                  >
+                    <LabelList
+                      dataKey="value"
+                      position="right"
+                      fill="#666"
+                      fontSize={11}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="da-empty-chart">
+                <FaShoppingBag size={32} style={{ marginBottom: "1rem" }} />
+                <span>No purchase data</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
 export default DetailedAnalytics;

@@ -14,11 +14,12 @@ import "./Styles/PaymentsView.css";
 import api from "../../../api/axiosConfig";
 import Pagination from "../../Common/Pagination";
 
-const PaymentsView = () => {
+const PaymentsView = ({ walletDataProp }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
 
   const [walletData, setWalletData] = useState(() => {
+    if (walletDataProp) return walletDataProp;
     try {
       const cached = localStorage.getItem(`cached_supplier_wallet_${userID}`);
       return cached ? JSON.parse(cached) : null;
@@ -27,7 +28,7 @@ const PaymentsView = () => {
       return null;
     }
   });
-  const [loading, setLoading] = useState(!walletData); // Only load if no cache
+  const [loading, setLoading] = useState(false); // Zero-Loading: Never show blocking loading
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState("eSewa");
@@ -41,7 +42,7 @@ const PaymentsView = () => {
 
   const fetchWalletData = async () => {
     try {
-      const response = await api.get(`/wallet/${userID}`);
+      const response = await api.get(`/wallet/${userID}?v=${Date.now()}`);
       setWalletData(response.data);
       localStorage.setItem(
         `cached_supplier_wallet_${userID}`,
@@ -57,7 +58,9 @@ const PaymentsView = () => {
   const fetchPaymentDetails = async () => {
     if (!userID) return;
     try {
-      const response = await api.get(`/wallet/payment-details/${userID}`);
+      const response = await api.get(
+        `/wallet/payment-details/${userID}?v=${Date.now()}`,
+      );
       if (response.data) {
         setWithdrawMethod(response.data.paymentMethod || "eSewa");
         setAccountDetails(response.data.gatewayId || "");
@@ -67,11 +70,23 @@ const PaymentsView = () => {
     }
   };
 
+  // Sync internal state when props change
   useEffect(() => {
-    if (userID) {
+    if (walletDataProp) {
+      setWalletData(walletDataProp);
+      localStorage.setItem(
+        `cached_supplier_wallet_${userID}`,
+        JSON.stringify(walletDataProp),
+      );
+      setLoading(false);
+    }
+  }, [walletDataProp, userID]);
+
+  useEffect(() => {
+    if (userID && !walletDataProp) {
       fetchWalletData();
     }
-  }, [userID]);
+  }, [userID, walletDataProp]);
 
   useEffect(() => {
     if (isWithdrawModalOpen) {
@@ -108,16 +123,7 @@ const PaymentsView = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div
-        className="payments-view"
-        style={{ textAlign: "center", padding: "5rem" }}
-      >
-        Loading Wallet Data...
-      </div>
-    );
-  }
+  // Zero-Loading: No blocking loading indicator
 
   const { wallet, onlineTransactions, codTransactions, withdrawals } =
     walletData || {};
@@ -130,7 +136,8 @@ const PaymentsView = () => {
     (currentWithdrawalPage - 1) * itemsPerPage,
     currentWithdrawalPage * itemsPerPage,
   );
-  const paginatedCodTxns = (codTransactions || []).slice(
+  const codTransactionsToShow = codTransactions || [];
+  const paginatedCodTxns = (codTransactionsToShow || []).slice(
     (currentCodPage - 1) * itemsPerPage,
     currentCodPage * itemsPerPage,
   );
@@ -248,8 +255,13 @@ const PaymentsView = () => {
                   </tr>
                 ) : (
                   paginatedOnlineTxns.map((tx) => {
-                    const isReceived =
-                      tx.sellerId?._id === userID || tx.sellerId === userID;
+                    const sellerIdStr =
+                      tx.sellerId?._id?.toString() || tx.sellerId?.toString();
+                    const buyerIdStr =
+                      tx.buyerId?._id?.toString() || tx.buyerId?.toString();
+                    const currentUserIdStr = userID?.toString();
+
+                    const isReceived = sellerIdStr === currentUserIdStr;
                     const partner = isReceived ? tx.buyerId : tx.sellerId;
                     return (
                       <tr key={tx._id}>
@@ -480,8 +492,12 @@ const PaymentsView = () => {
                 </tr>
               ) : (
                 paginatedCodTxns.map((tx) => {
+                  const sellerId = tx.sellerId?._id || tx.sellerId;
+                  const currentUserId = userID;
+
+                  // Use string comparison to be safe
                   const isReceived =
-                    tx.sellerId === userID || tx.sellerId?._id === userID;
+                    sellerId?.toString() === currentUserId?.toString();
                   const partner = isReceived ? tx.buyerId : tx.sellerId;
                   return (
                     <tr key={tx._id}>

@@ -10,6 +10,9 @@ import Wallet from "../models/Wallet.js";
 import Transaction from "../models/Transaction.js";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
+import { emitToUser, emitToRole, broadcast } from "../socket.js";
+import { logActivity } from "../utils/activityLogger.js";
+import { sendOrderEmail } from "../utils/emailService.js";
 
 // eSewa Configuration (Test Environment)
 const ESEWA_TEST_URL = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
@@ -32,13 +35,15 @@ const generateSignature = (totalAmount, transactionUuid, productCode) => {
 const groupCartItemsBySeller = (cartItems) => {
   const sellerGroups = {};
   cartItems.forEach((item) => {
-    let sellerId;
-    // Handle populated vs unpopulated userID
-    if (item.userID && typeof item.userID === "object") {
-      sellerId = item.userID._id || item.userID.id;
-    } else {
-      sellerId = item.userID;
+    let sellerId = item.userID?._id || item.userID?.id || item.userID;
+
+    // Ensure sellerId is a string for grouping keys
+    if (sellerId && typeof sellerId === "object") {
+      sellerId = sellerId.toString();
+    } else if (sellerId) {
+      sellerId = String(sellerId);
     }
+
     if (!sellerId) sellerId = "unknown_seller";
 
     if (!sellerGroups[sellerId]) {
@@ -58,9 +63,14 @@ const groupCartItemsBySeller = (cartItems) => {
       unit: item.unit,
       image: item.productImage,
       category: item.category,
+      productDescription: item.productDescription,
     });
     sellerGroups[sellerId].amount += itemTotal;
   });
+  console.log(
+    ">>> [orderController] Grouped cart items by seller:",
+    Object.keys(sellerGroups),
+  );
   return sellerGroups;
 };
 
@@ -88,7 +98,7 @@ export const initiatePayment = async (req, res) => {
     const signature = generateSignature(
       amountStr,
       transactionUuid,
-      ESEWA_PRODUCT_CODE
+      ESEWA_PRODUCT_CODE,
     );
 
     res.json({
@@ -126,13 +136,46 @@ export const createOrder = async (req, res) => {
     const { cartItems, userID, paymentMethod } = req.body;
 
     if (paymentMethod !== "COD") {
-      return res.status(400).json({ message: "This endpoint is for COD only." });
+      return res
+        .status(400)
+        .json({ message: "This endpoint is for COD only." });
     }
 
     const transactionUuid = `${Date.now()}-${uuidv4()}`;
     const sellerGroups = groupCartItemsBySeller(cartItems);
     const createdOrders = [];
     const deliveryChargePerOrder = 100; // Rs. 100 per order
+
+    // Fetch buyer details for log
+    const buyer = await User.findById(userID);
+    const buyerName = buyer?.name || "Buyer";
+
+    // Enrich buyer object with Business Name and Location
+    let businessName = null;
+    let specificAddress = null;
+
+    if (buyer) {
+      if (buyer.role === "buyer") {
+        const p = await Buyer.findOne({ userId: buyer._id });
+        businessName = p?.companyName;
+        specificAddress = p?.deliveryAddress;
+      } else if (buyer.role === "collector") {
+        const p = await Collector.findOne({ userId: buyer._id });
+        businessName = p?.companyName;
+        specificAddress = p?.location;
+      } else if (buyer.role === "supplier") {
+        const p = await Supplier.findOne({ userId: buyer._id });
+        businessName = p?.companyName;
+        specificAddress = p?.location;
+      } else if (buyer.role === "farmer") {
+        const p = await Farmer.findOne({ userId: buyer._id });
+        businessName = p?.farmName;
+      }
+    }
+
+    // Use specific address if available, otherwise fall back to user profile address
+    const finalAddress = specificAddress || buyer.address || "Address not provided";
+    const buyerForEmail = { ...buyer.toObject(), businessName, address: finalAddress };
 
     for (const sellerId in sellerGroups) {
       const group = sellerGroups[sellerId];
@@ -157,9 +200,9 @@ export const createOrder = async (req, res) => {
       // Create Transaction for All Seller Roles (Farmer, Collector, Supplier)
       const sellerUser = await User.findById(group.sellerId);
       const sellerRoles = ["farmer", "collector", "supplier"];
-      
+
       if (sellerUser && sellerRoles.includes(sellerUser.role)) {
-        await Transaction.create({
+        const txn = await Transaction.create({
           sellerId: group.sellerId, // Who receives payment
           buyerId: userID, // Who makes payment
           amount: orderTotal, // Include delivery charge in transaction
@@ -169,6 +212,31 @@ export const createOrder = async (req, res) => {
           description: `COD Order ${savedOrder.orderID}`,
           orderID: savedOrder.orderID,
         });
+      }
+
+      // Notify Seller of New Order
+      emitToUser(group.sellerId, "order:new", savedOrder);
+      // Notify Buyer (for multi-tab sync)
+      emitToUser(userID, "order:new", savedOrder);
+
+      // Log Activity
+      await logActivity({
+        type: "ORDER_PLACED",
+        message: `Order #${savedOrder.orderID} Placed`,
+        detail: `Placed by ${buyerName} (COD). Amount: ${savedOrder.totalAmount}`,
+        userId: userID,
+        metadata: {
+          orderId: savedOrder._id,
+          sellerId: group.sellerId,
+          paymentMethod: "COD",
+        },
+      });
+
+      // Send Email Notification to Seller
+      if (sellerUser && sellerUser.email) {
+        sendOrderEmail(savedOrder, sellerUser, buyerForEmail).catch((err) =>
+          console.error(`Failed to send email to ${sellerUser.email}:`, err),
+        );
       }
     }
 
@@ -198,7 +266,7 @@ export const verifyPayment = async (req, res) => {
     }
 
     const decodedData = JSON.parse(
-      Buffer.from(encodedData, "base64").toString("utf-8")
+      Buffer.from(encodedData, "base64").toString("utf-8"),
     );
     console.log("eSewa Payment Callback Data:", decodedData);
 
@@ -217,15 +285,16 @@ export const verifyPayment = async (req, res) => {
 
     // 1. Verify Signature
     // eSewa sends signed_field_names to indicate which fields are included in signature
-    const signedFieldNames = decodedData.signed_field_names || 
+    const signedFieldNames =
+      decodedData.signed_field_names ||
       "transaction_code,status,total_amount,transaction_uuid,product_code,signed_field_names";
-    
+
     // Build signature message using the exact fields eSewa signed
-    const fields = signedFieldNames.split(',');
+    const fields = signedFieldNames.split(",");
     const signatureMessage = fields
-      .map(field => `${field}=${decodedData[field]}`)
-      .join(',');
-    
+      .map((field) => `${field}=${decodedData[field]}`)
+      .join(",");
+
     const hmac = crypto.createHmac("sha256", ESEWA_SECRET_KEY);
     hmac.update(signatureMessage);
     const expectedSignature = hmac.digest("base64");
@@ -235,7 +304,7 @@ export const verifyPayment = async (req, res) => {
         expected: expectedSignature,
         received: signature,
         message: signatureMessage,
-        fields: fields
+        fields: fields,
       });
       // In production, uncomment the next line to strictly enforce signature
       // return res.status(400).json({ message: "Invalid signature" });
@@ -246,9 +315,9 @@ export const verifyPayment = async (req, res) => {
     // 2. Validate Cart Total matches Paid Amount
     const cartTotal = cartItems.reduce(
       (acc, item) => acc + item.price * item.quantity,
-      0
+      0,
     );
-    
+
     // Calculate delivery charge based on number of sellers
     const sellerGroups = groupCartItemsBySeller(cartItems);
     const numberOfOrders = Object.keys(sellerGroups).length;
@@ -270,7 +339,7 @@ export const verifyPayment = async (req, res) => {
     });
     if (existingOrdersGlobal.length > 0) {
       console.log(
-        `[Idempotency] Orders already exist for transaction ${transaction_uuid}`
+        `[Idempotency] Orders already exist for transaction ${transaction_uuid}`,
       );
       return res.json({
         message: "Payment verified (Existing Orders)",
@@ -284,6 +353,29 @@ export const verifyPayment = async (req, res) => {
     // sellerGroups already declared above (line 238) for delivery charge calculation
     const createdOrders = [];
 
+    // Fetch buyer details for log
+    const purchaseUser = await User.findById(userID);
+    const purchaseUserName = purchaseUser?.name || "Buyer";
+
+    // Enrich buyer object with Business Name
+    let businessName = null;
+    if (purchaseUser) {
+      if (purchaseUser.role === "buyer") {
+        const p = await Buyer.findOne({ userId: purchaseUser._id });
+        businessName = p?.companyName;
+      } else if (purchaseUser.role === "collector") {
+        const p = await Collector.findOne({ userId: purchaseUser._id });
+        businessName = p?.companyName;
+      } else if (purchaseUser.role === "supplier") {
+        const p = await Supplier.findOne({ userId: purchaseUser._id });
+        businessName = p?.companyName;
+      } else if (purchaseUser.role === "farmer") {
+        const p = await Farmer.findOne({ userId: purchaseUser._id });
+        businessName = p?.farmName;
+      }
+    }
+    const purchaseUserForEmail = { ...purchaseUser.toObject(), businessName };
+
     for (const sellerId in sellerGroups) {
       const group = sellerGroups[sellerId];
 
@@ -295,7 +387,7 @@ export const verifyPayment = async (req, res) => {
 
       if (existingOrder) {
         console.log(
-          `[Idempotency] Order already exists for seller ${group.sellerId}`
+          `[Idempotency] Order already exists for seller ${group.sellerId}`,
         );
         createdOrders.push(existingOrder);
         continue;
@@ -305,7 +397,7 @@ export const verifyPayment = async (req, res) => {
         // Create Order
         const deliveryChargePerOrder = 100; // Rs. 100 per order
         const orderTotal = group.amount + deliveryChargePerOrder;
-        
+
         const newOrder = new Order({
           orderID: `AGRM-${Math.floor(1000 + Math.random() * 9000)}`,
           buyerID: userID,
@@ -326,7 +418,7 @@ export const verifyPayment = async (req, res) => {
         // Handle Wallet & Transaction (All Seller Roles: Farmer, Collector, Supplier)
         const sellerUser = await User.findById(group.sellerId);
         const sellerRoles = ["farmer", "collector", "supplier"];
-        
+
         if (sellerUser && sellerRoles.includes(sellerUser.role)) {
           // Atomic Wallet Update
           await Wallet.findOneAndUpdate(
@@ -339,7 +431,7 @@ export const verifyPayment = async (req, res) => {
                 pendingWithdrawals: 0,
               },
             },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true, new: true, setDefaultsOnInsert: true },
           );
 
           // Record Locked Transaction
@@ -354,11 +446,36 @@ export const verifyPayment = async (req, res) => {
             orderID: savedOrder.orderID,
           });
         }
+
+        // Notify Seller of New Order
+        emitToUser(group.sellerId, "order:new", savedOrder);
+        // Notify Buyer
+        emitToUser(userID, "order:new", savedOrder);
+
+        // Log Activity
+        await logActivity({
+          type: "ORDER_PLACED",
+          message: `Order #${savedOrder.orderID} Placed`,
+          detail: `Placed by ${purchaseUserName} (eSewa). Amount: ${savedOrder.totalAmount}`,
+          userId: userID,
+          metadata: {
+            orderId: savedOrder._id,
+            sellerId: group.sellerId,
+            paymentMethod: "eSewa",
+          },
+        });
+
+        // Send Email Notification to Seller
+        if (sellerUser && sellerUser.email) {
+          sendOrderEmail(savedOrder, sellerUser, purchaseUserForEmail).catch((err) =>
+            console.error(`Failed to send email to ${sellerUser.email}:`, err),
+          );
+        }
       } catch (duplicateError) {
         // Handle duplicate key error (E11000) - order already exists
         if (duplicateError.code === 11000) {
           console.log(
-            `[DB Duplicate] Order already exists for seller ${group.sellerId}, transaction ${transaction_uuid}`
+            `[DB Duplicate] Order already exists for seller ${group.sellerId}, transaction ${transaction_uuid}`,
           );
           // Fetch the existing order
           const existingOrder = await Order.findOne({
@@ -379,7 +496,7 @@ export const verifyPayment = async (req, res) => {
     const populatedOrders = await Promise.all(
       createdOrders.map(async (order) => {
         const orderObj = order.toObject ? order.toObject() : order;
-        
+
         // Get seller user info
         const sellerUser = await User.findById(orderObj.sellerID);
         let sellerDetails = {
@@ -393,11 +510,15 @@ export const verifyPayment = async (req, res) => {
             const farmer = await Farmer.findOne({ userId: sellerUser._id });
             sellerDetails.businessName = farmer?.farmName || sellerUser.name;
           } else if (sellerUser.role === "collector") {
-            const collector = await Collector.findOne({ userId: sellerUser._id });
-            sellerDetails.businessName = collector?.companyName || sellerUser.name;
+            const collector = await Collector.findOne({
+              userId: sellerUser._id,
+            });
+            sellerDetails.businessName =
+              collector?.companyName || sellerUser.name;
           } else if (sellerUser.role === "supplier") {
             const supplier = await Supplier.findOne({ userId: sellerUser._id });
-            sellerDetails.businessName = supplier?.companyName || sellerUser.name;
+            sellerDetails.businessName =
+              supplier?.companyName || sellerUser.name;
           } else {
             sellerDetails.businessName = sellerUser.name;
           }
@@ -407,7 +528,7 @@ export const verifyPayment = async (req, res) => {
           ...orderObj,
           sellerDetails,
         };
-      })
+      }),
     );
 
     res.json({
@@ -442,8 +563,8 @@ export const getOrders = async (req, res) => {
 
     // Use .lean() to get plain JS objects we can modify
     let orders = await Order.find(query)
-      .populate("sellerID", "name email phone address role")
-      .populate("buyerID", "name email phone address role")
+      .populate("sellerID", "name email phone address role profileImage")
+      .populate("buyerID", "name email phone address role profileImage")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -456,10 +577,14 @@ export const getOrders = async (req, res) => {
             const farmer = await Farmer.findOne({ userId: order.sellerID._id });
             if (farmer) businessName = farmer.farmName;
           } else if (order.sellerID.role === "collector") {
-            const collector = await Collector.findOne({ userId: order.sellerID._id });
+            const collector = await Collector.findOne({
+              userId: order.sellerID._id,
+            });
             if (collector) businessName = collector.companyName;
           } else if (order.sellerID.role === "supplier") {
-            const supplier = await Supplier.findOne({ userId: order.sellerID._id });
+            const supplier = await Supplier.findOne({
+              userId: order.sellerID._id,
+            });
             if (supplier) businessName = supplier.companyName;
           }
           order.sellerID.businessName = businessName || order.sellerID.name;
@@ -473,10 +598,14 @@ export const getOrders = async (req, res) => {
             const farmer = await Farmer.findOne({ userId: order.buyerID._id });
             if (farmer) businessName = farmer.farmName;
           } else if (order.buyerID.role === "collector") {
-            const collector = await Collector.findOne({ userId: order.buyerID._id });
+            const collector = await Collector.findOne({
+              userId: order.buyerID._id,
+            });
             if (collector) businessName = collector.companyName;
           } else if (order.buyerID.role === "supplier") {
-            const supplier = await Supplier.findOne({ userId: order.buyerID._id });
+            const supplier = await Supplier.findOne({
+              userId: order.buyerID._id,
+            });
             if (supplier) businessName = supplier.companyName;
           } else if (order.buyerID.role === "buyer") {
             const buyer = await Buyer.findOne({ userId: order.buyerID._id });
@@ -487,7 +616,7 @@ export const getOrders = async (req, res) => {
         }
 
         return order;
-      })
+      }),
     );
 
     res.json(orders);
@@ -527,22 +656,22 @@ export const updateOrderStatus = async (req, res) => {
     // Status-specific validation
     if (status === "Rejected") {
       if (order.status !== "Pending") {
-        return res.status(400).json({ 
-          message: "Orders can only be rejected when they are Pending." 
+        return res.status(400).json({
+          message: "Orders can only be rejected when they are Pending.",
         });
       }
     } else if (status === "Canceled") {
       // Canceled can only be set from Pending or Accepted
       if (currentStatusIdx > 1) {
-        return res.status(400).json({ 
-          message: `Cannot cancel order in ${order.status} state.` 
+        return res.status(400).json({
+          message: `Cannot cancel order in ${order.status} state.`,
         });
       }
     } else {
       // Must follow sequence: Pending -> Accepted -> Processing -> Shipping -> Delivered
       if (newStatusIdx !== currentStatusIdx + 1) {
-        return res.status(400).json({ 
-          message: `Invalid status transition from ${order.status} to ${status}.` 
+        return res.status(400).json({
+          message: `Invalid status transition from ${order.status} to ${status}.`,
         });
       }
     }
@@ -552,15 +681,41 @@ export const updateOrderStatus = async (req, res) => {
       try {
         // Fetch seller to know which model to update
         const seller = await User.findById(order.sellerID);
-        const Model = (seller && seller.role === "farmer") ? Product : Inventory;
+        const Model = seller && seller.role === "farmer" ? Product : Inventory;
 
-        console.log(`>>> Restocking items for ${status} order ${order.orderID} using ${Model.modelName} model`);
-        
+        console.log(
+          `>>> Restocking items for ${status} order ${order.orderID} using ${Model.modelName} model`,
+        );
+
         for (const item of order.products) {
           await Model.findByIdAndUpdate(item.productID, {
-            $inc: { quantity: item.quantity }
+            $inc: { quantity: item.quantity },
           });
-          console.log(`>>> Restored ${item.quantity} units to ${item.productName}`);
+          console.log(
+            `>>> Restored ${item.quantity} units to ${item.productName}`,
+          );
+
+          // Notify next level about restocked item
+          if (Model.modelName === "Product") {
+            emitToRole("collector", "dashboard:update", {
+              type: "PRODUCT_RESTOCKED",
+              productId: item.productID,
+            });
+          } else {
+            // It's Inventory. Find collector or supplier
+            const invUser = await User.findById(order.sellerID);
+            if (invUser?.role === "collector") {
+              emitToRole("supplier", "dashboard:update", {
+                type: "INVENTORY_RESTOCKED",
+                inventoryId: item.productID,
+              });
+            } else if (invUser?.role === "supplier") {
+              emitToRole("buyer", "dashboard:update", {
+                type: "INVENTORY_RESTOCKED",
+                inventoryId: item.productID,
+              });
+            }
+          }
         }
       } catch (restockErr) {
         console.error("Failed to restock items on status change:", restockErr);
@@ -572,13 +727,16 @@ export const updateOrderStatus = async (req, res) => {
       try {
         const seller = await User.findById(order.sellerID);
         const sellerRoles = ["farmer", "collector", "supplier"];
-        
+
         if (seller && sellerRoles.includes(seller.role)) {
           const wallet = await Wallet.findOne({ userId: order.sellerID });
-          
+
           if (order.paymentMethod === "eSewa") {
             if (wallet) {
-              wallet.lockedBalance = Math.max(0, wallet.lockedBalance - order.totalAmount);
+              wallet.lockedBalance = Math.max(
+                0,
+                wallet.lockedBalance - order.totalAmount,
+              );
               wallet.availableBalance += order.totalAmount;
               wallet.totalEarnings += order.totalAmount;
               await wallet.save();
@@ -587,7 +745,7 @@ export const updateOrderStatus = async (req, res) => {
             // Update transaction status using orderID field
             await Transaction.findOneAndUpdate(
               { orderID: order.orderID, paymentMethod: "eSewa" },
-              { status: "Completed" }
+              { status: "Completed" },
             );
           }
         }
@@ -598,6 +756,47 @@ export const updateOrderStatus = async (req, res) => {
 
     order.status = status;
     const updatedOrder = await order.save();
+
+    // Signal Dashboard Update
+    emitToUser(order.sellerID, "dashboard:update", {
+      type: "ORDER_STATUS_CHANGED",
+      order: updatedOrder,
+    });
+    emitToUser(order.buyerID, "dashboard:update", {
+      type: "ORDER_STATUS_CHANGED",
+      order: updatedOrder,
+    });
+
+    // Notify Buyer, Seller and Admin
+    emitToUser(order.buyerID, "dashboard:update", {
+      type: "ORDER_STATUS_UPDATED",
+      order: updatedOrder,
+    });
+    emitToUser(order.sellerID, "dashboard:update", {
+      type: "ORDER_STATUS_UPDATED",
+      order: updatedOrder,
+    });
+    emitToRole("admin", "dashboard:update", {
+      type: "ORDER_STATUS_UPDATED",
+      order: updatedOrder,
+    });
+
+    // Log Activity
+    let activityType = "ORDER_UPDATED";
+    if (status === "Accepted") activityType = "ORDER_ACCEPTED";
+    else if (status === "Processing") activityType = "ORDER_PROCESSING";
+    else if (status === "Shipping") activityType = "ORDER_SHIPPED";
+    else if (status === "Delivered") activityType = "ORDER_DELIVERED";
+    else if (status === "Canceled") activityType = "ORDER_CANCELLED";
+    else if (status === "Rejected") activityType = "ORDER_REJECTED";
+
+    await logActivity({
+      type: activityType,
+      message: `Order #${updatedOrder.orderID} ${status}`,
+      detail: `Status updated to ${status}`,
+      userId: order.sellerID, // Seller usually updates status
+      metadata: { orderId: updatedOrder._id, status, buyerId: order.buyerID }
+    });
 
     res.json(updatedOrder);
   } catch (error) {
@@ -619,15 +818,21 @@ export const confirmCODPayment = async (req, res) => {
     }
 
     if (order.status !== "Delivered") {
-      return res.status(400).json({ message: "Order must be Delivered before confirming payment" });
+      return res
+        .status(400)
+        .json({ message: "Order must be Delivered before confirming payment" });
     }
 
     if (order.paymentMethod !== "COD") {
-      return res.status(400).json({ message: "Only COD orders can be confirmed this way" });
+      return res
+        .status(400)
+        .json({ message: "Only COD orders can be confirmed this way" });
     }
 
     if (order.paymentStatus === "Paid") {
-      return res.status(400).json({ message: "Order is already marked as Paid" });
+      return res
+        .status(400)
+        .json({ message: "Order is already marked as Paid" });
     }
 
     // Update Order Payment Status
@@ -637,8 +842,27 @@ export const confirmCODPayment = async (req, res) => {
     // Update Seller's Transaction record to Completed using orderID field
     await Transaction.findOneAndUpdate(
       { orderID: order.orderID, paymentMethod: "COD" },
-      { status: "Completed" }
+      { status: "Completed" },
     );
+
+    // Signal Dashboard Update
+    emitToUser(order.sellerID, "dashboard:update", {
+      type: "PAYMENT_CONFIRMED",
+      order,
+    });
+    emitToUser(order.buyerID, "dashboard:update", {
+      type: "PAYMENT_CONFIRMED",
+      order,
+    });
+
+    // Log Activity
+    await logActivity({
+      type: "COD_SETTLEMENT_COMPLETED",
+      message: `COD Payment Confirmed`,
+      detail: `Buyer confirmed payment for Order #${order.orderID}`,
+      userId: order.buyerID,
+      metadata: { orderId: order._id, transactionId: order.transactionUUID }
+    });
 
     res.json({ message: "Payment confirmed successfully", order });
   } catch (error) {

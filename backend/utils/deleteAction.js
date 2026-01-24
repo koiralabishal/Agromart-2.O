@@ -9,6 +9,7 @@ import Order from "../models/Order.js";
 import Wallet from "../models/Wallet.js";
 import Transaction from "../models/Transaction.js";
 import Withdrawal from "../models/Withdrawal.js";
+import { broadcast } from "../socket.js";
 
 import DeletedUser from "../models/DeletedUser.js";
 import DeletedFarmer from "../models/DeletedFarmer.js";
@@ -40,42 +41,60 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
     `>>> Starting Cascading Delete for User: ${user.name} (${userRole}), By: ${deletedBy}`,
   );
 
-    // 1. Backup & Delete Role Specific Profile
-    let RoleModel, DeletedRoleModel;
-    switch (userRole) {
-      case 'farmer': RoleModel = Farmer; DeletedRoleModel = DeletedFarmer; break;
-      case 'collector': RoleModel = Collector; DeletedRoleModel = DeletedCollector; break;
-      case 'supplier': RoleModel = Supplier; DeletedRoleModel = DeletedSupplier; break;
-      case 'buyer': RoleModel = Buyer; DeletedRoleModel = DeletedBuyer; break;
-    }
+  // 1. Backup & Delete Role Specific Profile
+  let RoleModel, DeletedRoleModel;
+  switch (userRole) {
+    case "farmer":
+      RoleModel = Farmer;
+      DeletedRoleModel = DeletedFarmer;
+      break;
+    case "collector":
+      RoleModel = Collector;
+      DeletedRoleModel = DeletedCollector;
+      break;
+    case "supplier":
+      RoleModel = Supplier;
+      DeletedRoleModel = DeletedSupplier;
+      break;
+    case "buyer":
+      RoleModel = Buyer;
+      DeletedRoleModel = DeletedBuyer;
+      break;
+  }
 
-    // Backup Role Profile separately
-    if (RoleModel && DeletedRoleModel) {
-        const roleProfile = await RoleModel.findOne({ userId });
-        if (roleProfile) {
-            const roleData = roleProfile.toObject();
-            delete roleData._id;
-            await DeletedRoleModel.create({ ...roleData, deletedBy, originalCreatedAt: roleProfile.createdAt });
-            await RoleModel.findByIdAndDelete(roleProfile._id);
-            console.log(`>>> Role Profile (${userRole}) backed up to ${DeletedRoleModel.modelName}.`);
-        }
+  // Backup Role Profile separately
+  if (RoleModel && DeletedRoleModel) {
+    const roleProfile = await RoleModel.findOne({ userId });
+    if (roleProfile) {
+      const roleData = roleProfile.toObject();
+      delete roleData._id;
+      await DeletedRoleModel.create({
+        ...roleData,
+        deletedBy,
+        originalCreatedAt: roleProfile.createdAt,
+      });
+      await RoleModel.findByIdAndDelete(roleProfile._id);
+      console.log(
+        `>>> Role Profile (${userRole}) backed up to ${DeletedRoleModel.modelName}.`,
+      );
     }
+  }
 
-    // Backup User Account separately
-    const userBackupData = {
-        originalUserId: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
-        role: user.role,
-        profileImage: user.profileImage,
-        deletedBy: deletedBy,
-        reason: reason || "User deleted",
-        originalCreatedAt: user.createdAt,
-    };
-    await DeletedUser.create(userBackupData);
-    console.log(">>> User account backed up to DeletedUser.");
+  // Backup User Account separately
+  const userBackupData = {
+    originalUserId: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    address: user.address,
+    role: user.role,
+    profileImage: user.profileImage,
+    deletedBy: deletedBy,
+    reason: reason || "User deleted",
+    originalCreatedAt: user.createdAt,
+  };
+  await DeletedUser.create(userBackupData);
+  console.log(">>> User account backed up to DeletedUser.");
 
   // 2. Backup & Delete Products / Inventory
   if (["farmer", "collector", "supplier"].includes(userRole)) {
@@ -123,32 +142,38 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
   if (wallet) {
     const walletData = wallet.toObject();
     delete walletData._id;
-    await DeletedWallet.create({ ...walletData, deletedBy, originalCreatedAt: wallet.createdAt });
+    await DeletedWallet.create({
+      ...walletData,
+      deletedBy,
+      originalCreatedAt: wallet.createdAt,
+    });
     await Wallet.findByIdAndDelete(wallet._id);
     console.log(`>>> Wallet backed up and deleted.`);
   }
 
   // 5. Backup & Delete Transactions (where user is seller or buyer)
   const transactions = await Transaction.find({
-    $or: [{ sellerId: userId }, { buyerId: userId }]
+    $or: [{ sellerId: userId }, { buyerId: userId }],
   });
   if (transactions.length > 0) {
-    const transactionDataArray = transactions.map(txn => {
+    const transactionDataArray = transactions.map((txn) => {
       const d = txn.toObject();
       delete d._id;
       return { ...d, deletedBy, originalCreatedAt: txn.createdAt };
     });
     await DeletedTransaction.insertMany(transactionDataArray);
     await Transaction.deleteMany({
-      $or: [{ sellerId: userId }, { buyerId: userId }]
+      $or: [{ sellerId: userId }, { buyerId: userId }],
     });
-    console.log(`>>> ${transactions.length} transactions backed up and deleted.`);
+    console.log(
+      `>>> ${transactions.length} transactions backed up and deleted.`,
+    );
   }
 
   // 6. Backup & Delete Withdrawals
   const withdrawals = await Withdrawal.find({ userId });
   if (withdrawals.length > 0) {
-    const withdrawalDataArray = withdrawals.map(w => {
+    const withdrawalDataArray = withdrawals.map((w) => {
       const d = w.toObject();
       delete d._id;
       return { ...d, deletedBy, originalCreatedAt: w.createdAt };
@@ -160,6 +185,9 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
 
   // 7. Finally Delete User
   await User.findByIdAndDelete(userId);
+
+  // Broadcast deletion for global sync (e.g. Active Farmers list)
+  broadcast("dashboard:update", { type: "USER_DELETED", userId });
 
   return {
     success: true,

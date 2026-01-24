@@ -252,14 +252,6 @@ const SettingsView = () => {
                              passwordData.newPassword === passwordData.confirmPassword &&
                              passwordData.currentPassword !== passwordData.newPassword;
 
-  if (isFetching) {
-    return (
-      <div className="settings-loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading your settings...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="settings-view">

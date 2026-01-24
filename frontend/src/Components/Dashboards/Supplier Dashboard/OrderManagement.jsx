@@ -4,10 +4,20 @@ import api from "../../../api/axiosConfig";
 import Pagination from "../../Common/Pagination";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
+import StockOrderModal from "../../Common/StockOrderModal";
+import StockSuccessModal from "../../Common/StockSuccessModal";
+import { FaBox } from "react-icons/fa";
 import "./Styles/OrderManagement.css";
 
-const OrderManagement = ({ onViewOrder }) => {
+const OrderManagement = ({
+  onViewOrder,
+  ordersPlacedProp,
+  ordersReceivedProp,
+  onInventoryRedirect,
+}) => {
   const [ordersPlaced, setOrdersPlaced] = useState(() => {
+    if (ordersPlacedProp && ordersPlacedProp.length > 0)
+      return ordersPlacedProp;
     try {
       const saved = sessionStorage.getItem("supplierOrdersPlaced");
       return saved ? JSON.parse(saved) : [];
@@ -16,6 +26,8 @@ const OrderManagement = ({ onViewOrder }) => {
     }
   });
   const [ordersReceived, setOrdersReceived] = useState(() => {
+    if (ordersReceivedProp && ordersReceivedProp.length > 0)
+      return ordersReceivedProp;
     try {
       const saved = sessionStorage.getItem("supplierOrdersReceived");
       return saved ? JSON.parse(saved) : [];
@@ -24,13 +36,7 @@ const OrderManagement = ({ onViewOrder }) => {
     }
   });
 
-  // Only show loading if we didn't find anything in cache
-  const [loading, setLoading] = useState(() => {
-    return (
-      !sessionStorage.getItem("supplierOrdersPlaced") &&
-      !sessionStorage.getItem("supplierOrdersReceived")
-    );
-  });
+  // No loading state needed - data is always available from props or cache
 
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
@@ -52,56 +58,45 @@ const OrderManagement = ({ onViewOrder }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isFilterPlacedOpen, setIsFilterPlacedOpen] = useState(false);
   const [isFilterReceivedOpen, setIsFilterReceivedOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [selectedOrderForStock, setSelectedOrderForStock] = useState(null);
+  const [isStockingLoading, setIsStockingLoading] = useState(false);
+  const [showStockSuccess, setShowStockSuccess] = useState(false);
+  const [stockedProductsList, setStockedProductsList] = useState([]);
   const [currentPlacedPage, setCurrentPlacedPage] = useState(1);
   const [currentReceivedPage, setCurrentReceivedPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        // Fetch "Placed" orders (User is Buyer)
-        const placedRes = await api.get("/orders", {
-          params: { userID, role: "buyer" },
-        });
-        setOrdersPlaced(placedRes.data);
-        sessionStorage.setItem(
-          "supplierOrdersPlaced",
-          JSON.stringify(placedRes.data)
-        );
-
-        // Fetch "Received" orders (User is Seller)
-        const receivedRes = await api.get("/orders", {
-          params: { userID, role: "seller" },
-        });
-        setOrdersReceived(receivedRes.data);
-        sessionStorage.setItem(
-          "supplierOrdersReceived",
-          JSON.stringify(receivedRes.data)
-        );
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        setLoading(false);
-      }
-    };
-
-    if (userID) {
-      fetchOrders();
+    if (ordersPlacedProp) {
+      setOrdersPlaced(ordersPlacedProp);
+      sessionStorage.setItem(
+        "supplierOrdersPlaced",
+        JSON.stringify(ordersPlacedProp),
+      );
     }
-  }, [userID]);
+    if (ordersReceivedProp) {
+      setOrdersReceived(ordersReceivedProp);
+      sessionStorage.setItem(
+        "supplierOrdersReceived",
+        JSON.stringify(ordersReceivedProp),
+      );
+    }
+  }, [ordersPlacedProp, ordersReceivedProp]);
+
+  // No need to fetch - parent component handles all data fetching and caching
 
   const handleStatusUpdate = async (orderId, newStatus, type = "received") => {
     try {
       if (newStatus === "Confirm Cash Paid") {
         await api.put(`/orders/${orderId}/confirm-payment`);
         const updatedOrders = ordersPlaced.map((o) =>
-          o._id === orderId ? { ...o, paymentStatus: "Paid" } : o
+          o._id === orderId ? { ...o, paymentStatus: "Paid" } : o,
         );
         setOrdersPlaced(updatedOrders);
         sessionStorage.setItem(
           "supplierOrdersPlaced",
-          JSON.stringify(updatedOrders)
+          JSON.stringify(updatedOrders),
         );
         setShowSuccess(true);
         return;
@@ -110,21 +105,21 @@ const OrderManagement = ({ onViewOrder }) => {
       await api.put(`/orders/${orderId}/status`, { status: newStatus });
       if (type === "received") {
         const updatedOrders = ordersReceived.map((o) =>
-          o._id === orderId ? { ...o, status: newStatus } : o
+          o._id === orderId ? { ...o, status: newStatus } : o,
         );
         setOrdersReceived(updatedOrders);
         sessionStorage.setItem(
           "supplierOrdersReceived",
-          JSON.stringify(updatedOrders)
+          JSON.stringify(updatedOrders),
         );
       } else {
         const updatedOrders = ordersPlaced.map((o) =>
-          o._id === orderId ? { ...o, status: newStatus } : o
+          o._id === orderId ? { ...o, status: newStatus } : o,
         );
         setOrdersPlaced(updatedOrders);
         sessionStorage.setItem(
           "supplierOrdersPlaced",
-          JSON.stringify(updatedOrders)
+          JSON.stringify(updatedOrders),
         );
       }
 
@@ -143,6 +138,49 @@ const OrderManagement = ({ onViewOrder }) => {
     }
   };
 
+  const handleStockConfirm = async (stockedItems) => {
+    try {
+      setIsStockingLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userID = user?._id || user?.id;
+
+      await api.post("/inventory/stock-order", {
+        orderId: selectedOrderForStock._id,
+        items: stockedItems,
+        userID,
+      });
+
+      setIsStockModalOpen(false);
+      setSelectedOrderForStock(null);
+
+      // Update local state
+      const updatedOrders = ordersPlaced.map((o) =>
+        o._id === selectedOrderForStock._id ? { ...o, isStocked: true } : o,
+      );
+      setOrdersPlaced(updatedOrders);
+      sessionStorage.setItem(
+        "supplierOrdersPlaced",
+        JSON.stringify(updatedOrders),
+      );
+
+      setStockedProductsList(
+        stockedItems.map((item) => ({
+          name: item.productName,
+          quantity: item.quantity,
+          unit: item.unit,
+        })),
+      );
+      setShowStockSuccess(true);
+    } catch (error) {
+      console.error("Error stocking items:", error);
+      alert(
+        error.response?.data?.message || "Failed to add items to inventory",
+      );
+    } finally {
+      setIsStockingLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -158,7 +196,7 @@ const OrderManagement = ({ onViewOrder }) => {
         const matchesSearch =
           order.orderID.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.products.some((p) =>
-            p.productName.toLowerCase().includes(searchTerm.toLowerCase())
+            p.productName.toLowerCase().includes(searchTerm.toLowerCase()),
           );
 
         const matchesFilter =
@@ -172,12 +210,12 @@ const OrderManagement = ({ onViewOrder }) => {
   const filteredPlaced = filterOrderList(
     ordersPlaced,
     searchTermPlaced,
-    filterPlaced
+    filterPlaced,
   );
   const filteredReceived = filterOrderList(
     ordersReceived,
     searchTermReceived,
-    filterReceived
+    filterReceived,
   );
 
   const paginatedPlaced = filteredPlaced.slice(
@@ -266,16 +304,7 @@ const OrderManagement = ({ onViewOrder }) => {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan="7"
-                    style={{ textAlign: "center", padding: "1rem" }}
-                  >
-                    Loading orders...
-                  </td>
-                </tr>
-              ) : filteredPlaced.length === 0 ? (
+              {filteredPlaced.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -302,14 +331,16 @@ const OrderManagement = ({ onViewOrder }) => {
                     </td>
                     <td>{order.paymentMethod}</td>
                     <td>
-                      <span className={`status-text ${order.paymentStatus === "Paid" ? "status-paid" : "status-pending-payment"}`}>
+                      <span
+                        className={`status-text ${order.paymentStatus === "Paid" ? "status-paid" : "status-pending-payment"}`}
+                      >
                         {order.paymentStatus}
                       </span>
                     </td>
                     <td className="order-status">
                       <span
                         className={`status-text ${getStatusClass(
-                          order.status
+                          order.status,
                         )}`}
                       >
                         {order.status}
@@ -374,11 +405,42 @@ const OrderManagement = ({ onViewOrder }) => {
                             Confirm Cash Paid
                           </button>
                         )}
+                      {order.status === "Delivered" &&
+                        order.paymentStatus === "Paid" &&
+                        !order.isStocked && (
+                          <button
+                            className="om-action-btn confirm"
+                            style={{
+                              backgroundColor: "#1dc956",
+                              color: "white",
+                              border: "none",
+                              padding: "5px 10px",
+                              borderRadius: "4px",
+                              fontSize: "0.8rem",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                            onClick={() => {
+                              setSelectedOrderForStock(order);
+                              setIsStockModalOpen(true);
+                            }}
+                          >
+                            <FaBox size={12} /> Add to Inventory
+                          </button>
+                        )}
                       {order.status !== "Pending" &&
                         !(
                           order.status === "Delivered" &&
                           order.paymentMethod === "COD" &&
                           order.paymentStatus === "Pending"
+                        ) &&
+                        !(
+                          order.status === "Delivered" &&
+                          order.paymentStatus === "Paid" &&
+                          !order.isStocked
                         ) && <span className="no-actions"></span>}
                     </td>
                   </tr>
@@ -467,16 +529,7 @@ const OrderManagement = ({ onViewOrder }) => {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan="7"
-                    style={{ textAlign: "center", padding: "1rem" }}
-                  >
-                    Loading orders...
-                  </td>
-                </tr>
-              ) : filteredReceived.length === 0 ? (
+              {filteredReceived.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -503,14 +556,16 @@ const OrderManagement = ({ onViewOrder }) => {
                     </td>
                     <td>{order.paymentMethod}</td>
                     <td>
-                      <span className={`status-text ${order.paymentStatus === "Paid" ? "status-paid" : "status-pending-payment"}`}>
+                      <span
+                        className={`status-text ${order.paymentStatus === "Paid" ? "status-paid" : "status-pending-payment"}`}
+                      >
                         {order.paymentStatus}
                       </span>
                     </td>
                     <td className="order-status">
                       <span
                         className={`status-text ${getStatusClass(
-                          order.status
+                          order.status,
                         )}`}
                       >
                         {order.status}
@@ -580,7 +635,7 @@ const OrderManagement = ({ onViewOrder }) => {
           handleStatusUpdate(
             confModal.orderId,
             confModal.newStatus,
-            confModal.orderType
+            confModal.orderType,
           );
           setConfModal({ ...confModal, isOpen: false });
         }}
@@ -597,6 +652,26 @@ const OrderManagement = ({ onViewOrder }) => {
         title="Payment Confirmed!"
         message="You have successfully confirmed the cash payment for this order."
         showPaymentNote={false}
+      />
+      {selectedOrderForStock && (
+        <StockOrderModal
+          isOpen={isStockModalOpen}
+          onClose={() => {
+            setIsStockModalOpen(false);
+            setSelectedOrderForStock(null);
+          }}
+          onConfirm={handleStockConfirm}
+          order={selectedOrderForStock}
+          isLoading={isStockingLoading}
+        />
+      )}
+      <StockSuccessModal
+        isOpen={showStockSuccess}
+        onClose={() => {
+          setShowStockSuccess(false);
+          if (onInventoryRedirect) onInventoryRedirect();
+        }}
+        products={stockedProductsList}
       />
     </div>
   );

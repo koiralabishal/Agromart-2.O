@@ -1,10 +1,11 @@
 import express from "express";
-import { 
-  createInventory, 
-  getInventory, 
-  deleteInventory, 
+import {
+  createInventory,
+  getInventory,
+  deleteInventory,
   updateInventoryQuantity,
-  updateInventory
+  updateInventory,
+  stockOrderItems,
 } from "../controllers/inventoryController.js";
 import { upload } from "../config/cloudinary.js";
 
@@ -15,5 +16,6 @@ router.get("/", getInventory);
 router.delete("/:id", deleteInventory);
 router.patch("/:id/quantity", updateInventoryQuantity);
 router.put("/:id", upload.single("productImage"), updateInventory);
+router.post("/stock-order", stockOrderItems);
 
 export default router;

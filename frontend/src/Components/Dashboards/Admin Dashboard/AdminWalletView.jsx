@@ -5,19 +5,27 @@ import ConfirmationModal from "../../Common/ConfirmationModal";
 import ReasonModal from "../../Common/ReasonModal";
 import Pagination from "../../Common/Pagination";
 
-
-const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpdate }) => {
+const AdminWalletView = ({
+  walletsCache,
+  codCache,
+  withdrawalsCache,
+  onlineCache,
+  onCacheUpdate,
+}) => {
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [activeDetailTab, setActiveDetailTab] = useState("status");
   const [wallets, setWallets] = useState(walletsCache || []);
   const [codTxns, setCodTxns] = useState(codCache || []);
   const [withdrawals, setWithdrawals] = useState(withdrawalsCache || []);
-  const [loading, setLoading] = useState(!walletsCache || !codCache || !withdrawalsCache);
+  const [onlineTxns, setOnlineTxns] = useState(onlineCache || []);
+  const [loading, setLoading] = useState(
+    !walletsCache || !codCache || !withdrawalsCache || !onlineCache,
+  );
   const [currentWalletPage, setCurrentWalletPage] = useState(1);
   const [currentCodPage, setCurrentCodPage] = useState(1);
   const [currentWithdrawalPage, setCurrentWithdrawalPage] = useState(1);
+  const [currentOnlinePage, setCurrentOnlinePage] = useState(1);
   const itemsPerPage = 10;
-
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -34,24 +42,34 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
   });
 
   useEffect(() => {
+    if (walletsCache) setWallets(walletsCache);
+    if (codCache) setCodTxns(codCache);
+    if (withdrawalsCache) setWithdrawals(withdrawalsCache);
+    if (onlineCache) setOnlineTxns(onlineCache);
+  }, [walletsCache, codCache, withdrawalsCache, onlineCache]);
+
+  useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     if (!walletsCache || !codCache || !withdrawalsCache) setLoading(true);
     try {
-      const [wRes, cRes, wdRes] = await Promise.all([
+      const [wRes, cRes, wdRes, oRes] = await Promise.all([
         api.get("/admin/wallets"),
         api.get("/admin/cod-ledger"),
-        api.get("/admin/withdrawals")
+        api.get("/admin/withdrawals"),
+        api.get("/admin/online-transactions"),
       ]);
       setWallets(wRes.data);
       setCodTxns(cRes.data);
       setWithdrawals(wdRes.data);
+      setOnlineTxns(oRes.data);
       onCacheUpdate({
         wallets: wRes.data,
         codLedger: cRes.data,
-        withdrawals: wdRes.data
+        withdrawals: wdRes.data,
+        onlineTransactions: oRes.data,
       });
     } catch (err) {
       console.error("Failed to fetch wallet data", err);
@@ -61,14 +79,14 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
   };
 
   const fetchWallets = async () => {
-     try {
-       const res = await api.get("/admin/wallets");
-       setWallets(res.data);
-       onCacheUpdate({ wallets: res.data });
-       return res.data;
-     } catch (err) {
-       console.error("Failed to fetch wallets", err);
-     }
+    try {
+      const res = await api.get("/admin/wallets");
+      setWallets(res.data);
+      onCacheUpdate({ wallets: res.data });
+      return res.data;
+    } catch (err) {
+      console.error("Failed to fetch wallets", err);
+    }
   };
 
   const fetchCOD = async () => {
@@ -88,6 +106,16 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
       onCacheUpdate({ withdrawals: res.data });
     } catch (err) {
       console.error("Failed to fetch withdrawals", err);
+    }
+  };
+
+  const fetchOnline = async () => {
+    try {
+      const res = await api.get("/admin/online-transactions");
+      setOnlineTxns(res.data);
+      onCacheUpdate({ onlineTransactions: res.data });
+    } catch (err) {
+      console.error("Failed to fetch online transactions", err);
     }
   };
 
@@ -235,8 +263,23 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
     currentWithdrawalPage * itemsPerPage,
   );
 
-  return (
+  const getFilteredOnlineTxns = () => {
+    return onlineTxns.filter(
+      (t) =>
+        t.sellerId?._id === selectedWallet?.userId?._id ||
+        t.sellerId === selectedWallet?.userId?._id ||
+        t.buyerId?._id === selectedWallet?.userId?._id ||
+        t.buyerId === selectedWallet?.userId?._id,
+    );
+  };
 
+  const currentOnlineTxns = getFilteredOnlineTxns();
+  const paginatedOnlineTxns = currentOnlineTxns.slice(
+    (currentOnlinePage - 1) * itemsPerPage,
+    currentOnlinePage * itemsPerPage,
+  );
+
+  return (
     <div className="admin-view-container">
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
@@ -293,7 +336,8 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+                      e.currentTarget.style.boxShadow =
+                        "0 1px 3px rgba(0,0,0,0.05)";
                     }}
                   >
                     {/* Profile Image */}
@@ -496,7 +540,8 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                       fontSize: "0.9rem",
                     }}
                   >
-                    {selectedWallet.userId?.role} • {selectedWallet.userId?.email}
+                    {selectedWallet.userId?.role} •{" "}
+                    {selectedWallet.userId?.email}
                   </p>
                 </div>
               </div>
@@ -510,6 +555,12 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                   onClick={() => setActiveDetailTab("status")}
                 >
                   Wallet Status
+                </button>
+                <button
+                  className={`tab-btn ${activeDetailTab === "online" ? "active" : ""}`}
+                  onClick={() => setActiveDetailTab("online")}
+                >
+                  Online Transactions
                 </button>
                 <button
                   className={`tab-btn ${activeDetailTab === "cod" ? "active" : ""}`}
@@ -534,7 +585,8 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(250px, 1fr))",
                         gap: "2rem",
                         marginBottom: "2rem",
                       }}
@@ -663,7 +715,9 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                                 : "#10b981",
                           }}
                         >
-                          {selectedWallet.isFrozen === "yes" ? "Freezed" : "Active"}
+                          {selectedWallet.isFrozen === "yes"
+                            ? "Freezed"
+                            : "Active"}
                         </div>
                       </div>
                     </div>
@@ -678,7 +732,10 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                     >
                       <button
                         onClick={() =>
-                          toggleFreeze(selectedWallet._id, selectedWallet.isFrozen)
+                          toggleFreeze(
+                            selectedWallet._id,
+                            selectedWallet.isFrozen,
+                          )
                         }
                         style={{
                           padding: "0.75rem 1.5rem",
@@ -702,6 +759,93 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                   </div>
                 )}
 
+                {/* TAB 1.5: ONLINE TRANSACTIONS */}
+                {activeDetailTab === "online" && (
+                  <>
+                    <table className="um-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Method</th>
+                          <th>Partner</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedOnlineTxns.map((t) => {
+                          const isReceived =
+                            t.sellerId?._id === selectedWallet?.userId?._id ||
+                            t.sellerId === selectedWallet?.userId?._id;
+                          const partner = isReceived ? t.buyerId : t.sellerId;
+
+                          return (
+                            <tr key={t._id}>
+                              <td>
+                                {new Date(t.createdAt).toLocaleDateString()}
+                              </td>
+                              <td>
+                                <span
+                                  className="um-status-badge status-approved"
+                                  style={{
+                                    backgroundColor: "#e0f2fe",
+                                    color: "#0369a1",
+                                  }}
+                                >
+                                  {t.paymentMethod}
+                                </span>
+                              </td>
+                              <td>
+                                {partner?.name || "Unknown"}
+                                <br />
+                                <span
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#6b7280",
+                                  }}
+                                >
+                                  ({isReceived ? "Buyer" : "Seller"})
+                                </span>
+                              </td>
+                              <td
+                                style={{
+                                  fontWeight: "600",
+                                  color: isReceived ? "#166534" : "#991b1b",
+                                }}
+                              >
+                                Rs. {t.amount}
+                              </td>
+                              <td>
+                                <span className="um-status-badge status-verified">
+                                  {t.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {paginatedOnlineTxns.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan="5"
+                              style={{ textAlign: "center", padding: "2rem" }}
+                            >
+                              No online transactions found for this user.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {currentOnlineTxns.length > itemsPerPage && (
+                      <Pagination
+                        currentPage={currentOnlinePage}
+                        totalItems={currentOnlineTxns.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={(page) => setCurrentOnlinePage(page)}
+                      />
+                    )}
+                  </>
+                )}
+
                 {/* TAB 2: COD SETTLEMENTS */}
                 {activeDetailTab === "cod" && (
                   <>
@@ -718,27 +862,44 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                       </thead>
                       <tbody>
                         {paginatedCodTxns.map((t) => {
-                          const isReceived = t.sellerId?._id === selectedWallet?.userId?._id || t.sellerId === selectedWallet?.userId?._id;
+                          const isReceived =
+                            t.sellerId?._id === selectedWallet?.userId?._id ||
+                            t.sellerId === selectedWallet?.userId?._id;
                           const partner = isReceived ? t.buyerId : t.sellerId;
-                          
+
                           return (
                             <tr key={t._id}>
-                              <td>{new Date(t.createdAt).toLocaleDateString()}</td>
                               <td>
-                                <span className={`um-status-badge ${isReceived ? 'status-verified' : 'status-pending'}`} style={{ backgroundColor: isReceived ? '#dcfce7' : '#fee2e2', color: isReceived ? '#166534' : '#991b1b' }}>
-                                  {isReceived ? 'Received' : 'Paid'}
+                                {new Date(t.createdAt).toLocaleDateString()}
+                              </td>
+                              <td>
+                                <span
+                                  className={`um-status-badge ${isReceived ? "status-verified" : "status-pending"}`}
+                                  style={{
+                                    backgroundColor: isReceived
+                                      ? "#dcfce7"
+                                      : "#fee2e2",
+                                    color: isReceived ? "#166534" : "#991b1b",
+                                  }}
+                                >
+                                  {isReceived ? "Received" : "Paid"}
                                 </span>
                               </td>
                               <td>
                                 {partner?.name || "Unknown"}
                                 <br />
                                 <span
-                                  style={{ fontSize: "0.75rem", color: "#6b7280" }}
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#6b7280",
+                                  }}
                                 >
-                                  ({isReceived ? 'Buyer' : 'Seller'})
+                                  ({isReceived ? "Buyer" : "Seller"})
                                 </span>
                               </td>
-                              <td style={{ fontWeight: "600" }}>Rs. {t.amount}</td>
+                              <td style={{ fontWeight: "600" }}>
+                                Rs. {t.amount}
+                              </td>
                               <td>
                                 <span
                                   className={`um-status-badge ${
@@ -771,7 +932,7 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                             </tr>
                           );
                         })}
-                        {paginatedCodTxns.length === 0 && (
+                        {(paginatedCodTxns.length === 0 && (
                           <tr>
                             <td
                               colSpan="6"
@@ -780,7 +941,8 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                               No COD transactions found for this user.
                             </td>
                           </tr>
-                        ) || null}
+                        )) ||
+                          null}
                       </tbody>
                     </table>
                     {currentCodTxns.length > itemsPerPage && (
@@ -811,13 +973,18 @@ const AdminWalletView = ({ walletsCache, codCache, withdrawalsCache, onCacheUpda
                       <tbody>
                         {paginatedWithdrawals.map((w) => (
                           <tr key={w._id}>
-                            <td>{new Date(w.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              {new Date(w.createdAt).toLocaleDateString()}
+                            </td>
                             <td style={{ fontWeight: "600", color: "#d97706" }}>
                               Rs. {w.amount}
                             </td>
                             <td>{w.paymentMethod}</td>
                             <td
-                              style={{ maxWidth: "200px", wordBreak: "break-word" }}
+                              style={{
+                                maxWidth: "200px",
+                                wordBreak: "break-word",
+                              }}
                             >
                               {w.accountDetails}
                             </td>

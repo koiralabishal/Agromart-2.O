@@ -1,0 +1,122 @@
+.stock-success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.stock-success-card {
+  background-color: white;
+  width: 90%;
+  max-width: 450px;
+  padding: 2.5rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-icon-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.success-check-icon {
+  font-size: 4rem;
+  color: #1dc956;
+  filter: drop-shadow(0 4px 6px rgba(29, 201, 86, 0.3));
+}
+
+.success-title {
+  color: #2d3436;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  color: #636e72;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.stocked-products-list {
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  max-height: 180px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.stocked-product-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0.8rem;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.stocked-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stocked-item-name {
+  color: #2d3436;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.stocked-item-qty {
+  color: #636e72;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.stocked-product-item:last-child {
+  border-bottom: none;
+}
+
+.item-arrow {
+  font-size: 0.7rem;
+  color: #1dc956;
+  margin-top: 5px;
+}
+
+.stock-success-ok-btn {
+  background-color: #1dc956;
+  color: white;
+  border: none;
+  padding: 12px 40px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.stock-success-ok-btn:hover {
+  background-color: #19ac4a;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(29, 201, 86, 0.4);
+}
+
+.stock-success-ok-btn:active {
+  transform: translateY(0);
+}

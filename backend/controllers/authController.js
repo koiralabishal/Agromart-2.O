@@ -6,6 +6,8 @@ import Buyer from "../models/Buyer.js";
 import OTP from "../models/OTP.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/sendEmail.js";
+import { broadcast } from "../socket.js";
+import { logActivity } from "../utils/activityLogger.js";
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
@@ -110,6 +112,19 @@ export const registerUser = async (req, res) => {
     // Delete OTP after successful registration
     await OTP.deleteOne({ _id: otpRecord._id });
 
+    // Notify Admin of new registration
+    broadcast("dashboard:update", { type: "USER_REGISTERED", user });
+
+    // Log Activity
+    const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+    await logActivity({
+      type: "USER_REGISTER",
+      message: `New ${roleLabel} Registered`,
+      detail: `${name} has joined the platform`,
+      userId: user._id, 
+      metadata: { role, email }
+    });
+
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -169,7 +184,7 @@ export const sendOTP = async (req, res) => {
     await OTP.findOneAndUpdate(
       { email },
       { otp, createdAt: Date.now() },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     // Send Email with HTML Template
@@ -213,7 +228,7 @@ export const sendOTP = async (req, res) => {
       email,
       "Agromart - Your Verification Code",
       `Your verification code is: ${otp}`,
-      htmlTemplate
+      htmlTemplate,
     );
 
     if (emailSent) {

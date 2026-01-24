@@ -17,24 +17,21 @@ import {
 } from "recharts";
 import {
   FaRegCalendarAlt,
-  FaFilter,
   FaDownload,
   FaLeaf,
   FaUsers,
   FaChartLine,
-  FaChartBar,
-  FaInbox,
-  FaChartPie,
   FaShoppingCart,
+  FaChartPie,
+  FaInbox,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import "./Styles/DetailedAnalytics.css";
 
 const DetailedAnalytics = ({
-  orders = { received: [] },
+  orders = { placed: [] },
   wallet = {},
   walletData = null,
-  products = [],
 }) => {
   const [timeFilter, setTimeFilter] = useState("current"); // "current" or "last"
 
@@ -52,16 +49,16 @@ const DetailedAnalytics = ({
       targetYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     }
 
-    return (orders.received || []).filter((order) => {
+    return (orders.placed || []).filter((order) => {
       const d = new Date(order.createdAt);
       return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
     });
-  }, [orders.received, timeFilter]);
+  }, [orders.placed, timeFilter]);
 
   const orderList = filteredOrders;
 
-  // 1. Process Sales Data (Daily Trend for filtered month)
-  const salesData = useMemo(() => {
+  // 1. Process Spending Data (Daily Trend for filtered month)
+  const spendingData = useMemo(() => {
     const now = new Date();
     let targetMonth, targetYear;
     if (timeFilter === "current") {
@@ -102,11 +99,14 @@ const DetailedAnalytics = ({
     return data;
   }, [orderList, timeFilter]);
 
-  // 2. Process Demand Data (Bar Chart)
-  const demandData = useMemo(() => {
+  // 2. Process Purchased Products Data (Bar Chart)
+  const purchaseData = useMemo(() => {
     const productMap = {};
     orderList.forEach((order) => {
-      if (order.status !== "Pending" && order.status !== "Delivered") return;
+      // For Top Purchased products, only count finalized transactions (Paid & Delivered)
+      const isPaid =
+        order.paymentStatus === "Paid" || order.paymentStatus === "Completed";
+      if (order.status !== "Delivered" || !isPaid) return;
 
       order.products.forEach((item) => {
         productMap[item.productName] =
@@ -117,7 +117,7 @@ const DetailedAnalytics = ({
     return Object.keys(productMap)
       .map((name) => ({ name, value: productMap[name] }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
+      .slice(0, 5);
   }, [orderList]);
 
   // 3. Process Order Status Data (Pie Chart)
@@ -155,21 +155,22 @@ const DetailedAnalytics = ({
         (o.paymentStatus === "Paid" || o.paymentStatus === "Completed"),
     );
 
-    const totalRevenue = finalizedOrders.reduce(
+    const totalSpending = finalizedOrders.reduce(
       (sum, o) => sum + Number(o.totalAmount || 0),
       0,
     );
 
-    const totalProductsSold = finalizedOrders.reduce((acc, order) => {
+    const totalProductsBought = finalizedOrders.reduce((acc, order) => {
       return acc + order.products.reduce((sum, p) => sum + p.quantity, 0);
     }, 0);
 
-    const uniqueCustomers = new Set(
-      orderList.map((o) => o.buyerID?._id || o.buyerID),
+    const uniqueSellers = new Set(
+      orderList.map((o) => o.sellerID?._id || o.sellerID),
     ).size;
+
     const avgOrderValue =
       finalizedOrders.length > 0
-        ? (totalRevenue / finalizedOrders.length).toFixed(2)
+        ? (totalSpending / finalizedOrders.length).toFixed(2)
         : 0;
 
     const currentMonthName = new Date().toLocaleString("default", {
@@ -183,23 +184,23 @@ const DetailedAnalytics = ({
 
     return [
       {
-        title: "Total Revenues",
-        value: `Rs. ${totalRevenue.toLocaleString()}`,
-        subtitle: `${periodName} Earnings`,
+        title: "Total Spending",
+        value: `Rs. ${totalSpending.toLocaleString()}`,
+        subtitle: `${periodName} Spending`,
         icon: <TbCurrencyRupeeNepalese />,
         color: "#1dc956",
       },
       {
-        title: "Products Sold",
-        value: `${totalProductsSold.toLocaleString()}`,
+        title: "Products Bought",
+        value: `${totalProductsBought.toLocaleString()}`,
         subtitle: `${periodName} Units`,
         icon: <FaLeaf />,
         color: "#1dc956",
       },
       {
-        title: "Unique Buyers",
-        value: `${uniqueCustomers}`,
-        subtitle: `${periodName} Customers`,
+        title: "Preferred Vendors",
+        value: `${uniqueSellers}`,
+        subtitle: `${periodName} Sellers`,
         icon: <FaUsers />,
         color: "#1dc956",
       },
@@ -211,7 +212,7 @@ const DetailedAnalytics = ({
         color: "#1dc956",
       },
     ];
-  }, [orderList, wallet, walletData]);
+  }, [orderList, timeFilter]);
 
   return (
     <div className="detailed-analytics">
@@ -258,14 +259,14 @@ const DetailedAnalytics = ({
       <div className="da-charts-main-row">
         <div className="da-chart-box large-chart">
           <div className="da-chart-header">
-            <h3>Sales Trend</h3>
-            <p>Monthly distribution of Produce</p>
+            <h3>Buying Trend</h3>
+            <p>Monthly distribution of purchases</p>
           </div>
           <div style={{ width: "100%", height: 350 }}>
-            {salesData.some((d) => d.fruits > 0 || d.vegetables > 0) ? (
+            {spendingData.some((d) => d.fruits > 0 || d.vegetables > 0) ? (
               <ResponsiveContainer>
                 <LineChart
-                  data={salesData}
+                  data={spendingData}
                   margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid
@@ -296,6 +297,7 @@ const DetailedAnalytics = ({
                     tickLine={false}
                     tick={{ fontSize: 12, fill: "#666" }}
                     width={60}
+                    allowDecimals={false}
                   >
                     <Label
                       value="Quantity"
@@ -324,6 +326,7 @@ const DetailedAnalytics = ({
                     strokeWidth={3}
                     dot={false}
                     activeDot={{ r: 6 }}
+                    name="Vegetables"
                   />
                   <Line
                     type="monotone"
@@ -332,13 +335,14 @@ const DetailedAnalytics = ({
                     strokeWidth={3}
                     dot={false}
                     activeDot={{ r: 6 }}
+                    name="Fruits"
                   />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <div className="da-empty-chart">
                 <FaChartLine size={40} style={{ marginBottom: "1rem" }} />
-                <span>No sales trend data for this period</span>
+                <span>No buying trend data for this period</span>
               </div>
             )}
           </div>
@@ -389,15 +393,15 @@ const DetailedAnalytics = ({
       <div className="da-charts-bottom-row">
         <div className="da-chart-box full-chart">
           <div className="da-chart-header">
-            <h3>Top Demand Products</h3>
-            <p>Top performing listings by quantity sold/pending</p>
+            <h3>Top 5 Purchased products</h3>
+            <p>Your most frequently purchased items by quantity</p>
           </div>
           <div className="da-demand-chart-container">
-            {demandData.length > 0 ? (
+            {purchaseData.length > 0 ? (
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart
                   layout="vertical"
-                  data={demandData}
+                  data={purchaseData}
                   margin={{ top: 20, right: 40, left: 100, bottom: 20 }}
                   barCategoryGap="15%"
                 >
@@ -412,9 +416,10 @@ const DetailedAnalytics = ({
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 12, fill: "#666" }}
+                    allowDecimals={false}
                   >
                     <Label
-                      value="Quantity Sold"
+                      value="Quantity Purchased"
                       offset={-10}
                       position="insideBottom"
                       style={{
@@ -441,13 +446,14 @@ const DetailedAnalytics = ({
                     fill="#1dc956"
                     radius={[0, 6, 6, 0]}
                     barSize={24}
+                    name="Quantity"
                   />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="da-empty-chart">
                 <FaShoppingCart size={40} style={{ marginBottom: "1rem" }} />
-                <span>No product demand data found</span>
+                <span>No product purchase data found</span>
               </div>
             )}
           </div>

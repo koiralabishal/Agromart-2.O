@@ -30,7 +30,7 @@ const InventoryManagement = ({ onAddInventory, initialData, onRefresh }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // No loading state needed - data is always available from props or cache
 
   // Edit State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -72,24 +72,19 @@ const InventoryManagement = ({ onAddInventory, initialData, onRefresh }) => {
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
+  // Refresh function for after edits - no loading state needed
   const fetchInventory = async () => {
     try {
-      setLoading(true);
       const res = await api.get(`/inventory?userID=${user._id || user.id}`);
       setInventoryItems(res.data);
       localStorage.setItem("supplierInventory_cache", JSON.stringify(res.data));
       if (onRefresh) onRefresh(); // Sync back to parent if needed
     } catch (err) {
       console.error("Error fetching inventory:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchInventory();
-  }, []);
-
+  // No need to fetch on mount - parent component handles prefetching
   // Keep state in sync with initialData from parent pre-fetch
   useEffect(() => {
     if (initialData) {
@@ -234,9 +229,7 @@ const InventoryManagement = ({ onAddInventory, initialData, onRefresh }) => {
       </div>
 
       <div className="inventory-grid">
-        {loading && inventoryItems.length === 0 ? (
-          <div className="im-empty-state">Loading inventory...</div>
-        ) : filteredItems.length > 0 ? (
+        {filteredItems.length > 0 ? (
           filteredItems.map((item) => (
             <div key={item._id || item.id} className="inventory-card">
               <img

@@ -38,6 +38,7 @@ const orderSchema = new mongoose.Schema(
         unit: String,
         image: String,
         category: String,
+        productDescription: String,
       },
     ],
     totalAmount: {
@@ -77,6 +78,10 @@ const orderSchema = new mongoose.Schema(
     },
     transactionCode: {
       type: String, // eSewa transaction code
+    },
+    isStocked: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

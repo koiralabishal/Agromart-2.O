@@ -1,6 +1,8 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import DeletedProduct from "../models/DeletedProduct.js";
+import { emitToUser, emitToRole } from "../socket.js";
+import { logActivity } from "../utils/activityLogger.js";
 
 // @desc    Create a new product
 // @route   POST /api/products
@@ -20,12 +22,14 @@ export const createProduct = async (req, res) => {
     } = req.body;
 
     // Log User Details
+    let farmerName = "Farmer";
     if (userID) {
       try {
         const farmer = await User.findById(userID);
         if (farmer) {
+          farmerName = farmer.name;
           console.log(
-            `>>> Product being added by Farmer: ${farmer.name} (${farmer.email})`
+            `>>> Product being added by Farmer: ${farmer.name} (${farmer.email})`,
           );
         } else {
           console.log(">>> Farmer not found for userID:", userID);
@@ -52,8 +56,37 @@ export const createProduct = async (req, res) => {
     const createdProduct = await product.save();
     console.log(
       ">>> Product created successfully:",
-      createdProduct.productName
+      createdProduct.productName,
     );
+
+    // Log activity
+    await logActivity({
+      type: "PRODUCT_CREATED",
+      message: `Product "${createdProduct.productName}" Added`,
+      detail: `Added by ${farmer?.name || "Farmer"}`,
+      userId: userID,
+      metadata: {
+        productId: createdProduct._id,
+        productName: createdProduct.productName,
+      },
+    });
+
+    // Notify Farmer Dashboard
+    emitToUser(userID, "dashboard:update", {
+      type: "PRODUCT_CREATED",
+      product: createdProduct,
+    });
+    // Notify all Collectors (so their farmer product views update)
+    emitToRole("collector", "dashboard:update", {
+      type: "PRODUCT_CREATED",
+      product: createdProduct,
+    });
+    // Notify Admin Dashboard for real-time stats update
+    emitToRole("admin", "dashboard:update", {
+      type: "PRODUCT_CREATED",
+      product: createdProduct,
+    });
+
     res.status(201).json(createdProduct);
   } catch (error) {
     console.error("Error creating product:", error);
@@ -98,7 +131,7 @@ export const deleteProduct = async (req, res) => {
     }
 
     console.log(
-      `>>> Archiving and deleting product: ${product.productName} (ID: ${id})`
+      `>>> Archiving and deleting product: ${product.productName} (ID: ${id})`,
     );
 
     // 2. Create backup in backup_agromart_2
@@ -112,6 +145,34 @@ export const deleteProduct = async (req, res) => {
     // 3. Delete from main DB
     await Product.findByIdAndDelete(id);
     console.log(`>>> Product removed from main database`);
+
+    // Fetch user for log
+    const user = await User.findById(product.userID);
+
+    // Log activity
+    await logActivity({
+      type: "PRODUCT_DELETED",
+      message: `Product "${product.productName}" Deleted`,
+      detail: `Deleted by ${user?.name || "Farmer"}`,
+      userId: product.userID,
+      metadata: { productId: id, productName: product.productName },
+    });
+
+    // Notify Farmer Dashboard
+    emitToUser(product.userID, "dashboard:update", {
+      type: "PRODUCT_DELETED",
+      productId: id,
+    });
+    // Notify all Collectors
+    emitToRole("collector", "dashboard:update", {
+      type: "PRODUCT_DELETED",
+      productId: id,
+    });
+    // Notify Admin Dashboard for real-time stats update
+    emitToRole("admin", "dashboard:update", {
+      type: "PRODUCT_DELETED",
+      productId: id,
+    });
 
     res.json({ message: "Product deleted and backed up successfully" });
   } catch (error) {
@@ -141,8 +202,20 @@ export const updateProductQuantity = async (req, res) => {
     await product.save();
 
     console.log(
-      `>>> Product ${product.productName} quantity updated by ${delta}. New quantity: ${product.quantity}`
+      `>>> Product ${product.productName} quantity updated by ${delta}. New quantity: ${product.quantity}`,
     );
+
+    // Notify Farmer Dashboard
+    emitToUser(product.userID, "dashboard:update", {
+      type: "PRODUCT_QUANTITY_UPDATED",
+      product,
+    });
+    // Notify all Collectors
+    emitToRole("collector", "dashboard:update", {
+      type: "PRODUCT_QUANTITY_UPDATED",
+      product,
+    });
+
     res.json(product);
   } catch (error) {
     console.error("Error updating product quantity:", error);
@@ -156,14 +229,8 @@ export const updateProductQuantity = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      productName,
-      quantity,
-      unit,
-      price,
-      productDescription,
-      category,
-    } = req.body;
+    const { productName, quantity, unit, price, productDescription, category } =
+      req.body;
 
     const product = await Product.findById(id);
 
@@ -187,7 +254,34 @@ export const updateProduct = async (req, res) => {
     }
 
     const updatedProduct = await product.save();
-    console.log(`>>> Product updated successfully: ${updatedProduct.productName}`);
+    console.log(
+      `>>> Product updated successfully: ${updatedProduct.productName}`,
+    );
+
+    // Notify Farmer Dashboard
+    emitToUser(updatedProduct.userID, "dashboard:update", {
+      type: "PRODUCT_UPDATED",
+      product: updatedProduct,
+    });
+    // Notify all Collectors
+    emitToRole("collector", "dashboard:update", {
+      type: "PRODUCT_UPDATED",
+      product: updatedProduct,
+    });
+
+    // Log user activity
+    const user = await User.findById(updatedProduct.userID);
+    await logActivity({
+      type: "PRODUCT_UPDATED",
+      message: `Product "${updatedProduct.productName}" Updated`,
+      detail: `Updated by ${user?.name || "Farmer"}`,
+      userId: updatedProduct.userID,
+      metadata: {
+        productId: updatedProduct._id,
+        productName: updatedProduct.productName,
+      },
+    });
+
     res.json(updatedProduct);
   } catch (error) {
     console.error("Error updating product:", error);

@@ -53,7 +53,7 @@ const CartView = ({
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
 
   // Rs. 100 delivery charge per order (per collector)
@@ -75,6 +75,7 @@ const CartView = ({
           userID,
           totalAmount: grandTotal,
         });
+
         setShowSuccessModal(true);
         return;
       }
@@ -94,7 +95,7 @@ const CartView = ({
         // Store transaction UUID for failure handling
         sessionStorage.setItem(
           "transactionUUID",
-          paymentParams.transaction_uuid
+          paymentParams.transaction_uuid,
         );
 
         const form = document.createElement("form");
@@ -131,7 +132,6 @@ const CartView = ({
     onClearCart && onClearCart();
     onOrderComplete && onOrderComplete();
   };
-
 
   if (cartItems.length === 0) {
     return (
@@ -234,7 +234,11 @@ const CartView = ({
               <span>Rs. {subtotal.toFixed(2)}</span>
             </div>
             <div className="summary-line">
-              <span>Delivery Charge ({numberOfOrders} {numberOfOrders === 1 ? 'order' : 'orders'} × Rs. {deliveryChargePerOrder})</span>
+              <span>
+                Delivery Charge ({numberOfOrders}{" "}
+                {numberOfOrders === 1 ? "order" : "orders"} × Rs.{" "}
+                {deliveryChargePerOrder})
+              </span>
               <span>Rs. {deliveryCharge.toFixed(2)}</span>
             </div>
             <div className="summary-divider"></div>

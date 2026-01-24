@@ -13,6 +13,7 @@ import api from "../../../api/axiosConfig";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Pagination from "../../Common/Pagination";
+import ConfirmationModal from "../../Common/ConfirmationModal";
 
 const UserManagementView = ({
   role,
@@ -39,6 +40,12 @@ const UserManagementView = ({
   const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
+    if (cache) {
+      setUsers(cache);
+    }
+  }, [cache]);
+
+  useEffect(() => {
     fetchUsers();
   }, [role, refreshTrigger]);
 
@@ -46,10 +53,17 @@ const UserManagementView = ({
     if (!cache) setLoading(true);
     try {
       const res = await api.get(`/admin/users?role=${role.toLowerCase()}`);
-      setUsers(res.data);
-      onCacheUpdate(res.data);
+      if (Array.isArray(res.data)) {
+        setUsers(res.data);
+        onCacheUpdate(res.data);
+      } else {
+        console.error("API Error: Expected array but got", res.data);
+        setUsers([]);
+        toast.error("Failed to load users: Invalid data format");
+      }
     } catch (err) {
       console.error("Failed to fetch users", err);
+      toast.error("Network error fetching users");
     } finally {
       setLoading(false);
     }

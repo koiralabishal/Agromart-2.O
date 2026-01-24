@@ -16,15 +16,17 @@ import "./Styles/PaymentsView.css";
 import api from "../../../api/axiosConfig";
 import Pagination from "../../Common/Pagination";
 
-const PaymentsView = () => {
+const PaymentsView = ({ walletDataProp }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
 
   const [walletData, setWalletData] = useState(() => {
+    if (walletDataProp) return walletDataProp;
     const cached = localStorage.getItem(`cached_farmer_wallet_${userID}`);
     return cached ? JSON.parse(cached) : null;
   });
-  const [loading, setLoading] = useState(!walletData); // Only load if no cache
+  // Zero-Loading: Never show blocking loading
+  const [loading, setLoading] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState("eSewa");
@@ -39,7 +41,7 @@ const PaymentsView = () => {
   const fetchWalletData = async () => {
     try {
       // Background fetch: don't show loading if we have cache
-      const response = await api.get(`/wallet/${userID}`);
+      const response = await api.get(`/wallet/${userID}?v=${Date.now()}`);
       setWalletData(response.data);
       localStorage.setItem(
         `cached_farmer_wallet_${userID}`,
@@ -54,7 +56,9 @@ const PaymentsView = () => {
 
   const fetchPaymentDetails = async () => {
     try {
-      const response = await api.get(`/wallet/payment-details/${userID}`);
+      const response = await api.get(
+        `/wallet/payment-details/${userID}?v=${Date.now()}`,
+      );
       if (response.data) {
         setWithdrawMethod(response.data.paymentMethod || "eSewa");
         setAccountDetails(response.data.gatewayId || "");
@@ -64,11 +68,23 @@ const PaymentsView = () => {
     }
   };
 
+  // Sync internal state when props change
   useEffect(() => {
-    if (userID) {
+    if (walletDataProp) {
+      setWalletData(walletDataProp);
+      localStorage.setItem(
+        `cached_farmer_wallet_${userID}`,
+        JSON.stringify(walletDataProp),
+      );
+      setLoading(false);
+    }
+  }, [walletDataProp, userID]);
+
+  useEffect(() => {
+    if (userID && !walletDataProp) {
       fetchWalletData();
     }
-  }, [userID]);
+  }, [userID, walletDataProp]);
 
   useEffect(() => {
     if (isWithdrawModalOpen) {
@@ -105,16 +121,7 @@ const PaymentsView = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div
-        className="payments-view"
-        style={{ textAlign: "center", padding: "5rem" }}
-      >
-        Loading Wallet Data...
-      </div>
-    );
-  }
+  // Zero-Loading: No blocking loading indicator
 
   const { wallet, onlineTransactions, codTransactions, withdrawals } =
     walletData || {};

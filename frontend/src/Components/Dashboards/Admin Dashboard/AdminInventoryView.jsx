@@ -4,7 +4,6 @@ import { FaTrash, FaSearch, FaEye, FaArrowLeft } from "react-icons/fa";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import Pagination from "../../Common/Pagination";
 
-
 const AdminInventoryView = ({ cache, onCacheUpdate }) => {
   const [inventory, setInventory] = useState(cache || []);
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,7 +15,6 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
   const [currentItemPage, setCurrentItemPage] = useState(1);
   const itemsPerPage = 10;
 
-
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -26,6 +24,12 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
     confirmBtnText: "",
     onConfirm: null,
   });
+
+  useEffect(() => {
+    if (cache) {
+      setInventory(cache);
+    }
+  }, [cache]);
 
   useEffect(() => {
     fetchInventory();
@@ -108,7 +112,6 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
     (currentItemPage - 1) * itemsPerPage,
     currentItemPage * itemsPerPage,
   );
-
 
   return (
     <div className="admin-view-container">
@@ -307,7 +310,6 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
                 itemsPerPage={itemsPerPage}
                 onPageChange={(page) => setCurrentUserPage(page)}
               />
-
             </>
           )}
 
@@ -462,7 +464,6 @@ const AdminInventoryView = ({ cache, onCacheUpdate }) => {
                 itemsPerPage={itemsPerPage}
                 onPageChange={(page) => setCurrentItemPage(page)}
               />
-
             </>
           )}
         </>

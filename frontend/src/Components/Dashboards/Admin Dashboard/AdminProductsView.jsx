@@ -27,6 +27,12 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
   });
 
   useEffect(() => {
+    if (cache) {
+      setProducts(cache);
+    }
+  }, [cache]);
+
+  useEffect(() => {
     fetchProducts();
   }, []);
 
@@ -35,8 +41,15 @@ const AdminProductsView = ({ cache, onCacheUpdate }) => {
     try {
       const res = await api.get("/admin/products");
       const allProducts = res.data;
-      setProducts(allProducts);
-      onCacheUpdate(allProducts);
+      
+      if (Array.isArray(allProducts)) {
+        setProducts(allProducts);
+        onCacheUpdate(allProducts);
+      } else {
+        console.error("API Error: Expected array of products but got", allProducts);
+        setProducts([]);
+        // Optional: toast.error("Invalid product data format");
+      }
     } catch (err) {
       console.error("Failed to fetch products", err);
     } finally {

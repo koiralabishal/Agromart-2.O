@@ -6,7 +6,7 @@ import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
 import "./Styles/BuyerOrderManagement.css";
 
-const BuyerOrderManagement = ({ onViewOrder }) => {
+const BuyerOrderManagement = ({ onViewOrder, ordersProp }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All Orders");
   const [confModal, setConfModal] = useState({
@@ -38,8 +38,15 @@ const BuyerOrderManagement = ({ onViewOrder }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
 
+  useEffect(() => {
+    if (ordersProp) {
+      setOrdersPlaced(ordersProp);
+      sessionStorage.setItem("buyerOrdersPlaced", JSON.stringify(ordersProp));
+    }
+  }, [ordersProp]);
+
   const fetchOrders = async () => {
-    if (!userID) return;
+    if (!userID || (ordersProp && ordersProp.length > 0)) return;
     try {
       // Buyers only place orders
       const placedRes = await api.get("/orders", {

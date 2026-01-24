@@ -11,8 +11,10 @@ import {
 } from "react-icons/fa";
 import api from "../../../api/axiosConfig";
 import "./Styles/DistributorProductView.css";
+import { useSocket } from "../../../context/SocketContext";
 
 const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
+  const socket = useSocket();
   const [searchTerm, setSearchTerm] = useState("");
   // Immediate data: Use local storage cache for this specific distributor
   const [products, setProducts] = useState(() => {
@@ -32,7 +34,16 @@ const DistributorProductView = ({ distributor, onBack, onAddToCart }) => {
     if (distributor) {
       fetchDistributorProducts();
     }
-  }, [distributor]);
+
+    if (socket) {
+      const handleUpdate = (data) => {
+        console.log(">>> [DistributorProduct Socket] Refreshing products");
+        fetchDistributorProducts();
+      };
+      socket.on("dashboard:update", handleUpdate);
+      return () => socket.off("dashboard:update", handleUpdate);
+    }
+  }, [distributor, socket]);
 
   const fetchDistributorProducts = async () => {
     try {
