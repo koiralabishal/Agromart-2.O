@@ -12,6 +12,7 @@ import {
   FaMoneyBillWave,
   FaGavel,
   FaBell,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import {
   BarChart,
@@ -209,53 +210,74 @@ const AdminOverview = ({ stats }) => {
             }}
           >
             <div style={{ minWidth: "600px", height: 300 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={getFilteredData(growthFilter)}
-                  barSize={30}
-                  barGap={4}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#E5E7EB"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                    allowDecimals={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} />
-                  <Bar dataKey="Farmers" fill="#1DC956" radius={[4, 4, 0, 0]} />
-                  <Bar
-                    dataKey="Collectors"
-                    fill="#3B82F6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="Suppliers"
-                    fill="#F59E0B"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar dataKey="Buyers" fill="#EF4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {getFilteredData(growthFilter).some(
+                (d) =>
+                  (d.Farmers > 0 ||
+                    d.Collectors > 0 ||
+                    d.Suppliers > 0 ||
+                    d.Buyers > 0)
+              ) ? (
+                <ResponsiveContainer>
+                  <BarChart
+                    data={getFilteredData(growthFilter)}
+                    barSize={30}
+                    barGap={4}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                      allowDecimals={false}
+                      interval={0}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                    <Bar
+                      dataKey="Farmers"
+                      fill="#1DC956"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Collectors"
+                      fill="#3B82F6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Suppliers"
+                      fill="#F59E0B"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Buyers"
+                      fill="#EF4444"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="ad-empty-chart">
+                  <FaChartLine size={40} />
+                  <span>No user growth data available</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -311,13 +333,11 @@ const AdminOverview = ({ stats }) => {
               })
             ) : (
               <div
-                style={{
-                  padding: "2rem",
-                  textAlign: "center",
-                  color: "#9CA3AF",
-                }}
+                className="ad-empty-chart"
+                style={{ height: "auto", minHeight: "200px" }}
               >
-                No recent activities
+                <FaBell size={40} />
+                <span>No recent activities found</span>
               </div>
             )}
           </div>
@@ -350,53 +370,62 @@ const AdminOverview = ({ stats }) => {
             }}
           >
             <div style={{ minWidth: "500px", height: 200 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={getFilteredData(fruitFilter)}
-                  barSize={30}
-                  barGap={4}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#E5E7EB"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                    allowDecimals={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} />
-                  <Bar
-                    dataKey="DemandFruit"
-                    name="Demand"
-                    fill="#EF4444"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="SupplyFruit"
-                    name="Supply"
-                    fill="#F59E0B"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {getFilteredData(fruitFilter).some(
+                (d) => d.DemandFruit > 0 || d.SupplyFruit > 0
+              ) ? (
+                <ResponsiveContainer>
+                  <BarChart
+                    data={getFilteredData(fruitFilter)}
+                    barSize={30}
+                    barGap={4}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                      allowDecimals={false}
+                      interval={0}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                    <Bar
+                      dataKey="DemandFruit"
+                      name="Demand"
+                      fill="#EF4444"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="SupplyFruit"
+                      name="Supply"
+                      fill="#F59E0B"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="ad-empty-chart">
+                  <FaAppleAlt size={40} />
+                  <span>No fruit data available</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -426,53 +455,62 @@ const AdminOverview = ({ stats }) => {
             }}
           >
             <div style={{ minWidth: "500px", height: 200 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={getFilteredData(vegFilter)}
-                  barSize={30}
-                  barGap={4}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#E5E7EB"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                    allowDecimals={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} />
-                  <Bar
-                    dataKey="DemandVeg"
-                    name="Demand"
-                    fill="#10B981"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="SupplyVeg"
-                    name="Supply"
-                    fill="#3B82F6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {getFilteredData(vegFilter).some(
+                (d) => d.DemandVeg > 0 || d.SupplyVeg > 0
+              ) ? (
+                <ResponsiveContainer>
+                  <BarChart
+                    data={getFilteredData(vegFilter)}
+                    barSize={30}
+                    barGap={4}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                      allowDecimals={false}
+                      interval={0}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                    <Bar
+                      dataKey="DemandVeg"
+                      name="Demand"
+                      fill="#10B981"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="SupplyVeg"
+                      name="Supply"
+                      fill="#3B82F6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="ad-empty-chart">
+                  <FaLeaf size={40} />
+                  <span>No vegetable data available</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -500,65 +538,78 @@ const AdminOverview = ({ stats }) => {
             style={{ width: "100%", overflowX: "auto" }}
           >
             <div style={{ minWidth: "800px", height: 300 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={getFilteredData(pipeFilter)}
-                  barSize={30}
-                  barGap={8}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#E5E7EB"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                    allowDecimals={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} />
-                  <Bar
-                    dataKey="PipeFarmer"
-                    name="1. Farmer Production"
-                    fill="#1DC956"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="PipeCollector"
-                    name="2. Collector Wholesale"
-                    fill="#3B82F6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="PipeSupplier"
-                    name="3. Supplier Inventory"
-                    fill="#F59E0B"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="PipeBuyer"
-                    name="4. Buyer Consumption"
-                    fill="#EF4444"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {getFilteredData(pipeFilter).some(
+                (d) =>
+                  d.PipeFarmer > 0 ||
+                  d.PipeCollector > 0 ||
+                  d.PipeSupplier > 0 ||
+                  d.PipeBuyer > 0
+              ) ? (
+                <ResponsiveContainer>
+                  <BarChart
+                    data={getFilteredData(pipeFilter)}
+                    barSize={30}
+                    barGap={8}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                      allowDecimals={false}
+                      interval={0}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                    <Bar
+                      dataKey="PipeFarmer"
+                      name="1. Farmer Production"
+                      fill="#1DC956"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="PipeCollector"
+                      name="2. Collector Wholesale"
+                      fill="#3B82F6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="PipeSupplier"
+                      name="3. Supplier Inventory"
+                      fill="#F59E0B"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="PipeBuyer"
+                      name="4. Buyer Consumption"
+                      fill="#EF4444"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="ad-empty-chart">
+                  <FaTruck size={40} />
+                  <span>No supply chain data available</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -590,54 +641,61 @@ const AdminOverview = ({ stats }) => {
             }}
           >
             <div style={{ minWidth: "350px", height: 230 }}>
-              <ResponsiveContainer>
-                <LineChart
-                  data={getFilteredData(revenueFilter)}
-                  margin={{ top: 20, right: 10, bottom: 5, left: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#E5E7EB"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 11 }}
-                    interval={0}
-                    padding={{ left: 10, right: 10 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#9CA3AF", fontSize: 11 }}
-                    allowDecimals={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Amount"
-                    stroke="#1DC956"
-                    strokeWidth={3}
-                    dot={{
-                      r: 3,
-                      fill: "#1DC956",
-                      stroke: "#fff",
-                      strokeWidth: 2,
-                    }}
-                    activeDot={{ r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {getFilteredData(revenueFilter).some((d) => d.Amount > 0) ? (
+                <ResponsiveContainer>
+                  <LineChart
+                    data={getFilteredData(revenueFilter)}
+                    margin={{ top: 20, right: 10, bottom: 5, left: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                      interval={0}
+                      padding={{ left: 10, right: 10 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                      allowDecimals={false}
+                      interval={0}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Amount"
+                      stroke="#1DC956"
+                      strokeWidth={3}
+                      dot={{
+                        r: 3,
+                        fill: "#1DC956",
+                        stroke: "#fff",
+                        strokeWidth: 2,
+                      }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="ad-empty-chart">
+                  <FaMoneyBillWave size={35} />
+                  <span>No revenue data recorded</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -647,60 +705,69 @@ const AdminOverview = ({ stats }) => {
             <div className="ad-chart-title">Platform Composition</div>
           </div>
           <div style={{ height: 230, display: "flex", alignItems: "center" }}>
-            <ResponsiveContainer width="60%" height="100%">
-              <PieChart>
-                <Pie
-                  data={userCompositionData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {userCompositionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ width: "40%", paddingLeft: "1rem" }}>
-              {userCompositionData.map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "12px",
-                      height: "12px",
-                      borderRadius: "50%",
-                      backgroundColor: item.color,
-                      marginRight: "8px",
-                    }}
-                  />
-                  <div>
+            {userCompositionData.some((d) => d.value > 0) ? (
+              <>
+                <ResponsiveContainer width="60%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={userCompositionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {userCompositionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ width: "40%", paddingLeft: "1rem" }}>
+                  {userCompositionData.map((item, index) => (
                     <div
+                      key={index}
                       style={{
-                        fontSize: "0.8rem",
-                        fontWeight: "600",
-                        color: "#1f2937",
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "8px",
                       }}
                     >
-                      {item.name}
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          backgroundColor: item.color,
+                          marginRight: "8px",
+                        }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            fontWeight: "600",
+                            color: "#1f2937",
+                          }}
+                        >
+                          {item.name}
+                        </div>
+                        <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
+                          {item.value} Users
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: "0.7rem", color: "#6b7280" }}>
-                      {item.value} Users
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="ad-empty-chart">
+                <FaUsers size={35} />
+                <span>No registered users found</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

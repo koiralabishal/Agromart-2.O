@@ -312,10 +312,10 @@ const InventoryManagement = ({ onAddInventory, initialData, onRefresh }) => {
           ))
         ) : (
           <div className="im-empty">
-            <FaBox className="empty-icon" />
-            <p>
-              Your inventory is empty! Start adding stock items to manage your
-              supply warehouse.
+            <FaBox className="empty-icon" style={{ fontSize: '6rem', color: '#cbd5e1', marginBottom: '1.5rem' }} />
+            <h3>No Inventory Items Yet</h3>
+            <p style={{ maxWidth: '450px', margin: '0 auto 2rem auto', color: '#64748b' }}>
+              Your inventory is completely empty! Start adding your available produce to attract buyers and manage your supply chain effectively.
             </p>
             <button onClick={onAddInventory} className="im-empty-add-btn">
               <FaPlus /> Add Your First Item

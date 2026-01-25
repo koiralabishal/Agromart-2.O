@@ -1,19 +1,65 @@
-import nodemailer from "nodemailer";
+import { sendMail } from "./mailer.js";
 
-// Configure Transporter (Gmail or SMTP)
-// Ensure process.env.EMAIL_USER and process.env.EMAIL_PASS are set
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
+/**
+ * Utility to get the logo URL matching AgroMart branding
+ */
 const getLogoUrl = () => {
-  // Using a specific leaf icon to match FaLeaf branding
-  // This is a high-quality openclipart or similar reliable CDN link
   return "https://cdn-icons-png.flaticon.com/512/188/188333.png";
+};
+
+/**
+ * Send OTP Verification Email
+ */
+export const sendOTPEmail = async (email, otp) => {
+  const htmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        .container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; }
+        .header { background-color: #2e8b57; color: white; padding: 30px; text-align: center; }
+        .content { padding: 40px; color: #333; line-height: 1.6; }
+        .otp-code { background-color: #f4fbf7; border: 2px dashed #2e8b57; border-radius: 8px; color: #2e8b57; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 30px 0; padding: 20px; text-align: center; }
+        .footer { background-color: #f9f9f9; color: #777; font-size: 12px; padding: 20px; text-align: center; }
+        .logo { font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 5px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🌿 AgroMart</div>
+          <div style="font-size: 16px; opacity: 0.9;">Cultivating Trust, Connecting Growth</div>
+        </div>
+        <div class="content">
+          <h2 style="margin-top: 0; color: #2c3e50;">Verify Your Email Address</h2>
+          <p>Hello,</p>
+          <p>Thank you for joining Agromart! To complete your registration and secure your account, please use the following verification code:</p>
+          <div class="otp-code">${otp}</div>
+          <p>This code is valid for <strong>10 minutes</strong>. If you didn't request this code, please ignore this email.</p>
+          <p>Best regards,<br>The AgroMart Team</p>
+        </div>
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} AgroMart. All rights reserved.<br>
+          Empowering farmers, suppliers, and buyers worldwide.
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const info = await sendMail({
+      to: email,
+      subject: "Agromart - Your Verification Code",
+      text: `Your verification code is: ${otp}`,
+      html: htmlTemplate,
+    });
+    console.log(">>> OTP Email sent successfully:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error(">>> OTP Email send failed:", error);
+    return false;
+  }
 };
 
 /**
@@ -112,7 +158,6 @@ export const sendOrderEmail = async (order, seller, buyer) => {
     else dashboardUrl += "/";
 
     const mailOptions = {
-      from: `"AgroMart" <${process.env.EMAIL_USER}>`,
       to: seller.email,
       subject: `New Order Received #${order.orderID}`,
       html: `
@@ -574,11 +619,11 @@ export const sendOrderEmail = async (order, seller, buyer) => {
       `,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log(">>> Email sent successfully:", info.messageId);
+    await sendMail(mailOptions);
+    console.log(">>> Order Email sent successfully");
     return true;
   } catch (error) {
-    console.error(">>> Email send failed:", error);
+    console.error(">>> Order Email send failed:", error);
     return false;
   }
 };

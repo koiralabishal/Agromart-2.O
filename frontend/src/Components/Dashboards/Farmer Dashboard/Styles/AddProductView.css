@@ -298,6 +298,11 @@
   animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.ap-success-popup.warning {
+  max-width: 800px;
+  padding: 3rem 4rem;
+}
+
 .ap-success-icon {
   font-size: 4rem;
   color: #1dc956;
@@ -335,6 +340,99 @@
   box-shadow: 0 4px 12px rgba(29, 201, 86, 0.3);
 }
 
+.ap-success-btn.secondary {
+  background: #f39c12;
+}
+
+.ap-success-btn.secondary:hover {
+  background: #e67e22;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.ap-success-btn.transparent {
+  background: transparent !important;
+  color: #666;
+  border: 1px solid #ddd !important;
+  width: 100%;
+}
+
+.ap-success-btn.transparent:hover {
+  background: #f5f5f5 !important;
+  box-shadow: none !important;
+  transform: none;
+}
+
+.modal-actions-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.warning-icon-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -1.5rem;
+  margin-right: -1.5rem;
+}
+
+.warning-icon-close {
+  cursor: pointer;
+  color: #888;
+  font-size: 1.2rem;
+  transition: color 0.2s;
+}
+
+.warning-icon-close:hover {
+  color: #333;
+}
+
+.warning-icon-large {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.ap-success-popup.warning h3 {
+  white-space: nowrap;
+}
+
+.ap-success-popup.warning p {
+  white-space: normal;
+  line-height: 1.6;
+}
+
+.modal-actions-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.ap-success-btn.cancel-btn {
+  background: #6c757d;
+  flex: 1;
+}
+
+.ap-success-btn.cancel-btn:hover {
+  background: #5a6268;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.ap-success-btn.yes-btn {
+  background: #f39c12;
+  flex: 1;
+}
+
+.ap-success-btn.yes-btn:hover {
+  background: #e67e22;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -355,14 +453,55 @@
   }
 }
 
-@media (max-width: 768px) {
-  .ap-form-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 666px) {
+  .ap-success-popup.warning {
+    width: 90%;
+    max-width: 400px;
+    padding: clamp(1rem, 4vw, 1.5rem);
+    position: relative; /* Ensure absolute children stay inside */
+    overflow: hidden; /* Prevent content spill */
   }
-  .ap-form-group.full-width {
-    grid-column: span 1;
+
+  .warning-icon-container {
+    margin-right: -0.2rem; /* Pull back from edge */
+    margin-top: -0.2rem;
   }
-  .add-product-card {
-    padding: 2rem 1.5rem;
+
+  .ap-success-popup.warning h3 {
+    font-size: clamp(1rem, 5vw, 1.2rem);
+    white-space: normal; /* Allow wrapping */
+    word-wrap: break-word; /* Prevent overflow */
+    padding: 0 10px; /* Safety padding */
+  }
+
+  .ap-success-popup.warning p {
+    font-size: clamp(0.75rem, 3.5vw, 0.9rem) !important;
+  }
+
+  .warning-icon-large svg {
+    font-size: clamp(2.5rem, 10vw, 3rem) !important;
+  }
+
+  .modal-actions-row {
+    flex-direction: row; /* Force row layout */
+    justify-content: center; /* Center buttons */
+    gap: 12px; /* Sufficient gap */
+    margin-top: 1rem;
+  }
+
+  .ap-success-btn.cancel-btn {
+    flex: 0 0 auto; /* Don't stretch */
+    width: auto;
+    /* padding: 0.5rem 0.8rem; */
+    
+    font-size: clamp(0.5rem, 3.5vw, 0.75rem);
+  }
+
+  .ap-success-btn.yes-btn {
+    flex: 1 1 auto; 
+    width: auto;
+    padding: 0.5rem 0.4rem;
+    font-size: clamp(0.5rem, 3.5vw, 0.75rem);
+    white-space: nowrap;
   }
 }

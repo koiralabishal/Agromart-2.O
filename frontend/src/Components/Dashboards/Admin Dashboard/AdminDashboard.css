@@ -561,7 +561,7 @@ body {
 
 /* Hide scrollbar utility */
 .hide-scrollbar {
-  scrollbar-width: none !important;  /* Firefox */
+  scrollbar-width: none !important; /* Firefox */
   -ms-overflow-style: none !important; /* IE and Edge */
 }
 
@@ -794,9 +794,27 @@ body {
   color: #1f2937;
 }
 
-.tab-btn.active {
-  color: var(--primary-green);
-  background-color: #f0fdf4;
+/* Empty Chart State */
+.ad-empty-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: #9ca3af;
+  text-align: center;
+  width: 100%;
+}
+
+.ad-empty-chart svg {
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.ad-empty-chart span {
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .tab-btn.active::after {

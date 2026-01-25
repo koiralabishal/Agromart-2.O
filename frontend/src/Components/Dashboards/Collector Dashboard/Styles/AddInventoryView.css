@@ -336,8 +336,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -360,5 +364,128 @@
   }
   .add-product-card {
     padding: 2rem 1.5rem;
+  }
+}
+
+/* Warning Popup Styles */
+.ap-success-popup.warning {
+  max-width: 800px;
+  padding: 3rem 4rem;
+}
+
+.warning-icon-large {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.ap-success-popup.warning h3 {
+  white-space: nowrap;
+}
+
+.ap-success-popup.warning p {
+  white-space: normal;
+  line-height: 1.6;
+}
+
+.modal-actions-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.ap-success-btn.cancel-btn {
+  background: #6c757d;
+  flex: 1;
+}
+
+.ap-success-btn.cancel-btn:hover {
+  background: #5a6268;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.ap-success-btn.yes-btn {
+  background: #f39c12;
+  flex: 1;
+}
+
+.ap-success-btn.yes-btn:hover {
+  background: #e67e22;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.warning-icon-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -1.5rem;
+  margin-right: -1.5rem;
+}
+
+.warning-icon-close {
+  cursor: pointer;
+  color: #888;
+  font-size: 1.2rem;
+  transition: color 0.2s;
+}
+
+.warning-icon-close:hover {
+  color: #333;
+}
+
+/* Responsive Styles for Warning Popup */
+@media (max-width: 666px) {
+  .ap-success-popup.warning {
+    width: 90%;
+    max-width: 400px;
+    padding: clamp(1rem, 4vw, 1.5rem);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .warning-icon-container {
+    margin-right: -0.2rem;
+    margin-top: -0.2rem;
+  }
+
+  .ap-success-popup.warning h3 {
+    font-size: clamp(1rem, 5vw, 1.2rem);
+    white-space: normal;
+    word-wrap: break-word;
+    padding: 0 10px;
+  }
+
+  .ap-success-popup.warning p {
+    font-size: clamp(0.75rem, 3.5vw, 0.9rem) !important;
+  }
+
+  .warning-icon-large svg {
+    font-size: clamp(2.5rem, 10vw, 3rem) !important;
+  }
+
+  .modal-actions-row {
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 1rem;
+  }
+
+  .ap-success-btn.cancel-btn {
+    flex: 0 0 auto;
+    width: auto;
+    /* padding: 0.5rem 0.8rem; */
+    font-size: clamp(0.5rem, 3.5vw, 0.75rem);
+  }
+
+  .ap-success-btn.yes-btn {
+    flex: 1 1 auto;
+    width: auto;
+    padding: 0.5rem 0.4rem;
+    font-size: clamp(0.5rem, 3.5vw, 0.75rem);
+    white-space: nowrap;
   }
 }

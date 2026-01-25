@@ -872,3 +872,37 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+/* Main Dashboard Empty Chart State */
+.cd-empty-chart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #a0aec0;
+  font-weight: 500;
+  font-size: 1rem;
+  background: #f8fafc;
+  border-radius: 20px;
+  border: 2px dashed #cbd5e0;
+  padding: 2rem;
+  text-align: center;
+  min-height: 250px;
+}
+
+.cd-empty-chart svg {
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.cd-empty-chart p {
+  color: #4a5568;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.cd-empty-chart span {
+  font-size: 0.85rem;
+  color: #718096;
+}

@@ -5,6 +5,7 @@ import Product from "../models/Product.js";
 import DeletedInventory from "../models/DeletedInventory.js";
 import { emitToUser, emitToRole } from "../socket.js";
 import { logActivity } from "../utils/activityLogger.js";
+import { findDuplicateProduct } from "../utils/productInventoryDuplicate.js";
 
 // @desc    Create a new inventory item
 // @route   POST /api/inventory
@@ -40,6 +41,28 @@ export const createInventory = async (req, res) => {
 
     const image = req.file ? req.file.path : req.body.productImage;
 
+    // --- Advanced Multi-Layer Duplicate Detection ---
+    const { confirmDuplicate } = req.body;
+    if (!confirmDuplicate) {
+      const existingItems = await Inventory.find({ userID, category });
+
+      const match = findDuplicateProduct(productName, existingItems);
+
+      if (match) {
+        return res.status(409).json({
+          message: "Similar inventory item already added",
+          isDuplicate: true,
+          existingProduct: {
+            name: match.existingItem.productName,
+            id: match.existingItem._id,
+            similarity: match.similarity,
+            detectionMethod: match.detectionMethod,
+          },
+        });
+      }
+    }
+    // -------------------------------------------------------
+
     const inventory = new Inventory({
       productName,
       quantity: Number(quantity),
@@ -59,7 +82,9 @@ export const createInventory = async (req, res) => {
 
     // Get user details for activity log and notifications
     const userDetails = await User.findById(userID);
-    const roleLabel = userDetails?.role?.charAt(0).toUpperCase() + userDetails?.role?.slice(1) || "User";
+    const roleLabel =
+      userDetails?.role?.charAt(0).toUpperCase() +
+        userDetails?.role?.slice(1) || "User";
 
     // Log activity
     await logActivity({
@@ -67,7 +92,10 @@ export const createInventory = async (req, res) => {
       message: `Inventory "${createdInventory.productName}" Added`,
       detail: `Added by ${userDetails?.name || roleLabel}`,
       userId: userID,
-      metadata: { inventoryId: createdInventory._id, productName: createdInventory.productName },
+      metadata: {
+        inventoryId: createdInventory._id,
+        productName: createdInventory.productName,
+      },
     });
 
     // Notify User's own Dashboard
@@ -154,7 +182,9 @@ export const deleteInventory = async (req, res) => {
 
     // Get user details for activity log
     const userDetails = await User.findById(item.userID);
-    const roleLabel = userDetails?.role?.charAt(0).toUpperCase() + userDetails?.role?.slice(1) || "User";
+    const roleLabel =
+      userDetails?.role?.charAt(0).toUpperCase() +
+        userDetails?.role?.slice(1) || "User";
 
     // Log activity
     await logActivity({
@@ -307,9 +337,12 @@ export const updateInventory = async (req, res) => {
     await logActivity({
       type: "INVENTORY_UPDATED",
       message: `Inventory "${updatedInventory.productName}" Updated`,
-      detail: `Updated by ${userDetails?.name || 'User'}`,
+      detail: `Updated by ${userDetails?.name || "User"}`,
       userId: updatedInventory.userID,
-      metadata: { inventoryId: updatedInventory._id, productName: updatedInventory.productName }
+      metadata: {
+        inventoryId: updatedInventory._id,
+        productName: updatedInventory.productName,
+      },
     });
 
     res.json(updatedInventory);
@@ -319,7 +352,7 @@ export const updateInventory = async (req, res) => {
   }
 };
 
-// @desc    Stock order items into inventory
+// @desc    Stock order items into inventory WITH SMART DUPLICATE HANDLING
 // @route   POST /api/inventory/stock-order
 // @access  Private
 export const stockOrderItems = async (req, res) => {
@@ -333,35 +366,66 @@ export const stockOrderItems = async (req, res) => {
     }
 
     if (order.isStocked) {
-      return res.status(400).json({ message: "Order already added to inventory" });
+      return res
+        .status(400)
+        .json({ message: "Order already added to inventory" });
     }
 
     const stockedItemsNames = [];
 
-    for (const item of items) {
-      // Find existing item with same name for this user
-      let inventoryItem = await Inventory.findOne({
-        userID: userID,
-        productName: item.productName,
-      });
+    // Pre-fetch all user inventory for comparison
+    const existingInventory = await Inventory.find({ userID });
 
-      if (inventoryItem) {
-        // Update existing
+    for (const item of items) {
+      // Resolve Order Product & Category FIRST
+      const orderProduct = order.products.find(
+        (p) => p.productName === item.productName,
+      );
+
+      const resolvedCategory = item.category || orderProduct?.category;
+
+      // Filter existing inventory to ONLY check items in the SAME category
+      const sameCategoryInventory = existingInventory.filter(
+        (inv) => inv.category === resolvedCategory,
+      );
+
+      // Use Smart Duplicate Detection on the filtered list
+      // For stockOrder, we strictly update if it's an exact match or a VERY close typo/variant within the same category.
+      const match = findDuplicateProduct(
+        item.productName,
+        sameCategoryInventory,
+      );
+
+      // Automatic Merge Condition:
+      // 1. Exact Match (Stemmed) OR
+      // 2. Clear Typo OR
+      // 3. Very high semantic similarity (> 35%)
+      const shouldMerge =
+        match &&
+        (match.detectionMethod.includes("Exact") ||
+          match.detectionMethod.includes("Typo") ||
+          match.similarity > 35);
+
+      if (shouldMerge) {
+        console.log(
+          `>>> Merging "${item.productName}" into existing "${match.existingItem.productName}" (${match.detectionMethod})`,
+        );
+
+        // Update existing item in DB (and our local array for subsequent checks in this loop if needed)
+        const inventoryItem = match.existingItem;
         inventoryItem.quantity += Number(item.quantity);
         inventoryItem.price = Number(item.sellingPrice);
-        // Sync other details if they changed? User said same as order items but price different.
+        // Note: We deliberately DON'T overwrite description/image with order data to preserve user's catalog
         await inventoryItem.save();
       } else {
         // Create new
-        const orderProduct = order.products.find(p => p.productName === item.productName);
-        
         // Fetch the original product/inventory to get the actual description
         let productDescription = `From Order ${order.orderID}`; // Fallback
         if (orderProduct?.productID) {
           try {
             // 1. Try fetching from Product collection (Farmer sales)
             let originalSource = await Product.findById(orderProduct.productID);
-            
+
             // 2. If not found, try fetching from Inventory collection (Collector sales)
             if (!originalSource) {
               originalSource = await Inventory.findById(orderProduct.productID);
@@ -371,22 +435,27 @@ export const stockOrderItems = async (req, res) => {
               productDescription = originalSource.productDescription;
             }
           } catch (err) {
-            console.warn(`Could not fetch original source ${orderProduct.productID}:`, err.message);
+            console.warn(
+              `Could not fetch original source ${orderProduct.productID}:`,
+              err.message,
+            );
           }
         }
-        
-        inventoryItem = new Inventory({
+
+        const newInventoryItem = new Inventory({
           userID: userID,
           productName: item.productName,
           quantity: Number(item.quantity),
           unit: item.unit || orderProduct?.unit,
           price: Number(item.sellingPrice),
           productDescription: productDescription,
-          category: item.category || orderProduct?.category,
+          category: resolvedCategory,
           productImage: orderProduct?.image || "",
-          availableStatus: "Available"
+          availableStatus: "Available",
         });
-        await inventoryItem.save();
+        await newInventoryItem.save();
+        // Add to local array to catch duplicates within the SAME order (e.g. 2x "Tomato" lines)
+        existingInventory.push(newInventoryItem);
       }
       stockedItemsNames.push(item.productName);
     }
@@ -407,10 +476,13 @@ export const stockOrderItems = async (req, res) => {
       message: `Stocked items from Order #${order.orderID}`,
       detail: `${stockedItemsNames.length} items added/updated.`,
       userId: userID,
-      metadata: { orderId: order._id, items: stockedItemsNames }
+      metadata: { orderId: order._id, items: stockedItemsNames },
     });
 
-    res.json({ message: "Items added to inventory successfully", stockedItemsNames });
+    res.json({
+      message: "Items added to inventory successfully",
+      stockedItemsNames,
+    });
   } catch (error) {
     console.error("Error stocking order items:", error);
     res.status(500).json({ message: error.message });

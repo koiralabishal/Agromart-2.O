@@ -304,41 +304,46 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 5rem 2rem;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  border: 2px dashed #e2e8f0; /* Dashed border for empty state feel */
+  box-shadow: none;
   text-align: center;
-  gap: 1.5rem;
   width: 100%;
-  margin-top: 8rem;
-  flex: 1;
+  margin-top: 2rem;
+  min-height: 400px;
+}
+
+.im-empty h3 {
+  font-size: 1.5rem;
+  color: #334155;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
 }
 
 .im-empty p {
   color: #64748b;
-  font-size: 1.1rem;
-  max-width: 400px;
+  font-size: 1.05rem;
+  max-width: 450px;
   line-height: 1.6;
-  margin: 0;
-}
-
-.empty-icon {
-  font-size: 5rem;
-  color: #94a3b8;
-  margin-bottom: 0.5rem;
+  margin: 0 0 1.5rem 0;
 }
 
 .im-empty-add-btn {
   background: #1dc956;
   color: white;
   border: none;
-  padding: 0.9rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 1rem;
+  gap: 0.8rem;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(29, 201, 86, 0.25);
 }
 
 .im-empty-add-btn:hover {
