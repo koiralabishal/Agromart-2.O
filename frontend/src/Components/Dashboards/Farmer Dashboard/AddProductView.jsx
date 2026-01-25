@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FaCloudUploadAlt, FaTimes, FaCheckCircle } from "react-icons/fa";
+import { FaCloudUploadAlt, FaTimes, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 import api from "../../../api/axiosConfig";
 import "./Styles/AddProductView.css";
 
@@ -18,11 +18,24 @@ const AddProductView = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [successPopup, setSuccessPopup] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(null); // Store similar product info
   const [addedProductName, setAddedProductName] = useState("");
 
   const fileInputRef = useRef(null);
   const user = JSON.parse(localStorage.getItem("user"));
   const userID = user?._id || user?.id;
+
+  // Lock body scroll when success popup or duplicate warning is open
+  React.useEffect(() => {
+    if (successPopup || duplicateWarning) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [successPopup, duplicateWarning]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -103,9 +116,11 @@ const AddProductView = ({ onBack }) => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, confirmDuplicate = false) => {
+    if (e) e.preventDefault();
     setErrors({});
+    // Don't close warning immediately, wait for success or error
+    if (!confirmDuplicate) setDuplicateWarning(null);
 
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -126,6 +141,10 @@ const AddProductView = ({ onBack }) => {
       data.append("userID", userID);
       data.append("productImage", imageFile);
 
+      if (confirmDuplicate) {
+        data.append("confirmDuplicate", "true");
+      }
+
       const response = await api.post("/products", data, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -134,16 +153,20 @@ const AddProductView = ({ onBack }) => {
 
       if (response.status === 201 || response.status === 200) {
         setAddedProductName(formData.productName);
+        setDuplicateWarning(null); // Close warning if open
         setSuccessPopup(true);
 
-        // Update local cache if possible or just rely on the next fetch
-        // Fetching again on return is safer but we can clear cache to force update
         localStorage.removeItem(`cached_farmer_products_${userID}`);
       }
     } catch (err) {
-      setErrors({
-        submit: err.response?.data?.message || "Failed to add product",
-      });
+      setDuplicateWarning(null); // Close warning on error to show form error
+      if (err.response?.status === 409 && err.response?.data?.isDuplicate) {
+        setDuplicateWarning(err.response.data.existingProduct);
+      } else {
+        setErrors({
+          submit: err.response?.data?.message || "Failed to add product",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -361,6 +384,46 @@ const AddProductView = ({ onBack }) => {
           </div>
         </form>
       </div>
+
+      {/* Duplicate Warning Popup (Improved UX) */}
+      {duplicateWarning && (
+        <div className="ap-success-overlay">
+          <div className="ap-success-popup warning">
+            <div className="warning-icon-container">
+              <FaTimes
+                className="warning-icon-close"
+                onClick={() => setDuplicateWarning(null)}
+              />
+            </div>
+            <div className="warning-icon-large">
+              <FaExclamationTriangle style={{ fontSize: '4rem', color: '#f39c12' }} />
+            </div>
+            <h3 style={{ color: '#f39c12', marginTop: '1rem' }}>Similar Product Already Added</h3>
+            <p style={{ marginBottom: '1.5rem' }}>
+              You have already added a similar product: <strong style={{ fontSize: '1.1rem', color: '#333' }}>"{duplicateWarning.name}"</strong>
+            </p>
+            <p style={{ color: '#666', fontSize: '0.95rem' }}>
+              Would you like to add <strong>"{formData.productName}"</strong> anyway?
+            </p>
+            <div className="modal-actions-row">
+              <button 
+                className="ap-success-btn cancel-btn" 
+                onClick={() => setDuplicateWarning(null)}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button 
+                className="ap-success-btn yes-btn" 
+                onClick={() => handleSubmit(null, true)}
+                disabled={loading}
+              >
+                {loading ? "Adding..." : "Yes, Add Anyway"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Popup */}
       {successPopup && (

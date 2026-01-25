@@ -55,9 +55,9 @@ const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
   
   const editFileInputRef = React.useRef(null);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll when any modal or popup is open
   useEffect(() => {
-    if (showEditModal) {
+    if (showEditModal || showDeleteModal || editSuccessPopup) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -65,7 +65,7 @@ const ProductManagement = ({ onAddProduct, preFetchedProducts }) => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [showEditModal]);
+  }, [showEditModal, showDeleteModal, editSuccessPopup]);
 
   const toggleDescription = (id) => {
     setExpandedProducts((prev) => ({

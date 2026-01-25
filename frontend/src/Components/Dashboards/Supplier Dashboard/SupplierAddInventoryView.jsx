@@ -1,5 +1,10 @@
 import React, { useState, useRef } from "react";
-import { FaCloudUploadAlt, FaTimes, FaCheckCircle } from "react-icons/fa";
+import {
+  FaCloudUploadAlt,
+  FaTimes,
+  FaCheckCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import RecommendedPricePopup from "./RecommendedPricePopup";
 import api from "../../../api/axiosConfig";
 import "./Styles/SupplierAddInventoryView.css";
@@ -19,11 +24,25 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [successPopup, setSuccessPopup] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
   const [addedItemName, setAddedItemName] = useState("");
-  const [showRecommendedPricePopup, setShowRecommendedPricePopup] = useState(false);
+  const [showRecommendedPricePopup, setShowRecommendedPricePopup] =
+    useState(false);
 
   const fileInputRef = useRef(null);
   const user = JSON.parse(localStorage.getItem("user"));
+
+  // Lock body scroll when success popup or duplicate warning is open
+  React.useEffect(() => {
+    if (successPopup || duplicateWarning) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [successPopup, duplicateWarning]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,7 +94,8 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.productName.trim()) newErrors.productName = "Item name is required";
+    if (!formData.productName.trim())
+      newErrors.productName = "Item name is required";
     if (!formData.category) newErrors.category = "Category is required";
     if (!formData.quantity) {
       newErrors.quantity = "Quantity is required";
@@ -88,7 +108,7 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
     } else if (parseFloat(formData.price) < 0) {
       newErrors.price = "Price cannot be negative";
     }
-    
+
     if (!formData.productDescription.trim()) {
       newErrors.productDescription = "Description is required";
     } else {
@@ -97,16 +117,16 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
         newErrors.productDescription = `Description must be at least 15 words. Current: ${wordCount}`;
       }
     }
-    
+
     if (!imageFile) newErrors.productImage = "Item image is required";
-    
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
-    
+
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -128,8 +148,8 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
 
       const response = await api.post("/inventory", data, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (response.status === 201 || response.status === 200) {
@@ -140,7 +160,10 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
         setErrors({ submit: "Failed to add to inventory" });
       }
     } catch (err) {
-      setErrors({ submit: err.response?.data?.message || "Network error. Please try again." });
+      setErrors({
+        submit:
+          err.response?.data?.message || "Network error. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -148,7 +171,7 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
 
   // Helper to handle price confirm from popup
   const handlePriceSelect = (price) => {
-    setFormData(prev => ({ ...prev, price: price.toString() }));
+    setFormData((prev) => ({ ...prev, price: price.toString() }));
     setShowRecommendedPricePopup(false);
   };
 
@@ -161,31 +184,38 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
       <div className="add-product-card">
         <div className="ap-form-header">
           <h3>Inventory Item Details</h3>
-          <p>Enter the details for the stock item you are adding to your supplier inventory.</p>
+          <p>
+            Enter the details for the stock item you are adding to your supplier
+            inventory.
+          </p>
         </div>
 
-        {errors.submit && <div className="ap-error-message">{errors.submit}</div>}
+        {errors.submit && (
+          <div className="ap-error-message">{errors.submit}</div>
+        )}
 
         <form className="ap-form" onSubmit={handleSubmit} noValidate>
           <div className="ap-form-grid">
             <div className="ap-form-group">
               <label>Item Name</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="productName"
-                placeholder="e.g., Red Potatoes" 
+                placeholder="e.g., Red Potatoes"
                 value={formData.productName}
                 onChange={handleChange}
                 onFocus={handleFocus}
                 className={errors.productName ? "invalid" : ""}
-                required 
+                required
               />
-              {errors.productName && <span className="ap-field-error">{errors.productName}</span>}
+              {errors.productName && (
+                <span className="ap-field-error">{errors.productName}</span>
+              )}
             </div>
 
             <div className="ap-form-group">
               <label>Category</label>
-              <select 
+              <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
@@ -200,27 +230,31 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
                 <option value="Dairy">Dairy</option>
                 <option value="Other">Other</option>
               </select>
-              {errors.category && <span className="ap-field-error">{errors.category}</span>}
+              {errors.category && (
+                <span className="ap-field-error">{errors.category}</span>
+              )}
             </div>
 
             <div className="ap-form-group">
               <label>Quantity</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="quantity"
-                placeholder="e.g., 500" 
+                placeholder="e.g., 500"
                 value={formData.quantity}
                 onChange={handleChange}
                 onFocus={handleFocus}
                 className={errors.quantity ? "invalid" : ""}
-                required 
+                required
               />
-              {errors.quantity && <span className="ap-field-error">{errors.quantity}</span>}
+              {errors.quantity && (
+                <span className="ap-field-error">{errors.quantity}</span>
+              )}
             </div>
 
             <div className="ap-form-group">
               <label>Unit</label>
-              <select 
+              <select
                 name="unit"
                 value={formData.unit}
                 onChange={handleChange}
@@ -243,64 +277,85 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
                 <option value="crate">Crate</option>
                 <option value="sack">Sack</option>
               </select>
-              {errors.unit && <span className="ap-field-error">{errors.unit}</span>}
+              {errors.unit && (
+                <span className="ap-field-error">{errors.unit}</span>
+              )}
             </div>
 
             <div className="ap-form-group">
               <label>Expected Price (per unit)</label>
               <div className="price-input-wrapper">
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   name="price"
-                  placeholder="e.g., 45.00" 
+                  placeholder="e.g., 45.00"
                   value={formData.price}
                   onChange={handleChange}
                   onFocus={handleFocus}
                   className={errors.price ? "invalid" : ""}
-                  required 
+                  required
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="get-recommended-btn"
                   onClick={() => setShowRecommendedPricePopup(true)}
                 >
                   Get Recommended Price
                 </button>
               </div>
-              {errors.price && <span className="ap-field-error">{errors.price}</span>}
+              {errors.price && (
+                <span className="ap-field-error">{errors.price}</span>
+              )}
             </div>
 
             <div className="ap-form-group full-width">
               <label>Item Description (min 15 words)</label>
-              <textarea 
+              <textarea
                 name="productDescription"
-                placeholder="Describe the item (e.g., quality grade, origin, storage condition...)" 
+                placeholder="Describe the item (e.g., quality grade, origin, storage condition...)"
                 value={formData.productDescription}
                 onChange={handleChange}
                 onFocus={handleFocus}
                 className={errors.productDescription ? "invalid" : ""}
-                required 
+                required
                 rows="4"
               ></textarea>
               <div className="ap-description-footer">
-                {errors.productDescription && <span className="ap-field-error">{errors.productDescription}</span>}
+                {errors.productDescription && (
+                  <span className="ap-field-error">
+                    {errors.productDescription}
+                  </span>
+                )}
                 <small className="ap-word-count">
-                  Word count: {formData.productDescription.trim() === "" ? 0 : formData.productDescription.trim().split(/\s+/).length} / 15
+                  Word count:{" "}
+                  {formData.productDescription.trim() === ""
+                    ? 0
+                    : formData.productDescription.trim().split(/\s+/)
+                        .length}{" "}
+                  / 15
                 </small>
               </div>
             </div>
 
             <div className="ap-form-group full-width">
               <label>Item Image</label>
-              <div 
-                className={`ap-upload-area ${imagePreview ? 'has-preview' : ''} ${errors.productImage ? 'invalid' : ''}`} 
+              <div
+                className={`ap-upload-area ${imagePreview ? "has-preview" : ""} ${errors.productImage ? "invalid" : ""}`}
                 onClick={triggerFileInput}
               >
                 {imagePreview ? (
                   <div className="ap-preview-wrapper">
                     <div className="ap-preview-card">
-                      <img src={imagePreview} alt="Preview" className="ap-preview-img" />
-                      <button type="button" className="ap-remove-img" onClick={removeImage}>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="ap-preview-img"
+                      />
+                      <button
+                        type="button"
+                        className="ap-remove-img"
+                        onClick={removeImage}
+                      >
                         <FaTimes />
                       </button>
                       <div className="ap-file-info">
@@ -314,20 +369,27 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
                     <p>Upload Item Image</p>
                   </>
                 )}
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   ref={fileInputRef}
-                  style={{ display: 'none' }} 
+                  style={{ display: "none" }}
                   accept="image/*"
                   onChange={handleImageChange}
                 />
               </div>
-              {errors.productImage && <span className="ap-field-error">{errors.productImage}</span>}
+              {errors.productImage && (
+                <span className="ap-field-error">{errors.productImage}</span>
+              )}
             </div>
           </div>
 
           <div className="ap-form-footer">
-            <button type="button" className="ap-cancel-btn" onClick={onBack} disabled={loading}>
+            <button
+              type="button"
+              className="ap-cancel-btn"
+              onClick={onBack}
+              disabled={loading}
+            >
               Cancel
             </button>
             <button type="submit" className="ap-submit-btn" disabled={loading}>
@@ -337,13 +399,64 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
         </form>
       </div>
 
+      {/* Duplicate Warning Popup (Improved UX) */}
+      {duplicateWarning && (
+        <div className="ap-success-overlay">
+          <div className="ap-success-popup warning">
+            <div className="warning-icon-container">
+              <FaTimes
+                className="warning-icon-close"
+                onClick={() => setDuplicateWarning(null)}
+              />
+            </div>
+            <div className="warning-icon-large">
+              <FaExclamationTriangle
+                style={{ fontSize: "4rem", color: "#f39c12" }}
+              />
+            </div>
+            <h3 style={{ color: "#f39c12", marginTop: "1rem" }}>
+              Similar Item Already Added
+            </h3>
+            <p style={{ marginBottom: "1.5rem" }}>
+              You have already added a similar item:{" "}
+              <strong style={{ fontSize: "1.1rem", color: "#333" }}>
+                "{duplicateWarning.name}"
+              </strong>
+            </p>
+            <p style={{ color: "#666", fontSize: "0.95rem" }}>
+              Would you like to add <strong>"{formData.productName}"</strong>{" "}
+              anyway?
+            </p>
+            <div className="modal-actions-row">
+              <button
+                className="ap-success-btn cancel-btn"
+                onClick={() => setDuplicateWarning(null)}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                className="ap-success-btn yes-btn"
+                onClick={() => handleSubmit(null, true)}
+                disabled={loading}
+              >
+                {loading ? "Adding..." : "Yes, Add Anyway"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Success Popup */}
       {successPopup && (
         <div className="ap-success-overlay">
           <div className="ap-success-popup">
             <FaCheckCircle className="ap-success-icon" />
             <h3>Success!</h3>
-            <p>Your item <strong>{addedItemName}</strong> has been added to inventory successfully.</p>
+            <p>
+              Your item <strong>{addedItemName}</strong> has been added to
+              inventory successfully.
+            </p>
             <button className="ap-success-btn" onClick={onBack}>
               Okay
             </button>

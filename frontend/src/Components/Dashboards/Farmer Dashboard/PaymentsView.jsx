@@ -87,10 +87,15 @@ const PaymentsView = ({ walletDataProp }) => {
   }, [userID, walletDataProp]);
 
   useEffect(() => {
-    if (isWithdrawModalOpen) {
-      fetchPaymentDetails();
+    if (isWithdrawModalOpen || isSuccessModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
     }
-  }, [isWithdrawModalOpen]);
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isWithdrawModalOpen, isSuccessModalOpen]);
 
   const handleWithdrawRequest = async (e) => {
     e.preventDefault();

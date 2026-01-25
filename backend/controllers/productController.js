@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import DeletedProduct from "../models/DeletedProduct.js";
 import { emitToUser, emitToRole } from "../socket.js";
 import { logActivity } from "../utils/activityLogger.js";
+import { findDuplicateProduct } from "../utils/productInventoryDuplicate.js";
 
 // @desc    Create a new product
 // @route   POST /api/products
@@ -42,6 +43,31 @@ export const createProduct = async (req, res) => {
     // Handle image from Cloudinary (req.file) or as a fallback
     const image = req.file ? req.file.path : req.body.productImage;
 
+    // --- Advanced Multi-Layer Duplicate Detection ---
+    const { confirmDuplicate } = req.body;
+    if (!confirmDuplicate) {
+      const existingProducts = await Product.find({ userID, category });
+
+      const match = findDuplicateProduct(productName, existingProducts);
+
+      if (match) {
+        console.log(
+          `>>> Duplicate detected (${match.detectionMethod}): "${productName}" matches "${match.existingItem.productName}" (${match.similarity}% similar)`,
+        );
+        return res.status(409).json({
+          message: "Similar product already added",
+          isDuplicate: true,
+          existingProduct: {
+            name: match.existingItem.productName,
+            id: match.existingItem._id,
+            similarity: match.similarity,
+            detectionMethod: match.detectionMethod,
+          },
+        });
+      }
+    }
+    // -------------------------------------------------------
+
     const product = new Product({
       productName,
       quantity: Number(quantity),
@@ -63,7 +89,7 @@ export const createProduct = async (req, res) => {
     await logActivity({
       type: "PRODUCT_CREATED",
       message: `Product "${createdProduct.productName}" Added`,
-      detail: `Added by ${farmer?.name || "Farmer"}`,
+      detail: `Added by ${farmerName}`,
       userId: userID,
       metadata: {
         productId: createdProduct._id,

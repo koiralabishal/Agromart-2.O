@@ -23,6 +23,7 @@ import {
   FaCheckCircle,
   FaChartLine,
   FaChartPie,
+  FaShoppingBag,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
@@ -1268,57 +1269,69 @@ const SupplierDashboard = () => {
                   <div
                     style={{ width: "100%", height: "100%", minHeight: 300 }}
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={salesTrendData}
-                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f0f0f0"
-                        />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 11, fill: "#888" }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval={2}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: "#888" }}
-                          axisLine={false}
-                          tickLine={false}
-                          allowDecimals={false}
-                        />
-                        <Tooltip />
-                        <Legend
-                          verticalAlign="top"
-                          align="right"
-                          height={36}
-                          wrapperStyle={{ fontSize: "10px" }}
-                        />
-                        <Line
-                          type="monotone"
-                          name="Vegetables"
-                          dataKey="vegetables"
-                          stroke="#1dc956"
-                          strokeWidth={3}
-                          dot={false}
-                          activeDot={{ r: 6 }}
-                        />
-                        <Line
-                          type="monotone"
-                          name="Fruits"
-                          dataKey="fruits"
-                          stroke="#f1c40f"
-                          strokeWidth={3}
-                          strokeDasharray="5 5"
-                          dot={false}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    {salesTrendData.some(
+                      (d) => d.fruits > 0 || d.vegetables > 0,
+                    ) ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={salesTrendData}
+                          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#f0f0f0"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fontSize: 11, fill: "#888" }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={2}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: "#888" }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                          />
+                          <Tooltip />
+                          <Legend
+                            verticalAlign="top"
+                            align="right"
+                            height={36}
+                            wrapperStyle={{ fontSize: "10px" }}
+                          />
+                          <Line
+                            type="monotone"
+                            name="Vegetables"
+                            dataKey="vegetables"
+                            stroke="#1dc956"
+                            strokeWidth={3}
+                            dot={false}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line
+                            type="monotone"
+                            name="Fruits"
+                            dataKey="fruits"
+                            stroke="#f1c40f"
+                            strokeWidth={3}
+                            strokeDasharray="5 5"
+                            dot={false}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="sd-empty-chart">
+                        <FaChartLine size={48} />
+                        <p>No sales activity yet</p>
+                        <span>
+                          Sales data will appear here once orders are processed.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1332,57 +1345,69 @@ const SupplierDashboard = () => {
                   <div
                     style={{ width: "100%", height: "100%", minHeight: 300 }}
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={purchaseTrendData}
-                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#f0f0f0"
-                        />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 11, fill: "#888" }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval={2}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: "#888" }}
-                          axisLine={false}
-                          tickLine={false}
-                          allowDecimals={false}
-                        />
-                        <Tooltip />
-                        <Legend
-                          verticalAlign="top"
-                          align="right"
-                          height={36}
-                          wrapperStyle={{ fontSize: "10px" }}
-                        />
-                        <Line
-                          type="monotone"
-                          name="Vegetables"
-                          dataKey="vegetables"
-                          stroke="#3498db"
-                          strokeWidth={3}
-                          dot={false}
-                          activeDot={{ r: 6 }}
-                        />
-                        <Line
-                          type="monotone"
-                          name="Fruits"
-                          dataKey="fruits"
-                          stroke="#e67e22"
-                          strokeWidth={3}
-                          strokeDasharray="5 5"
-                          dot={false}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    {purchaseTrendData.some(
+                      (d) => d.fruits > 0 || d.vegetables > 0,
+                    ) ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={purchaseTrendData}
+                          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#f0f0f0"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fontSize: 11, fill: "#888" }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={2}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: "#888" }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                          />
+                          <Tooltip />
+                          <Legend
+                            verticalAlign="top"
+                            align="right"
+                            height={36}
+                            wrapperStyle={{ fontSize: "10px" }}
+                          />
+                          <Line
+                            type="monotone"
+                            name="Vegetables"
+                            dataKey="vegetables"
+                            stroke="#3498db"
+                            strokeWidth={3}
+                            dot={false}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line
+                            type="monotone"
+                            name="Fruits"
+                            dataKey="fruits"
+                            stroke="#e67e22"
+                            strokeWidth={3}
+                            strokeDasharray="5 5"
+                            dot={false}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="sd-empty-chart">
+                        <FaShoppingBag size={48} />
+                        <p>No purchase activity yet</p>
+                        <span>
+                          Purchase history will be visualized here.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1424,13 +1449,10 @@ const SupplierDashboard = () => {
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="sd-empty-chart-mini">
-                        <FaChartPie
-                          size={32}
-                          color="#cbd5e0"
-                          style={{ marginBottom: "0.5rem" }}
-                        />
+                      <div className="sd-empty-chart">
+                        <FaChartPie size={48} />
                         <p>No order data</p>
+                        <span>Status distribution will show here.</span>
                       </div>
                     )}
                   </div>

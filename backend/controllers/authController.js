@@ -5,7 +5,7 @@ import Supplier from "../models/Supplier.js";
 import Buyer from "../models/Buyer.js";
 import OTP from "../models/OTP.js";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendOTPEmail } from "../utils/emailService.js";
 import { broadcast } from "../socket.js";
 import { logActivity } from "../utils/activityLogger.js";
 
@@ -187,49 +187,7 @@ export const sendOTP = async (req, res) => {
       { upsert: true, new: true },
     );
 
-    // Send Email with HTML Template
-    const htmlTemplate = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        .container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; }
-        .header { background-color: #2e8b57; color: white; padding: 30px; text-align: center; }
-        .content { padding: 40px; color: #333; line-height: 1.6; }
-        .otp-code { background-color: #f4fbf7; border: 2px dashed #2e8b57; border-radius: 8px; color: #2e8b57; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 30px 0; padding: 20px; text-align: center; }
-        .footer { background-color: #f9f9f9; color: #777; font-size: 12px; padding: 20px; text-align: center; }
-        .logo { font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 5px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🌿 AgroMart</div>
-          <div style="font-size: 16px; opacity: 0.9;">Cultivating Trust, Connecting Growth</div>
-        </div>
-        <div class="content">
-          <h2 style="margin-top: 0; color: #2c3e50;">Verify Your Email Address</h2>
-          <p>Hello,</p>
-          <p>Thank you for joining Agromart! To complete your registration and secure your account, please use the following verification code:</p>
-          <div class="otp-code">${otp}</div>
-          <p>This code is valid for <strong>10 minutes</strong>. If you didn't request this code, please ignore this email.</p>
-          <p>Best regards,<br>The AgroMart Team</p>
-        </div>
-        <div class="footer">
-          &copy; ${new Date().getFullYear()} AgroMart. All rights reserved.<br>
-          Empowering farmers, suppliers, and buyers worldwide.
-        </div>
-      </div>
-    </body>
-    </html>
-    `;
-
-    const emailSent = await sendEmail(
-      email,
-      "Agromart - Your Verification Code",
-      `Your verification code is: ${otp}`,
-      htmlTemplate,
-    );
+    const emailSent = await sendOTPEmail(email, otp);
 
     if (emailSent) {
       res.json({ message: "OTP sent successfully to your email" });
