@@ -1481,7 +1481,7 @@ const SupplierDashboard = () => {
           (inventorySubView === "list" ? (
             <InventoryManagement
               onAddInventory={() => setInventorySubView("add")}
-              initialInventory={ownInventory}
+              initialData={ownInventory}
               onRefresh={() => {
                 // Background refresh
                 api
