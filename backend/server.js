@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
   res.send("Agromart API is running with Real-Time support...");
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 httpServer.listen(PORT, () => {
   console.log(
