@@ -123,9 +123,12 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, confirmDuplicate = false) => {
+    if (e) e.preventDefault();
     setErrors({});
+
+    // Don't close warning immediately, wait for success or error
+    if (!confirmDuplicate) setDuplicateWarning(null);
 
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -146,6 +149,10 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
       data.append("userID", user._id || user.id);
       data.append("productImage", imageFile);
 
+      if (confirmDuplicate) {
+        data.append("confirmDuplicate", "true");
+      }
+
       const response = await api.post("/inventory", data, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -154,16 +161,22 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
 
       if (response.status === 201 || response.status === 200) {
         setAddedItemName(formData.productName);
+        setDuplicateWarning(null); // Close warning if open
         setSuccessPopup(true);
         if (onItemAdded) onItemAdded();
       } else {
         setErrors({ submit: "Failed to add to inventory" });
       }
     } catch (err) {
-      setErrors({
-        submit:
-          err.response?.data?.message || "Network error. Please try again.",
-      });
+      setDuplicateWarning(null); // Close warning on error to show form error
+      if (err.response?.status === 409 && err.response?.data?.isDuplicate) {
+        setDuplicateWarning(err.response.data.existingProduct);
+      } else {
+        setErrors({
+          submit:
+            err.response?.data?.message || "Network error. Please try again.",
+        });
+      }
     } finally {
       setLoading(false);
     }
