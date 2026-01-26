@@ -1,16 +1,21 @@
 import json
 import pymongo
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # MongoDB Atlas Connection String
-CONNECTION_STRING = "mongodb+srv://koiralabishal:koiralabishal123@cluster0.iph69.mongodb.net/agromart_2"
+CONNECTION_STRING = os.getenv("MONGO_URI")
+
+if not CONNECTION_STRING:
+    raise ValueError("MONGO_URI not found in environment variables")
 
 # --- Analysis of Files to Import ---
 # 1. vegetables.json: Contains 10 selected vegetables with 4 unique topics each.
 # 2. fruits.json: Contains 10 selected fruits with 4 unique topics each.
 FILES_TO_IMPORT = {
-    "vegetables": "d:/chat app/vegetables.json",
-    "fruits": "d:/chat app/fruits.json"
+    "vegetables": "vegetables.json",
+    "fruits": "fruits.json"
 }
 
 # --- Analysis of Files to Delete (Cleanup) ---

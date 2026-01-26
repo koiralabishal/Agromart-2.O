@@ -1,9 +1,16 @@
 from pymongo import MongoClient
 import time
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configuration
-MONGO_URI = "mongodb+srv://koiralabishal:koiralabishal123@cluster0.iph69.mongodb.net/agromart_2"
+MONGO_URI = os.getenv("MONGO_URI")
 db_name = "agromart_2"
+
+if not MONGO_URI:
+    raise ValueError("MONGO_URI not found in environment variables")
 
 # Vector Search Index Definition
 index_definition = {

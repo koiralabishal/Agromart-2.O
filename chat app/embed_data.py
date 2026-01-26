@@ -3,9 +3,16 @@ import json
 from google import genai
 from pymongo import MongoClient
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configuration
-MONGO_URI = "mongodb+srv://koiralabishal:koiralabishal123@cluster0.iph69.mongodb.net/agromart_2"
-API_KEY = "AIzaSyAYnBKyUQwvv2E3z1PFXc-FL3ftPHzP-V4"
+MONGO_URI = os.getenv("MONGO_URI")
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not MONGO_URI or not API_KEY:
+    raise ValueError("MONGO_URI or GEMINI_API_KEY not found in environment variables")
 
 client = genai.Client(api_key=API_KEY)
 collection_names = ["vegetables", "fruits"]
