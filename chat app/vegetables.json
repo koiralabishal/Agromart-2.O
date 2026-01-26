@@ -1,0 +1,722 @@
+[
+  {
+    "crop_id": "cabbage",
+    "topic": "price",
+    "language": "nepali",
+    "question": "बन्दाको मूल्य कति छ?",
+    "answer": "बन्दाको भाउ प्रतिकिलो रु २५ देखि ४० सम्म रहेको छ।",
+    "keywords": ["बन्दा", "मूल्य", "भाउ"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of cabbage?",
+    "answer": "Cabbage is currently priced at 25 to 40 NPR per kg in the local market.",
+    "keywords": ["cabbage", "price", "cost"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "बन्दामा लाग्ने डाइमण्ड ब्याक मोथ कसरी हटाउने?",
+    "answer": "यस किराका लागि निमको झोल वा जैविक विषादीको प्रयोग प्रभावकारी हुन्छ।",
+    "keywords": ["बन्दा", "किरा", "मोथ"],
+    "tags": ["disease", "pests"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to control Diamondback Moth in cabbage?",
+    "answer": "Use neem-based sprays or bio-pesticides to effectively control Diamondback Moth.",
+    "keywords": ["cabbage", "moth", "pests"],
+    "tags": ["disease", "pests"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "बन्दा खेतीको लागि कस्तो दूरी चाहिन्छ?",
+    "answer": "बन्दा रोप्दा बोट देखि बोटको दूरी ४५ से.मि. र हार देखि हारको दूरी ६० से.मि. राख्नुहोस्।",
+    "keywords": ["बन्दा", "दूरी", "रोपाइँ"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "What spacing is required for cabbage cultivation?",
+    "answer": "Maintain a distance of 45 cm between plants and 60 cm between rows for cabbage.",
+    "keywords": ["cabbage", "spacing", "farming"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "बन्दामा कुन मलको मात्रा धेरै चाहिन्छ?",
+    "answer": "बन्दालाई हरियो पातलो बनाउन नाइट्रोजनयुक्त मल (यूरिया) को बढी आवश्यकता पर्छ।",
+    "keywords": ["बन्दा", "मल", "नाइट्रोजन"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "cabbage",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer is needed more for cabbage?",
+    "answer": "Nitrogen-rich fertilizers (Urea) are needed more for healthy leaf growth in cabbage.",
+    "keywords": ["cabbage", "fertilizer", "nitrogen"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "price",
+    "language": "nepali",
+    "question": "गोलभेंडाको मूल्य कति छ?",
+    "answer": "गोलभेंडाको मूल्य प्रतिकिलो रु ४० देखि ८० सम्म सिजन अनुसार फरक पर्छ।",
+    "keywords": ["गोलभेंडा", "मूल्य", "भाउ"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of tomato?",
+    "answer": "Tomato prices vary between 40 and 80 NPR per kg based on market supply.",
+    "keywords": ["tomato", "price", "cost"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "गोलभेंडाको फेद कुहिने रोग कसरी रोक्ने?",
+    "answer": "फेद कुहिने रोगबाट बच्न माटोको उपचार गर्ने र पानी नजम्ने बनाउने।",
+    "keywords": ["गोलभेंडा", "कुहिने", "रोग"],
+    "tags": ["disease", "treatment"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to prevent Damping Off in tomatoes?",
+    "answer": "Prevent damping off by treating the soil and ensuring there is no waterlogging in the nursery.",
+    "keywords": ["tomato", "damping", "disease"],
+    "tags": ["disease", "treatment"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "गोलभेंडा खेतीका लागि नर्सरी कसरी तयार गर्ने?",
+    "answer": "उन्नत बीउहरुलाई १५ से.मि. को फरकमा मसिनो माटोमा छर्नुहोस् र खरले छोप्नुहोस्।",
+    "keywords": ["गोलभेंडा", "नर्सरी", "बीउ"],
+    "tags": ["cultivation", "farming"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "How to prepare a tomato nursery?",
+    "answer": "Sow improved seeds 15 cm apart in fine soil and cover with straw until germination.",
+    "keywords": ["tomato", "nursery", "seeds"],
+    "tags": ["cultivation", "farming"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "गोलभेंडामा कुन मल हाल्दा फल राम्रो लाग्छ?",
+    "answer": "फल लाग्ने समयमा पोटास र बोरोन युक्त मलको प्रयोग गर्दा फल राम्रो र चहकिलो हुन्छ।",
+    "keywords": ["गोलभेंडा", "मल", "फल"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "tomato",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer improves tomato fruiting?",
+    "answer": "Using potash and Boron during the fruiting stage results in better and glossier tomatoes.",
+    "keywords": ["tomato", "fertilizer", "growth"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "price",
+    "language": "nepali",
+    "question": "आलुको थोक मूल्य कति छ?",
+    "answer": "स्थानीय रातो आलुको थोक मूल्य रु ५० देखि ७० सम्म रहेको छ।",
+    "keywords": ["आलु", "मूल्य", "थोक"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the wholesale price of potato?",
+    "answer": "The wholesale price of local red potatoes is between 50 and 70 NPR per kg.",
+    "keywords": ["potato", "price", "wholesale"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "आलुको पछौटे डढुवा (Late Blight) नियन्त्रण कसरी गर्ने?",
+    "answer": "डढुवा नियन्त्रण गर्न क्रिलक्सिल वा म्यान्कोजेब विषादी समयमा नै छर्कनुहोस्।",
+    "keywords": ["आलु", "डढुवा", "रोग"],
+    "tags": ["disease", "root"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to control Potato Late Blight?",
+    "answer": "Apply fungicides like Krilaxyl or Mancozeb on time to control Late Blight in potatoes.",
+    "keywords": ["potato", "blight", "disease"],
+    "tags": ["disease", "root"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "आलु रोप्ने दूरी कति हुनुपर्छ?",
+    "answer": "आलुको हार देखि हारको दूरी ६० से.मि. र बोट देखि बोटको दूरी २५ से.मि. हुनुपर्छ।",
+    "keywords": ["आलु", "दूरी", "रोपाइँ"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "What should be the spacing for planting potatoes?",
+    "answer": "The recommended spacing for potatoes is 60 cm between rows and 25 cm between plants.",
+    "keywords": ["potato", "spacing", "farming"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "आलुमा कुन मलको बढी महत्व हुन्छ?",
+    "answer": "आलुको दाना बढाउनका लागि पोटास मलको विशेष महत्व हुन्छ।",
+    "keywords": ["आलु", "मल", "पोटास"],
+    "tags": ["fertilizer", "root"]
+  },
+  {
+    "crop_id": "potato",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer is crucial for potato tubers?",
+    "answer": "Potash is a crucial fertilizer for increasing the size and quality of potato tubers.",
+    "keywords": ["potato", "fertilizer", "potash"],
+    "tags": ["fertilizer", "root"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "price",
+    "language": "nepali",
+    "question": "गाजरको मूल्य प्रतिकिलो कति छ?",
+    "answer": "गाजरको मूल्य अहिले रु ६० देखि ८० को हाराहारीमा रहेको छ।",
+    "keywords": ["गाजर", "मूल्य", "भाउ"],
+    "tags": ["price", "root"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of carrot per kg?",
+    "answer": "The price of carrots is currently around 60 to 80 NPR per kg.",
+    "keywords": ["carrot", "price", "cost"],
+    "tags": ["price", "root"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "गाजरमा लाग्ने खैरो डढुवा कसरी नियन्त्रण गर्ने?",
+    "answer": "खैरो डढुवा नियन्त्रण गर्न बीउ उपचार गर्ने र संक्रमित बोट हटाउने।",
+    "keywords": ["गाजर", "डढुवा", "रोग"],
+    "tags": ["disease", "root"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to control Alternaria Leaf Blight in carrots?",
+    "answer": "Control leaf blight by using treated seeds and removing infected plants from the rows.",
+    "keywords": ["carrot", "blight", "disease"],
+    "tags": ["disease", "root"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "गाजर रोप्ने उपयुक्त समय कहिले हो?",
+    "answer": "गाजर रोप्ने कार्य भदौ महिना देखि कार्तिक महिना सम्म गर्दा उत्पादन राम्रो हुन्छ।",
+    "keywords": ["गाजर", "समय", "रोपाइँ"],
+    "tags": ["cultivation", "carrot"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "When is the best time to sow carrots?",
+    "answer": "Sowing carrots from August to November ensures the best quality and yield.",
+    "keywords": ["carrot", "sowing", "season"],
+    "tags": ["cultivation", "carrot"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "गाजरमा कस्तो मल हाल्दा फल र सोझो हुन्छ?",
+    "answer": "गाजरका लागि मसिनो पारिएको माटो र फस्फोरस युक्त मलको सन्तुलन आवश्यक हुन्छ।",
+    "keywords": ["गाजर", "मल", "फस्फोरस"],
+    "tags": ["fertilizer", "quality"]
+  },
+  {
+    "crop_id": "carrot",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer helps carrots grow long and straight?",
+    "answer": "Fine soil and balanced phosphorus-rich fertilizers are essential for long, straight carrots.",
+    "keywords": ["carrot", "fertilizer", "phosphorus"],
+    "tags": ["fertilizer", "quality"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "price",
+    "language": "nepali",
+    "question": "काउलीको मूल्य कति पुग्यो?",
+    "answer": "काउलीको मूल्य बढेर रु ७० देखि ९० सम्म पुगेको छ।",
+    "keywords": ["काउली", "मूल्य", "भाउ"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of cauliflower?",
+    "answer": "Cauliflower prices have risen to between 70 and 90 NPR per kg recently.",
+    "keywords": ["cauliflower", "price", "market"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "काउलीमा लाग्ने ह्विपटेल (Whiptail) के कारणले हुन्छ?",
+    "answer": "काउलीमा ह्विपटेल रोग मलिवडेनम (Molybdenum) को कमीले गर्दा हुन्छ।",
+    "keywords": ["काउली", "ह्विपटेल", "रोग"],
+    "tags": ["disease", "deficiency"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "disease",
+    "language": "english",
+    "question": "What causes Whiptail in cauliflower?",
+    "answer": "Whiptail in cauliflower is caused by Molybdenum deficiency in the soil.",
+    "keywords": ["cauliflower", "whiptail", "disease"],
+    "tags": ["disease", "deficiency"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "काउली खेतीको लागि उत्तम हावापानी कुन हो?",
+    "answer": "काउलीका लागि ठण्डा र आद्र हावापानी उत्तम मानिन्छ। चिसो ठाउँमा राम्रो फल्छ।",
+    "keywords": ["काउली", "हावापानी", "मौसम"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "What is the best climate for cauliflower farming?",
+    "answer": "Cool and humid climates are ideal for the successful growth of cauliflower.",
+    "keywords": ["cauliflower", "climate", "farming"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "काउलीमा बोरोन मल किन हाल्नुपर्छ?",
+    "answer": "बोरोनले काउलीको फूललाई सेतो र आकर्षक बनाउन तथा भित्र खोक्रो हुनबाट बचाउन मद्दत गर्छ।",
+    "keywords": ["काउली", "मल", "बोरोन"],
+    "tags": ["fertilizer", "quality"]
+  },
+  {
+    "crop_id": "cauliflower",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Why use Boron fertilizer for cauliflower?",
+    "answer": "Boron helps keep cauliflower heads white and prevents hollow stem disorder.",
+    "keywords": ["cauliflower", "boron", "fertilizer"],
+    "tags": ["fertilizer", "quality"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "price",
+    "language": "nepali",
+    "question": "पालुङ्गोको मुठाको मूल्य कति छ?",
+    "answer": "पालुङ्गोको प्रति मुठा मूल्य रु १५ देखि २५ सम्म चल्दैछ।",
+    "keywords": ["पालुङ्गो", "मूल्य", "मुठा"],
+    "tags": ["price", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "price",
+    "language": "english",
+    "question": "How much for a bundle of spinach?",
+    "answer": "A bundle of spinach usually costs between 15 and 25 NPR in the market.",
+    "keywords": ["spinach", "price", "bundle"],
+    "tags": ["price", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "पालुङ्गोको पातमा सेतो टाटो देखिए के गर्ने?",
+    "answer": "सेतो टाटो नियन्त्रण गर्न पातलाई ओसिलो हुन नदिने र ढुसीनाशक छर्किने।",
+    "keywords": ["पालुङ्गो", "सेतो टाटो", "रोग"],
+    "tags": ["disease", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "disease",
+    "language": "english",
+    "question": "What to do for White Rust in spinach?",
+    "answer": "For white rust, avoid overhead irrigation and apply suitable fungicides to the foliage.",
+    "keywords": ["spinach", "white rust", "disease"],
+    "tags": ["disease", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "पालुङ्गो खेती कसरी गर्ने?",
+    "answer": "पालुङ्गोलाई ओसिलो र उर्भर माटोमा छर्नुहोस्। यसलाई धेरै घाम नपर्ने ठाउँमा पनि खेती गर्न सकिन्छ।",
+    "keywords": ["पालुङ्गो", "खेती", "माटो"],
+    "tags": ["cultivation", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "How to cultivate spinach?",
+    "answer": "Sow spinach in moist, fertile soil. It can also be grown in partial shade.",
+    "keywords": ["spinach", "cultivation", "soil"],
+    "tags": ["cultivation", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "पालुङ्गोमा कुन मल हाल्नुपर्छ?",
+    "answer": "पालुङ्गोलाई हरियो र कलिलो बनाउन नाइट्रोजन मलको साथै झोल मलको प्रयोग गर्नुहोस्।",
+    "keywords": ["पालुङ्गो", "मल", "नाइट्रोजन"],
+    "tags": ["fertilizer", "greenery"]
+  },
+  {
+    "crop_id": "spinach",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "What fertilizer is recommended for spinach?",
+    "answer": "Nitrogen-based fertilizers and liquid manures are recommended for lush, green spinach.",
+    "keywords": ["spinach", "fertilizer", "liquid manure"],
+    "tags": ["fertilizer", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "price",
+    "language": "nepali",
+    "question": "तरकारी सलाद (Lettuce) को मूल्य कति छ?",
+    "answer": "सलादको एक मुठाको मूल्य रु २० देखि ४० सम्म रहेको छ।",
+    "keywords": ["सलाद", "मूल्य", "भाउ"],
+    "tags": ["price", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of lettuce?",
+    "answer": "A bundle of lettuce costs between 20 and 40 NPR depending on the variety.",
+    "keywords": ["lettuce", "price", "market"],
+    "tags": ["price", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "सलादमा लाग्ने फेद कुहिने रोग कसरी रोक्ने?",
+    "answer": "फेद कुहिने रोग रोक्न माटोको निकास मिलाउने र धेरै चिस्यान हुन नदिने।",
+    "keywords": ["सलाद", "कुहिने", "रोग"],
+    "tags": ["disease", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to prevent bottom rot in lettuce?",
+    "answer": "Ensure proper field drainage and avoid excessive watering to prevent bottom rot in lettuce.",
+    "keywords": ["lettuce", "rot", "disease"],
+    "tags": ["disease", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "सलाद खेती कहिले गर्ने?",
+    "answer": "सलाद खेती असोज देखि मङ्सिर सम्म गर्दा सबैभन्दा राम्रो नतिजा पाइन्छ।",
+    "keywords": ["सलाद", "समय", "खेती"],
+    "tags": ["cultivation", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "When to cultivate lettuce?",
+    "answer": "Growing lettuce from September to November yields the best quality leaves.",
+    "keywords": ["lettuce", "season", "farming"],
+    "tags": ["cultivation", "greenery"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "सलादमा कुन मल बढी चाहिन्छ?",
+    "answer": "यसलाई कलिलो बनाउन नाइट्रोजन मल र कम्पोस्टको मात्रा बढी दिनुहोस्।",
+    "keywords": ["सलाद", "मल", "नाइट्रोजन"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "lettuce",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer is needed for lettuce?",
+    "answer": "Nitrogen-rich fertilizers and high-quality compost help in maintaining tender lettuce leaves.",
+    "keywords": ["lettuce", "fertilizer", "nutrition"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "price",
+    "language": "nepali",
+    "question": "भेंडे खुर्सानीको मूल्य कति छ?",
+    "answer": "भेंडे खुर्सानीको मूल्य प्रतिकिलो रु १०० देखि १५० सम्म रहेको छ।",
+    "keywords": ["भेंडे खुर्सानी", "मूल्य", "भाउ"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of capsicum?",
+    "answer": "The price of capsicum is currently around 100 to 150 NPR per kg in the market.",
+    "keywords": ["capsicum", "price", "cost"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "भेंडे खुर्सानीमा लाग्ने डढुवा (Blight) कसरी नियन्त्रण गर्ने?",
+    "answer": "डढुवा नियन्त्रण गर्न पानीको निकास मिलाउने र बोर्डो मिश्रण छर्किने।",
+    "keywords": ["भेंडे खुर्सानी", "डढुवा", "रोग"],
+    "tags": ["disease", "treatment"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to control blight in capsicum?",
+    "answer": "Control blight by ensuring good drainage and spraying Bordeaux mixture in the field.",
+    "keywords": ["capsicum", "blight", "disease"],
+    "tags": ["disease", "treatment"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "भेंडे खुर्सानी खेतीका लागि उपयुक्त समय कहिले हो?",
+    "answer": "यसको खेती फागुन देखि जेठ सम्म र असोज देखि मङ्सिर सम्म गर्न सकिन्छ।",
+    "keywords": ["भेंडे खुर्सानी", "समय", "रोपाइँ"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "When is the best time to cultivate capsicum?",
+    "answer": "Capsicum can be successfully grown from February to May and from September to November.",
+    "keywords": ["capsicum", "planting", "season"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "भेंडे खुर्सानीमा कस्तो मल हाल्नुपर्छ?",
+    "answer": "भेंडे खुर्सानीका लागि नाइट्रोजन र पोटास मलको सन्तुलित प्रयोग गर्नुहोस्।",
+    "keywords": ["भेंडे खुर्सानी", "मल", "एनपिके"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "capsicum",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "What fertilizer is recommended for capsicum?",
+    "answer": "A balanced mix of nitrogen and potash is recommended to improve capsicum fruit quality and yield.",
+    "keywords": ["capsicum", "fertilizer", "growth"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "price",
+    "language": "nepali",
+    "question": "भन्टाको भाउ आज कस्तो छ?",
+    "answer": "भन्टाको मूल्य प्रतिकिलो रु ४० देखि ६० सम्म रहेको छ।",
+    "keywords": ["भन्टा", "मूल्य", "भाउ"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the price of eggplant today?",
+    "answer": "The price of eggplant is currently between 40 and 60 NPR in the wholesale market.",
+    "keywords": ["eggplant", "price", "cost"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "भन्टाको मुना र फल प्वाल पार्ने किरा कसरी हटाउने?",
+    "answer": "प्वाल पार्ने किरा नियन्त्रण गर्न फेरोमेन ट्रयापको प्रयोग गर्नुहोस् र संक्रमित फल नष्ट गर्नुहोस्।",
+    "keywords": ["भन्टा", "किरा", "उपचार"],
+    "tags": ["disease", "pests"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to control shoot and fruit borer in eggplant?",
+    "answer": "Use pheromone traps and destroy infested fruits to control shoot and fruit borer.",
+    "keywords": ["eggplant", "borer", "pest"],
+    "tags": ["disease", "pests"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "भन्टा खेतीका लागि कस्तो तापक्रम उपयुक्त हुन्छ?",
+    "answer": "भन्टाका लागि २५ देखि ३५ डिग्री सेल्सियसको न्यानो तापक्रम उत्तम हुन्छ।",
+    "keywords": ["भन्टा", "तापक्रम", "खेती"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "What temperature is ideal for eggplant farming?",
+    "answer": "Eggplants grow best in warm temperatures ranging from 25 to 35 degrees Celsius.",
+    "keywords": ["eggplant", "temperature", "farming"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "भन्टामा कुन मल हाल्दा राम्रो फल्छ?",
+    "answer": "भन्टामा गोबर मलसँगै सन्तुलित एनपिके मलको प्रयोग गर्दा उत्पादन बढ्छ।",
+    "keywords": ["भन्टा", "मल", "एनपिके"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "eggplant",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer improves eggplant productivity?",
+    "answer": "Applying balanced NPK along with well-rotted farmyard manure increases yield.",
+    "keywords": ["eggplant", "fertilizer", "growth"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "price",
+    "language": "nepali",
+    "question": "सिमीको बजार मूल्य कति छ?",
+    "answer": "सिमीको मूल्य प्रतिकिलो रु ६० देखि ८० सम्म रहेको छ।",
+    "keywords": ["सिमी", "मूल्य", "भाउ"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "price",
+    "language": "english",
+    "question": "What is the market price of beans?",
+    "answer": "The price of beans is currently around 60 to 80 NPR per kg.",
+    "keywords": ["beans", "price", "cost"],
+    "tags": ["price", "vegetable"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "disease",
+    "language": "nepali",
+    "question": "सिमीमा लाग्ने खिया रोग (Rust) कसरी रोक्ने?",
+    "answer": "खिया रोग नियन्त्रण गर्न सफा बीउ रोप्ने र आवश्यकता अनुसार ढुसीनाशक छर्किने।",
+    "keywords": ["सिमी", "खिया", "रोग"],
+    "tags": ["disease", "vegetable"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "disease",
+    "language": "english",
+    "question": "How to prevent Rust disease in beans?",
+    "answer": "Prevent rust by using clean seeds and applying fungicides as soon as early symptoms appear.",
+    "keywords": ["beans", "rust", "disease"],
+    "tags": ["disease", "vegetable"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "cultivation",
+    "language": "nepali",
+    "question": "सिमी रोप्ने बेला के कुरामा ध्यान दिनुपर्छ?",
+    "answer": "सिमीलाई खम्बाहरुको सहायता (Staking) दिनुहोस् ताकि फलहरु सफा र स्वस्थ रहन सकुन्।",
+    "keywords": ["सिमी", "थाँक्रो", "खेती"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "cultivation",
+    "language": "english",
+    "question": "What should be considered when planting beans?",
+    "answer": "Provide stakes for bean plants to climb, which helps keep the pods clean and healthy.",
+    "keywords": ["beans", "staking", "farming"],
+    "tags": ["cultivation", "vegetable"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "fertilizer",
+    "language": "nepali",
+    "question": "सिमीमा कुन मलको बढी प्रयोग गरिन्छ?",
+    "answer": "सिमीलाई कोसा लाग्ने बेला फस्फोरस र पोटास मलको आवश्यकता बढी पर्छ।",
+    "keywords": ["सिमी", "मल", "पोटास"],
+    "tags": ["fertilizer", "growth"]
+  },
+  {
+    "crop_id": "beans",
+    "topic": "fertilizer",
+    "language": "english",
+    "question": "Which fertilizer is used more for beans?",
+    "answer": "Beans require more phosphorus and potash during the pod-setting stage.",
+    "keywords": ["beans", "fertilizer", "potash"],
+    "tags": ["fertilizer", "growth"]
+  }
+]

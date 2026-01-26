@@ -7,8 +7,8 @@
   width: 100%;
   background: white;
   overflow: hidden;
-  position: relative;
-  /* bottom: rem; */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
   font-family: inherit;
 }
 
@@ -27,6 +27,13 @@
   margin: 0;
 }
 
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chat-action-btn,
 .chat-close-btn {
   background: none;
   border: none;
@@ -36,11 +43,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  transition: all 0.2s;
 }
 
+.chat-action-btn:hover,
 .chat-close-btn:hover {
-  color: #334155;
+  color: #1dc956;
+  transform: scale(1.1);
+}
+
+/* Maximized State */
+.chat-view-container.maximized {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  height: 85vh;
+  z-index: 9999;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e2e8f0;
+}
+
+.chat-view-container.maximized .chat-header {
+  position: relative;
+  justify-content: center;
+}
+
+.chat-view-container.maximized .chat-header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.chat-view-container.maximized .chat-header-actions {
+  margin-left: auto;
+  z-index: 1;
+}
+
+.chat-view-container.maximized .chat-message-row {
+  max-width: 85%;
+}
+
+.chat-view-container.maximized .message-content {
+  font-size: 1.05rem;
+  padding: 1rem 1.5rem;
 }
 
 .chat-body {
@@ -68,7 +115,7 @@
 
 .bot-avatar-icon {
   font-size: 1.4rem;
-  color: #64748b;
+  color: #15a344;
   margin-top: 0.2rem;
   flex-shrink: 0;
 }
@@ -120,15 +167,30 @@
   color: #64748b;
 }
 
-.chat-send-icon {
-  color: #1dc956;
-  font-size: 1.2rem;
+.chat-send-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s;
 }
 
-.chat-send-icon:hover {
+.chat-send-btn:disabled .chat-send-icon {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.chat-send-icon {
+  color: #1dc956;
+  font-size: 1.25rem;
+  transition: all 0.2s;
+}
+
+.chat-send-btn:not(:disabled):hover .chat-send-icon {
   transform: scale(1.1);
+  color: #15a344;
 }
 
 /* Scrollbar Styling */
@@ -141,6 +203,111 @@
 }
 
 .chat-body::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: #1dc956;
   border-radius: 10px;
+}
+
+/* Typing Animation */
+.message-content.typing {
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background-color: #1dc956;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.message-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.message-content.user {
+  background-color: #1dc956;
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 18px 18px 2px 18px;
+  box-shadow: 0 2px 5px rgba(29, 201, 86, 0.2);
+  display: flex;
+  align-items: center;
+}
+
+.message-content.bot {
+  background-color: #f0f7f4; /* Very light green tint */
+  color: #1e293b;
+  padding: 1rem 1.4rem;
+  border-radius: 18px 18px 18px 2px;
+  max-width: 100%;
+  border: 1px solid #e1eee8;
+}
+
+/* Markdown Styling */
+.message-content.bot p {
+  margin-bottom: 0.8rem;
+}
+
+.message-content.bot p:last-child {
+  margin-bottom: 0;
+}
+
+.message-content.bot ul, 
+.message-content.bot ol {
+  margin: 0.5rem 0 0.8rem 1.2rem;
+  padding: 0;
+}
+
+.message-content.bot li {
+  margin-bottom: 0.4rem;
+}
+
+.message-content.bot strong {
+  color: #1a202c;
+  font-weight: 700;
+}
+
+.message-content.bot h1,
+.message-content.bot h2,
+.message-content.bot h3 {
+  margin: 1rem 0 0.5rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.message-content.bot h1 { font-size: 1.2rem; }
+.message-content.bot h2 { font-size: 1.1rem; }
+.message-content.bot h3 { font-size: 1rem; }
+
+/* Typing Dots Position Fix */
+.message-content.typing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.8rem 1.2rem;
+}
+
+.chat-view-container.maximized .message-content.bot {
+  font-size: 1.05rem;
+  padding: 1.2rem 1.8rem;
 }

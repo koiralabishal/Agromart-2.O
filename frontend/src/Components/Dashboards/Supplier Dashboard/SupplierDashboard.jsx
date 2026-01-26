@@ -12,7 +12,6 @@ import {
   FaFacebookF,
   FaTwitter,
   FaLinkedinIn,
-  FaCommentDots,
   FaBars,
   FaTimes,
   FaBoxes,
@@ -36,7 +35,6 @@ import OrderDetailView from "./OrderDetailView";
 import DetailedAnalytics from "./DetailedAnalytics";
 import SettingsView from "./SettingsView";
 import NotificationsView from "./NotificationsView";
-import ChatView from "./ChatView";
 import PaymentsView from "./PaymentsView";
 import CartView from "./CartView";
 import {
@@ -65,7 +63,6 @@ const SupplierDashboard = () => {
   const [activeView, setActiveView] = useState(
     sessionStorage.getItem("supplierActiveView") || "dashboard",
   );
-  const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = sessionStorage.getItem("cartItems");
@@ -202,7 +199,7 @@ const SupplierDashboard = () => {
       // Check if we have cached data to avoid flashing empty state
       // We no longer set loading=true even if there is no data
       // This ensures we show "zeros" and empty states immediately instead of a spinner
-      
+
       try {
         // Parallel fetch for speed - added cache busting
 
@@ -1104,7 +1101,9 @@ const SupplierDashboard = () => {
                                   <span
                                     className={`inv-status ${isOutOfStock ? "critical" : "warning"}`}
                                   >
-                                    {isOutOfStock ? "Out of Stock" : "Low Stock"}
+                                    {isOutOfStock
+                                      ? "Out of Stock"
+                                      : "Low Stock"}
                                   </span>
                                 </div>
                                 <div className="inv-qty">
@@ -1403,9 +1402,7 @@ const SupplierDashboard = () => {
                       <div className="sd-empty-chart">
                         <FaShoppingBag size={48} />
                         <p>No purchase activity yet</p>
-                        <span>
-                          Purchase history will be visualized here.
-                        </span>
+                        <span>Purchase history will be visualized here.</span>
                       </div>
                     )}
                   </div>
@@ -1542,7 +1539,6 @@ const SupplierDashboard = () => {
             onOrderComplete={() => setActiveView("orders")}
           />
         )}
-        {activeView === "chat" && <ChatView />}
       </main>
 
       <footer className="sd-footer">
@@ -1553,20 +1549,6 @@ const SupplierDashboard = () => {
           <FaFacebookF /> <FaTwitter /> <FaLinkedinIn />
         </div>
       </footer>
-
-      {isChatPopupOpen && (
-        <div className="chat-popup-overlay">
-          <div className="chat-popup-content">
-            <ChatView onClose={() => setIsChatPopupOpen(false)} />
-          </div>
-        </div>
-      )}
-      <div
-        className="chat-fab"
-        onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}
-      >
-        <FaCommentDots />
-      </div>
     </div>
   );
 };
