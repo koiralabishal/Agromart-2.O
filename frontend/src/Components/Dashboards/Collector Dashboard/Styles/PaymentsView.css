@@ -93,7 +93,8 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.95rem;
-  opacity: 0.9;
+  color: #ffffff;
+  opacity: 1;
   margin-bottom: 1rem;
 }
 
@@ -110,7 +111,8 @@
 
 .card-footer {
   font-size: 0.85rem;
-  opacity: 0.8;
+  color: #ffffff;
+  opacity: 1;
 }
 
 /* Withdrawal Action */
