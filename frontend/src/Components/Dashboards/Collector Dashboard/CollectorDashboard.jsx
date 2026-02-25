@@ -12,7 +12,6 @@ import {
   FaFacebookF,
   FaTwitter,
   FaLinkedinIn,
-  FaCommentDots,
   FaBars,
   FaTimes,
   FaBoxes,
@@ -36,7 +35,6 @@ import OrderDetailView from "./OrderDetailView";
 import DetailedAnalytics from "./DetailedAnalytics";
 import SettingsView from "./SettingsView";
 import NotificationsView from "./NotificationsView";
-import ChatView from "./ChatView";
 import PaymentsView from "./PaymentsView";
 import CartView from "./CartView";
 import {
@@ -65,7 +63,6 @@ const CollectorDashboard = () => {
   const [activeView, setActiveView] = useState(
     sessionStorage.getItem("collectorActiveView") || "dashboard",
   );
-  const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = sessionStorage.getItem("cartItems");
@@ -187,7 +184,9 @@ const CollectorDashboard = () => {
 
       // Failsafe: Restore from cache if state is empty (prevents flash)
       if (orders.placed.length === 0 && orders.received.length === 0) {
-        const cached = localStorage.getItem(`cached_collector_orders_${userID}`);
+        const cached = localStorage.getItem(
+          `cached_collector_orders_${userID}`,
+        );
         if (cached) setOrders(JSON.parse(cached));
       }
       if (!preFetchedFarmers || preFetchedFarmers.length === 0) {
@@ -199,7 +198,9 @@ const CollectorDashboard = () => {
         if (cached) setOwnInventory(JSON.parse(cached));
       }
       if (!wallet) {
-        const cached = localStorage.getItem(`cached_collector_wallet_${userID}`);
+        const cached = localStorage.getItem(
+          `cached_collector_wallet_${userID}`,
+        );
         if (cached) {
           const parsed = JSON.parse(cached);
           setWallet(parsed.wallet);
@@ -1114,7 +1115,9 @@ const CollectorDashboard = () => {
                                   <span
                                     className={`inv-status ${isOutOfStock ? "critical" : "warning"}`}
                                   >
-                                    {isOutOfStock ? "Out of Stock" : "Low Stock"}
+                                    {isOutOfStock
+                                      ? "Out of Stock"
+                                      : "Low Stock"}
                                   </span>
                                 </div>
                                 <div className="inv-qty">
@@ -1413,9 +1416,7 @@ const CollectorDashboard = () => {
                       <div className="cd-empty-chart">
                         <FaShoppingBag size={48} />
                         <p>No purchase activity yet</p>
-                        <span>
-                          Purchase history will be visualized here.
-                        </span>
+                        <span>Purchase history will be visualized here.</span>
                       </div>
                     )}
                   </div>
@@ -1550,7 +1551,6 @@ const CollectorDashboard = () => {
             onOrderComplete={() => setActiveView("orders")}
           />
         )}
-        {activeView === "chat" && <ChatView />}
       </main>
 
       <footer className="cd-footer">
@@ -1561,20 +1561,6 @@ const CollectorDashboard = () => {
           <FaFacebookF /> <FaTwitter /> <FaLinkedinIn />
         </div>
       </footer>
-
-      {isChatPopupOpen && (
-        <div className="chat-popup-overlay">
-          <div className="chat-popup-content">
-            <ChatView onClose={() => setIsChatPopupOpen(false)} />
-          </div>
-        </div>
-      )}
-      <div
-        className="chat-fab"
-        onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}
-      >
-        <FaCommentDots />
-      </div>
     </div>
   );
 };

@@ -10,7 +10,6 @@ import {
   FaFacebookF,
   FaTwitter,
   FaLinkedinIn,
-  FaCommentDots,
   FaBars,
   FaTimes,
   FaList,
@@ -35,7 +34,6 @@ import BuyerOrderManagement from "./BuyerOrderManagement";
 import BuyerOrderDetailView from "./BuyerOrderDetailView";
 import SettingsView from "./SettingsView";
 import BuyerNotificationsView from "./BuyerNotificationsView";
-import ChatView from "./ChatView";
 import CartView from "./CartView";
 import PaymentsView from "./PaymentsView";
 import DetailedAnalytics from "./DetailedAnalytics";
@@ -73,7 +71,6 @@ const BuyerDashboard = () => {
   const [activeView, setActiveView] = useState(
     sessionStorage.getItem("buyerActiveView") || "dashboard",
   );
-  const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = sessionStorage.getItem("cartItems");
@@ -1267,7 +1264,6 @@ const BuyerDashboard = () => {
             walletData={walletData}
           />
         )}
-        {activeView === "chat" && <ChatView />}
       </main>
 
       <footer className="bd-footer">
@@ -1278,20 +1274,6 @@ const BuyerDashboard = () => {
           <FaFacebookF /> <FaTwitter /> <FaLinkedinIn />
         </div>
       </footer>
-
-      {isChatPopupOpen && (
-        <div className="chat-popup-overlay">
-          <div className="chat-popup-content">
-            <ChatView onClose={() => setIsChatPopupOpen(false)} />
-          </div>
-        </div>
-      )}
-      <div
-        className="chat-fab"
-        onClick={() => setIsChatPopupOpen(!isChatPopupOpen)}
-      >
-        <FaCommentDots />
-      </div>
     </div>
   );
 };
