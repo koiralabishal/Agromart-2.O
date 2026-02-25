@@ -23,6 +23,7 @@ import {
   FaChartLine,
   FaChartPie,
   FaShoppingBag,
+  FaLightbulb,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +38,7 @@ import SettingsView from "./SettingsView";
 import NotificationsView from "./NotificationsView";
 import PaymentsView from "./PaymentsView";
 import CartView from "./CartView";
+import RecommendationView from "./RecommendationView";
 import {
   LineChart,
   Line,
@@ -757,6 +759,18 @@ const SupplierDashboard = () => {
             }}
           >
             <FaChartBar /> Analytics
+          </div>
+          <div
+            className={`sd-nav-item ${
+              activeView === "recommendation" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveView("recommendation");
+              setSelectedCollector(null);
+              setIsSidebarOpen(false);
+            }}
+          >
+            <FaLightbulb /> Recommendation
           </div>
           <div
             className={`sd-nav-item ${
@@ -1524,6 +1538,7 @@ const SupplierDashboard = () => {
           />
         )}
         {activeView === "settings" && <SettingsView />}
+        {activeView === "recommendation" && <RecommendationView />}
         {activeView === "notifications" && <NotificationsView />}
         {activeView === "cart" && (
           <CartView

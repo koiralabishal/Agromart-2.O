@@ -82,7 +82,7 @@ const UserManagementView = ({
       setConfirmModal({
         isOpen: true,
         title: "Delete User?",
-        message: `Are you sure you want to delete ${user.name}? This cannot be undone.`,
+        message: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
         type: "danger",
         confirmBtnText: "Yes, Delete",
         onConfirm: () => performDelete(user),

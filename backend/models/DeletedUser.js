@@ -12,9 +12,10 @@ const deletedUserSchema = new mongoose.Schema(
     address: { type: String },
     role: { type: String },
     profileImage: { type: String },
+    status: { type: String },
+    docStatus: { type: String },
     deletedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Admin who deleted
+      type: String,
     },
     reason: { type: String },
     originalCreatedAt: { type: Date },

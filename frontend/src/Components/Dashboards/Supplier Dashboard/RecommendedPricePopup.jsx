@@ -1,203 +1,322 @@
-import React, { useState } from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import {
+  FaArrowLeft,
+  FaCalendarAlt,
+  FaLeaf,
+  FaSearch,
+  FaChevronRight,
+  FaDotCircle,
+} from "react-icons/fa";
+import {
+  TbCurrencyRupeeNepalese,
+  TbReportMoney,
+  TbChartBar,
+} from "react-icons/tb";
+import api from "../../../api/axiosConfig";
 import "./Styles/RecommendedPricePopup.css";
 
-const RecommendedPricePopup = ({ isOpen, onClose, onConfirm }) => {
-  const [productPrices, setProductPrices] = useState({
-    1: { option: "recommended", customPrice: "", rangePrice: "" },
-    2: { option: "recommended", customPrice: "", rangePrice: "" },
-    3: { option: "recommended", customPrice: "", rangePrice: "" },
-    4: { option: "recommended", customPrice: "", rangePrice: "" },
-  });
-  const [errors, setErrors] = useState({});
+const RecommendedPricePopup = ({ isOpen, onClose, onConfirm, productName }) => {
+  const [allForecasts, setAllForecasts] = useState([]);
+  const [forecast, setForecast] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [customPrice, setCustomPrice] = useState("");
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const products = [
-    { id: 1, name: "Tomato", priceMin: 58, priceMax: 65 },
-    { id: 2, name: "Potato", priceMin: 42, priceMax: 48 },
-    { id: 3, name: "Onion", priceMin: 50, priceMax: 56 },
-    { id: 4, name: "Cabbage", priceMin: 30, priceMax: 35 },
-  ];
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const fetchForecast = async () => {
+        setLoading(true);
+        try {
+          const response = await api.get("/forecast");
+          const data = response.data;
+          setAllForecasts(data);
 
-  const handleOptionChange = (productId, option) => {
-    setProductPrices((prev) => ({
-      ...prev,
-      [productId]: { ...prev[productId], option },
-    }));
-    // Clear error for this product when option changes
-    if (errors[productId]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[productId];
-        return newErrors;
-      });
-    }
-  };
+          if (productName) {
+            findMatch(data, productName);
+          } else {
+            setForecast(null);
+          }
+        } catch (err) {
+          console.error("Error fetching forecast:", err);
+          setError("Failed to load recommendation data.");
+        } finally {
+          setLoading(false);
+        }
+      };
 
-  const handleInputChange = (productId, field, value) => {
-    setProductPrices((prev) => ({
-      ...prev,
-      [productId]: { ...prev[productId], [field]: value },
-    }));
-    // Clear error for this product when input changes
-    if (errors[productId]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[productId];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleConfirmPrice = (product) => {
-    const priceData = productPrices[product.id];
-    let finalPrice;
-
-    if (priceData.option === "recommended") {
-      finalPrice =
-        priceData.rangePrice ||
-        ((product.priceMin + product.priceMax) / 2).toString();
-
-      // Validation: Must be within range
-      const numericPrice = parseFloat(finalPrice);
-      if (
-        isNaN(numericPrice) ||
-        numericPrice < product.priceMin ||
-        numericPrice > product.priceMax
-      ) {
-        setErrors((prev) => ({
-          ...prev,
-          [product.id]: `Price must be between NPR ${product.priceMin} - ${product.priceMax}`,
-        }));
-        return;
-      }
+      fetchForecast();
     } else {
-      finalPrice = priceData.customPrice;
-      const numericPrice = parseFloat(finalPrice);
-      if (isNaN(numericPrice) || numericPrice <= 0) {
-        setErrors((prev) => ({
-          ...prev,
-          [product.id]: "Please enter a valid custom price",
-        }));
-        return;
-      }
+      document.body.style.overflow = "auto";
     }
 
-    onConfirm(finalPrice);
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && allForecasts.length > 0) {
+      findMatch(allForecasts, productName);
+    }
+  }, [productName, allForecasts, isOpen]);
+
+  const findMatch = (data, name) => {
+    if (!name) {
+      setForecast(null);
+      return;
+    }
+
+    let match = data.find(
+      (f) => f.vegetable.toLowerCase() === name.toLowerCase(),
+    );
+
+    if (!match) {
+      match = data.find(
+        (f) =>
+          f.vegetable.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(f.vegetable.toLowerCase()),
+      );
+    }
+    setForecast(match);
   };
+
+  const handleConfirm = (price) => {
+    onConfirm(price);
+  };
+
+  const filteredItems = allForecasts.filter((f) =>
+    f.vegetable.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   if (!isOpen) return null;
 
   return (
-    <div className="rpp-overlay" onClick={onClose}>
-      <div className="rpp-container" onClick={(e) => e.stopPropagation()}>
-        <div className="rpp-header">
-          <div className="rpp-logo">
-            <span className="rpp-logo-icon">🌱</span>
-            <span className="rpp-logo-text">AgroMart</span>
+    <div className="rpp-modern-overlay" onClick={onClose}>
+      <div
+        className="rpp-modern-container"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Futuristic Background Accents */}
+        <div className="rpp-bg-blob blob-1"></div>
+        <div className="rpp-bg-blob blob-2"></div>
+
+        <div className="rpp-modern-header">
+          <div className="rpp-brand">
+            <div className="rpp-brand-logo">
+              <FaLeaf />
+            </div>
+            <div className="rpp-brand-text">
+              <span className="brand-main">AgroMart</span>
+              <span className="brand-sub">Smart Pricing AI</span>
+            </div>
           </div>
-          <button className="rpp-back-btn" onClick={onClose}>
-            Back
+          <button className="rpp-close-btn" onClick={onClose}>
+            <FaArrowLeft /> Back
           </button>
         </div>
 
-        <h2 className="rpp-title">Recommended Price</h2>
+        <div className="rpp-modern-body">
+          <div className="rpp-body-header">
+            <h1>Market Recommendations</h1>
+            <p>AI-driven price forecasts based on real-time market data.</p>
+          </div>
 
-        <div className="rpp-products-grid">
-          {products.map((product) => (
-            <div key={product.id} className="rpp-product-card">
-              <h3 className="rpp-product-name">{product.name}</h3>
-
-              <div className="rpp-price-badge">
-                NPR {product.priceMin} – {product.priceMax} / kg
-                <span className="rpp-price-subtitle">
-                  Based on market demand & trends
-                </span>
-              </div>
-
-              <div className="rpp-options">
-                <div className="rpp-option">
-                  <input
-                    type="radio"
-                    id={`recommended-${product.id}`}
-                    name={`price-option-${product.id}`}
-                    checked={productPrices[product.id].option === "recommended"}
-                    onChange={() =>
-                      handleOptionChange(product.id, "recommended")
-                    }
-                  />
-                  <label htmlFor={`recommended-${product.id}`}>
-                    Accept Recommended Price
-                  </label>
-                  <input
-                    type="text"
-                    className={`rpp-input ${errors[product.id] && productPrices[product.id].option === "recommended" ? "invalid" : ""}`}
-                    placeholder="Enter price within a range"
-                    disabled={
-                      productPrices[product.id].option !== "recommended"
-                    }
-                    value={productPrices[product.id].rangePrice}
-                    onChange={(e) =>
-                      handleInputChange(
-                        product.id,
-                        "rangePrice",
-                        e.target.value
-                      )
-                    }
-                  />
+          <div className="rpp-main-grid">
+            {/* Left Column: Forecast or Selection */}
+            <div className="rpp-view-column">
+              {loading ? (
+                <div className="rpp-modern-loader">
+                  <div className="loader-orbit">
+                    <div className="loader-planet"></div>
+                  </div>
+                  <p>Analyzing Market Waves...</p>
                 </div>
+              ) : forecast ? (
+                <div className="rpp-forecast-view animate-fade-in">
+                  <div className="rpp-item-header-card">
+                    <div className="item-icon-box">
+                      <TbChartBar />
+                    </div>
+                    <div className="item-details">
+                      <h3>{forecast.vegetable}</h3>
+                      <span className="v-status">
+                        <FaDotCircle /> Active Trend
+                      </span>
+                    </div>
+                    <button
+                      className="change-item-btn"
+                      onClick={() => setForecast(null)}
+                    >
+                      Switch Item
+                    </button>
+                  </div>
 
-                <div className="rpp-option">
-                  <input
-                    type="radio"
-                    id={`custom-${product.id}`}
-                    name={`price-option-${product.id}`}
-                    checked={productPrices[product.id].option === "custom"}
-                    onChange={() => handleOptionChange(product.id, "custom")}
-                  />
-                  <label htmlFor={`custom-${product.id}`}>
-                    Set My Own Price
-                  </label>
-                  <input
-                    type="text"
-                    className={`rpp-input ${errors[product.id] && productPrices[product.id].option === "custom" ? "invalid" : ""}`}
-                    placeholder="Enter your own price"
-                    disabled={productPrices[product.id].option !== "custom"}
-                    value={productPrices[product.id].customPrice}
-                    onChange={(e) =>
-                      handleInputChange(
-                        product.id,
-                        "customPrice",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <div className="rpp-forecast-list">
+                    {forecast.forecast.map((day, idx) => {
+                      const prevPrice =
+                        idx > 0 ? forecast.forecast[idx - 1].price : null;
+                      const isUp = prevPrice !== null && day.price > prevPrice;
+                      const isDown =
+                        prevPrice !== null && day.price < prevPrice;
+
+                      return (
+                        <div key={idx} className="rpp-forecast-card">
+                          <div className="fc-date">
+                            <span className="fc-day">
+                              {new Date(day.date).toLocaleDateString("en-US", {
+                                weekday: "short",
+                              })}
+                            </span>
+                            <span className="fc-full-date">
+                              {new Date(day.date).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          </div>
+                          <div className="fc-price">
+                            <TbCurrencyRupeeNepalese className="price-unit" />
+                            <span className="price-val">
+                              {day.price.toFixed(0)}
+                            </span>
+                            <span className="price-dec">
+                              .{day.price.toFixed(2).split(".")[1]}
+                            </span>
+                          </div>
+                          <div
+                            className={`fc-trend ${isUp ? "trend-up" : isDown ? "trend-down" : "trend-stable"}`}
+                          >
+                            {isUp && (
+                              <>
+                                <span className="t-icon">▲</span>{" "}
+                                <span className="t-text">Up</span>
+                              </>
+                            )}
+                            {isDown && (
+                              <>
+                                <span className="t-icon">▼</span>{" "}
+                                <span className="t-text">Down</span>
+                              </>
+                            )}
+                            {!isUp && !isDown && (
+                              <>
+                                <span className="t-icon">-</span>{" "}
+                                <span className="t-text">Flat</span>
+                              </>
+                            )}
+                          </div>
+                          <button
+                            className="fc-set-btn"
+                            onClick={() => handleConfirm(day.price.toFixed(2))}
+                          >
+                            Set This Price
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                
-                {errors[product.id] && (
-                  <span className="rpp-field-error">{errors[product.id]}</span>
-                )}
-              </div>
-
-              <button
-                className="rpp-confirm-btn"
-                onClick={() => handleConfirmPrice(product)}
-              >
-                Confirm Price
-              </button>
+              ) : (
+                <div className="rpp-selector-view animate-fade-in">
+                  <div className="rpp-modern-search">
+                    <FaSearch className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search across 15+ commodities..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="rpp-selection-grid">
+                    {filteredItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="rpp-select-card"
+                        onClick={() => setForecast(item)}
+                      >
+                        <div className="sc-icon">
+                          <FaLeaf />
+                        </div>
+                        <div className="sc-info">
+                          <span className="sc-name">{item.vegetable}</span>
+                          <span className="sc-hint">Click to see forecast</span>
+                        </div>
+                        <FaChevronRight className="sc-arrow" />
+                      </div>
+                    ))}
+                    {filteredItems.length === 0 && (
+                      <div className="no-items-state">
+                        <p>No commodities matching "{searchTerm}"</p>
+                      </div>
+                    )}
+                  </div>
+                  {productName && !forecast && !searchTerm && (
+                    <div className="rpp-fallback-alert">
+                      <p>
+                        We don't have a direct forecast for{" "}
+                        <strong>"{productName}"</strong>. Please select the most
+                        similar item from the list above.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
+
+            {/* Right Column: Custom Price & Summary */}
+            <div className="rpp-action-column">
+              <div className="rpp-premium-card custom-price-card">
+                <div className="card-top">
+                  <TbReportMoney className="card-icon" />
+                  <h4>Manual Pricing</h4>
+                </div>
+                <p className="card-desc">
+                  Set your own price if market predictions don't match your
+                  quality.
+                </p>
+
+                <div className="premium-input-group">
+                  <div className="pi-wrapper">
+                    <TbCurrencyRupeeNepalese className="pi-unit" />
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={customPrice}
+                      onChange={(e) => setCustomPrice(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    className="pi-button"
+                    onClick={() => customPrice && handleConfirm(customPrice)}
+                    disabled={!customPrice}
+                  >
+                    Apply Custom Price
+                  </button>
+                </div>
+              </div>
+
+              <div className="rpp-trust-card">
+                <div className="trust-icon-box">🛡️</div>
+                <div className="trust-content">
+                  <h5>Trusted Prediction</h5>
+                  <p>
+                    AgroMart AI analyzes historical trends from Kalimati Market
+                    to give you the most accurate price recommendations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <footer className="rpp-footer">
-          <div className="rpp-footer-text">
-            © {new Date().getFullYear()} AgroMart. All rights reserved.
-          </div>
-          <div className="rpp-footer-socials">
-            <span>f</span>
-            <span>t</span>
-            <span>in</span>
-          </div>
-        </footer>
+        <div className="rpp-modern-footer">
+          <p>
+            © {new Date().getFullYear()} AgroMart Intelligence System. All data
+            is indicative of market trends.
+          </p>
+        </div>
       </div>
     </div>
   );

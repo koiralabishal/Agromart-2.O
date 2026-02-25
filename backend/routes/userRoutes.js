@@ -9,6 +9,8 @@ import {
 import { upload } from "../config/cloudinary.js";
 import User from "../models/User.js";
 
+import { protect } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
 router.get("/active-farmers", getActiveFarmers);
@@ -24,6 +26,6 @@ router.get("/profile/:userID", async (req, res) => {
   }
 });
 router.put("/profile", upload.single("profileImage"), updateUserProfile);
-router.delete("/profile", deleteMyAccount);
+router.delete("/profile", protect, deleteMyAccount);
 
 export default router;

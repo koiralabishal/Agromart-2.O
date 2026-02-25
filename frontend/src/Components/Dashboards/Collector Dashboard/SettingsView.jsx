@@ -11,16 +11,19 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosConfig";
+import ConfirmationModal from "../../Common/ConfirmationModal";
 import "./Styles/SettingsView.css";
 
 const SettingsView = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
-  
+
   // Get initially logged in user from localStorage
   const initialUser = JSON.parse(localStorage.getItem("user")) || {};
-  
-  const [previewUrl, setPreviewUrl] = useState(initialUser.profileImage || null);
+
+  const [previewUrl, setPreviewUrl] = useState(
+    initialUser.profileImage || null,
+  );
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Get logged in user from state for reactivity
@@ -48,18 +51,19 @@ const SettingsView = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     // Background Sync: Fetch latest profile from backend to keep content fresh
     const syncProfile = async () => {
-      if (!userID || userID === 'admin-id') {
+      if (!userID || userID === "admin-id") {
         setIsFetching(false);
         return;
       }
       try {
         const response = await api.get(`/users/profile/${userID}`);
         const updatedUser = { ...currentUser, ...response.data };
-        
+
         // Only update if data has actually changed to avoid unnecessary re-renders
         if (JSON.stringify(updatedUser) !== JSON.stringify(currentUser)) {
           localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -92,7 +96,7 @@ const SettingsView = () => {
     return String(email)
       .toLowerCase()
       .match(
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
       );
   };
 
@@ -144,20 +148,27 @@ const SettingsView = () => {
 
     try {
       const response = await api.put("/users/profile", formData);
-      
+
       const updatedUser = { ...currentUser, ...response.data };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
-      window.dispatchEvent(new Event('userUpdated'));
+      window.dispatchEvent(new Event("userUpdated"));
       setSuccessMsg("Profile photo updated successfully!");
       setSelectedFile(null);
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
       console.error("Error updating photo:", err);
       if (err.response) {
-        console.log("Server responded with:", err.response.status, err.response.data);
+        console.log(
+          "Server responded with:",
+          err.response.status,
+          err.response.data,
+        );
       }
-      setErrors({ photo: err.response?.data?.message || "Server error: Failed to upload photo" });
+      setErrors({
+        photo:
+          err.response?.data?.message || "Server error: Failed to upload photo",
+      });
     } finally {
       setLoadingPhoto(false);
     }
@@ -188,11 +199,13 @@ const SettingsView = () => {
       const updatedUser = { ...currentUser, ...response.data };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
-      window.dispatchEvent(new Event('userUpdated'));
+      window.dispatchEvent(new Event("userUpdated"));
       setSuccessMsg("Profile updated successfully!");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
-      setErrors({ profile: err.response?.data?.message || "Failed to update profile" });
+      setErrors({
+        profile: err.response?.data?.message || "Failed to update profile",
+      });
     } finally {
       setLoadingProfile(false);
     }
@@ -200,12 +213,14 @@ const SettingsView = () => {
 
   const handleUpdatePassword = async () => {
     const newErrors = {};
-    if (!passwordData.currentPassword) newErrors.currentPassword = "Current password is required";
-    
+    if (!passwordData.currentPassword)
+      newErrors.currentPassword = "Current password is required";
+
     if (!passwordData.newPassword) {
       newErrors.newPassword = "New password is required";
     } else if (!validatePassword(passwordData.newPassword)) {
-      newErrors.newPassword = "Password must be 8+ chars with letters and numbers";
+      newErrors.newPassword =
+        "Password must be 8+ chars with letters and numbers";
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -213,7 +228,8 @@ const SettingsView = () => {
     }
 
     if (passwordData.currentPassword === passwordData.newPassword) {
-      newErrors.newPassword = "New password must be different from current password";
+      newErrors.newPassword =
+        "New password must be different from current password";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -230,27 +246,60 @@ const SettingsView = () => {
       });
 
       setSuccessMsg("Password updated successfully!");
-      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
-      setErrors({ 
-        currentPassword: err.response?.status === 401 
-          ? "Invalid current password" 
-          : (err.response?.data?.message || "Failed to update password") 
+      setErrors({
+        currentPassword:
+          err.response?.status === 401
+            ? "Invalid current password"
+            : err.response?.data?.message || "Failed to update password",
       });
     } finally {
       setLoadingPassword(false);
     }
   };
 
-  const isProfileChanged = profileData.name.trim() !== (currentUser.name || "").trim() || 
-                             profileData.email.trim() !== (currentUser.email || "").trim();
-  
-  const isPasswordChanged = passwordData.currentPassword.length > 0 && 
-                             passwordData.newPassword.length >= 8 && 
-                             passwordData.newPassword === passwordData.confirmPassword &&
-                             passwordData.currentPassword !== passwordData.newPassword;
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
+  const handleDeleteAccount = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleteModalOpen(false);
+    setLoadingDelete(true);
+    try {
+      await api.delete("/users/profile");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.dispatchEvent(new Event("userUpdated"));
+      navigate("/");
+    } catch (err) {
+      console.error("Delete account error:", err);
+      setErrors({
+        delete:
+          err.response?.data?.message ||
+          "Failed to delete account. Please try again.",
+      });
+    } finally {
+      setLoadingDelete(false);
+    }
+  };
+
+  const isProfileChanged =
+    profileData.name.trim() !== (currentUser.name || "").trim() ||
+    profileData.email.trim() !== (currentUser.email || "").trim();
+
+  const isPasswordChanged =
+    passwordData.currentPassword.length > 0 &&
+    passwordData.newPassword.length >= 8 &&
+    passwordData.newPassword === passwordData.confirmPassword &&
+    passwordData.currentPassword !== passwordData.newPassword;
 
   return (
     <div className="settings-view">
@@ -272,7 +321,10 @@ const SettingsView = () => {
         <div className="profile-header-content">
           <div className="avatar-wrapper">
             <img
-              src={previewUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"}
+              src={
+                previewUrl ||
+                "https://api.dicebear.com/7.x/avataaars/svg?seed=Evelyn"
+              }
               alt="Profile"
               className="settings-avatar"
             />
@@ -294,8 +346,8 @@ const SettingsView = () => {
               Change Photo
             </button>
             {selectedFile && (
-              <button 
-                className="save-photo-btn" 
+              <button
+                className="save-photo-btn"
                 onClick={handleSavePhoto}
                 disabled={loadingPhoto}
               >
@@ -339,13 +391,15 @@ const SettingsView = () => {
                 placeholder="Enter your email"
               />
             </div>
-            {errors.email && <p className="error-text-inline">{errors.email}</p>}
+            {errors.email && (
+              <p className="error-text-inline">{errors.email}</p>
+            )}
           </div>
         </div>
         <div className="card-footer">
-          <button 
-            className={`save-btn ${!isProfileChanged ? "disabled" : ""}`} 
-            onClick={handleUpdateProfile} 
+          <button
+            className={`save-btn ${!isProfileChanged ? "disabled" : ""}`}
+            onClick={handleUpdateProfile}
             disabled={loadingProfile || !isProfileChanged}
           >
             {loadingProfile ? "Updating..." : "Save Changes"}
@@ -362,7 +416,9 @@ const SettingsView = () => {
         <div className="form-column">
           <div className="input-group">
             <label>Current Password</label>
-            <div className={`input-wrapper ${errors.currentPassword ? "has-error" : ""}`}>
+            <div
+              className={`input-wrapper ${errors.currentPassword ? "has-error" : ""}`}
+            >
               <FaLock className="input-icon" />
               <input
                 type={showCurrentPassword ? "text" : "password"}
@@ -372,9 +428,9 @@ const SettingsView = () => {
                 placeholder="Enter current password"
                 autoComplete="off"
               />
-              <button 
-                type="button" 
-                className="password-toggle-btn" 
+              <button
+                type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               >
                 {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
@@ -388,7 +444,9 @@ const SettingsView = () => {
           </div>
           <div className="input-group">
             <label>New Password</label>
-            <div className={`input-wrapper ${errors.newPassword ? "has-error" : ""}`}>
+            <div
+              className={`input-wrapper ${errors.newPassword ? "has-error" : ""}`}
+            >
               <FaLock className="input-icon" />
               <input
                 type={showNewPassword ? "text" : "password"}
@@ -398,9 +456,9 @@ const SettingsView = () => {
                 placeholder="Enter new password"
                 autoComplete="new-password"
               />
-              <button 
-                type="button" 
-                className="password-toggle-btn" 
+              <button
+                type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowNewPassword(!showNewPassword)}
               >
                 {showNewPassword ? <FaEyeSlash /> : <FaEye />}
@@ -409,12 +467,17 @@ const SettingsView = () => {
             {errors.newPassword ? (
               <p className="error-text-inline">{errors.newPassword}</p>
             ) : (
-              <p className="input-hint">Must be at least 8 characters long and include letters and numbers.</p>
+              <p className="input-hint">
+                Must be at least 8 characters long and include letters and
+                numbers.
+              </p>
             )}
           </div>
           <div className="input-group">
             <label>Confirm New Password</label>
-            <div className={`input-wrapper ${errors.confirmPassword ? "has-error" : ""}`}>
+            <div
+              className={`input-wrapper ${errors.confirmPassword ? "has-error" : ""}`}
+            >
               <FaLock className="input-icon" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -423,9 +486,9 @@ const SettingsView = () => {
                 onChange={handlePasswordChange}
                 placeholder="Confirm new password"
               />
-              <button 
-                type="button" 
-                className="password-toggle-btn" 
+              <button
+                type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
@@ -437,8 +500,8 @@ const SettingsView = () => {
           </div>
         </div>
         <div className="card-footer">
-          <button 
-            className={`save-btn secondary ${!isPasswordChanged ? "disabled" : ""}`} 
+          <button
+            className={`save-btn secondary ${!isPasswordChanged ? "disabled" : ""}`}
             onClick={handleUpdatePassword}
             disabled={loadingPassword || !isPasswordChanged}
           >
@@ -460,9 +523,30 @@ const SettingsView = () => {
             Permanently delete your AgroMart account and all associated data.
             <span className="bold red-text"> This action is irreversible.</span>
           </p>
-          <button className="delete-btn">Delete Account</button>
+          <button
+            className="delete-btn"
+            onClick={handleDeleteAccount}
+            disabled={loadingDelete}
+          >
+            {loadingDelete ? "Deleting..." : "Delete Account"}
+          </button>
+          {errors.delete && (
+            <p className="error-text-inline" style={{ marginTop: "10px" }}>
+              {errors.delete}
+            </p>
+          )}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone."
+        type="danger"
+        confirmBtnText="Yes, Delete My Account"
+      />
     </div>
   );
 };

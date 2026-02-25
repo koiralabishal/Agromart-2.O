@@ -1,7 +1,6 @@
 pandas
 numpy
 matplotlib
-prophet
 cmdstanpy
 beautifulsoup4
 requests

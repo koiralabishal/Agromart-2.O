@@ -1,7 +1,16 @@
-import { inventorySchema } from './Inventory.js';
-import { backupConnection } from '../config/db.js';
+import mongoose from "mongoose";
+import { inventorySchema } from "./Inventory.js";
+import { backupConnection } from "../config/db.js";
 
-// Create a model using the backup database connection
-const DeletedInventory = backupConnection.model('DeletedInventory', inventorySchema);
+// Shallow copy the schema to avoid modifying the original
+const deletedInventorySchema = inventorySchema.clone();
+
+// Add backup-specific fields
+deletedInventorySchema.add({
+  deletedBy: { type: String },
+  originalCreatedAt: { type: Date }
+});
+
+const DeletedInventory = backupConnection.model("DeletedInventory", deletedInventorySchema);
 
 export default DeletedInventory;

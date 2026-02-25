@@ -9,6 +9,9 @@ import Order from "../models/Order.js";
 import Wallet from "../models/Wallet.js";
 import Transaction from "../models/Transaction.js";
 import Withdrawal from "../models/Withdrawal.js";
+import Activity from "../models/Activity.js";
+import Dispute from "../models/Dispute.js";
+import OTP from "../models/OTP.js";
 import { broadcast } from "../socket.js";
 
 import DeletedUser from "../models/DeletedUser.js";
@@ -22,6 +25,9 @@ import DeletedOrder from "../models/DeletedOrder.js";
 import DeletedWallet from "../models/DeletedWallet.js";
 import DeletedTransaction from "../models/DeletedTransaction.js";
 import DeletedWithdrawal from "../models/DeletedWithdrawal.js";
+import DeletedActivity from "../models/DeletedActivity.js";
+import DeletedDispute from "../models/DeletedDispute.js";
+import DeletedOTP from "../models/DeletedOTP.js";
 
 /**
  * Performs a cascading soft delete for a user.
@@ -89,6 +95,8 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
     address: user.address,
     role: user.role,
     profileImage: user.profileImage,
+    status: user.status,
+    docStatus: user.docStatus,
     deletedBy: deletedBy,
     reason: reason || "User deleted",
     originalCreatedAt: user.createdAt,
@@ -107,7 +115,7 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
       const itemDataArray = items.map((item) => {
         const d = item.toObject();
         delete d._id;
-        return { ...d, deletedBy: "CASCADE_" + deletedBy };
+        return { ...d, deletedBy: "CASCADE_" + deletedBy, originalCreatedAt: item.createdAt };
       });
       await DeletedItemModel.insertMany(itemDataArray);
       await ItemModel.deleteMany({ userID: userId });
@@ -128,6 +136,7 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
         ...d,
         deletedBy: deletedBy,
         reason: "Cascade Delete: User Removed",
+        originalCreatedAt: order.createdAt,
       };
     });
     await DeletedOrder.insertMany(orderDataArray);
@@ -183,7 +192,50 @@ export const performUserDeletion = async (userId, deletedBy, reason) => {
     console.log(`>>> ${withdrawals.length} withdrawals backed up and deleted.`);
   }
 
-  // 7. Finally Delete User
+  // 7. Backup & Delete Activities
+  const activities = await Activity.find({ userId });
+  if (activities.length > 0) {
+    const activityDataArray = activities.map((a) => {
+      const d = a.toObject();
+      delete d._id;
+      return { ...d, deletedBy, originalCreatedAt: a.createdAt };
+    });
+    await DeletedActivity.insertMany(activityDataArray);
+    await Activity.deleteMany({ userId });
+    console.log(`>>> ${activities.length} activities backed up and deleted.`);
+  }
+
+  // 8. Backup & Delete Disputes
+  const disputes = await Dispute.find({
+    $or: [{ raisedBy: userId }, { sellerID: userId }],
+  });
+  if (disputes.length > 0) {
+    const disputeDataArray = disputes.map((dis) => {
+      const d = dis.toObject();
+      delete d._id;
+      return { ...d, deletedBy, originalCreatedAt: dis.createdAt };
+    });
+    await DeletedDispute.insertMany(disputeDataArray);
+    await Dispute.deleteMany({
+      $or: [{ raisedBy: userId }, { sellerID: userId }],
+    });
+    console.log(`>>> ${disputes.length} disputes backed up and deleted.`);
+  }
+
+  // 9. Backup & Delete OTPs
+  const otps = await OTP.find({ email: user.email });
+  if (otps.length > 0) {
+    const otpDataArray = otps.map((otp) => {
+      const d = otp.toObject();
+      delete d._id;
+      return { ...d, deletedBy, originalCreatedAt: otp.createdAt };
+    });
+    await DeletedOTP.insertMany(otpDataArray);
+    await OTP.deleteMany({ email: user.email });
+    console.log(`>>> ${otps.length} OTPs backed up and deleted.`);
+  }
+
+  // 10. Finally Delete User
   await User.findByIdAndDelete(userId);
 
   // Broadcast deletion for global sync (e.g. Active Farmers list)

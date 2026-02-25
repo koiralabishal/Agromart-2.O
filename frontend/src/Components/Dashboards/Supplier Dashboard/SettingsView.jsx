@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosConfig";
+import ConfirmationModal from "../../Common/ConfirmationModal";
 import "./Styles/SettingsView.css";
 
 const SettingsView = () => {
@@ -48,6 +49,7 @@ const SettingsView = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     // Background Sync: Fetch latest profile from backend to keep content fresh
@@ -240,6 +242,33 @@ const SettingsView = () => {
       });
     } finally {
       setLoadingPassword(false);
+    }
+  };
+
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  const handleDeleteAccount = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleteModalOpen(false);
+    setLoadingDelete(true);
+    try {
+      await api.delete("/users/profile");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.dispatchEvent(new Event("userUpdated"));
+      navigate("/");
+    } catch (err) {
+      console.error("Delete account error:", err);
+      setErrors({
+        delete:
+          err.response?.data?.message ||
+          "Failed to delete account. Please try again.",
+      });
+    } finally {
+      setLoadingDelete(false);
     }
   };
 
@@ -468,9 +497,26 @@ const SettingsView = () => {
             Permanently delete your AgroMart account and all associated data.
             <span className="bold red-text"> This action is irreversible.</span>
           </p>
-          <button className="delete-btn">Delete Account</button>
+          <button 
+            className="delete-btn" 
+            onClick={handleDeleteAccount}
+            disabled={loadingDelete}
+          >
+            {loadingDelete ? "Deleting..." : "Delete Account"}
+          </button>
+          {errors.delete && <p className="error-text-inline" style={{ marginTop: '10px' }}>{errors.delete}</p>}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone."
+        type="danger"
+        confirmBtnText="Yes, Delete My Account"
+      />
     </div>
   );
 };

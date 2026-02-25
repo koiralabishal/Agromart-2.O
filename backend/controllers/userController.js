@@ -247,10 +247,11 @@ import { performUserDeletion } from "../utils/deleteAction.js";
 export const deleteMyAccount = async (req, res) => {
   try {
     const userID = req.user._id; // From authMiddleware
-    const reason = req.body.reason || "User requested self-deletion";
+    const reason =
+      (req.body && req.body.reason) || "User requested self-deletion";
 
     const result = await performUserDeletion(userID, "SELF", reason);
-    
+
     // Broadcast deletion for real-time sync
     broadcast("dashboard:update", { type: "USER_DELETED", userId: userID });
 

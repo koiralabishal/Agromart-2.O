@@ -482,6 +482,7 @@ const SupplierAddInventoryView = ({ onBack, onItemAdded }) => {
           isOpen={showRecommendedPricePopup}
           onClose={() => setShowRecommendedPricePopup(false)}
           onConfirm={handlePriceSelect}
+          productName={formData.productName}
         />
       )}
     </div>

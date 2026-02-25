@@ -684,7 +684,7 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     const adminId = req.user._id;
-    const reason = req.body.reason || "Admin deletion";
+    const reason = (req.body && req.body.reason) || "Admin deletion";
 
     // Call shared utility
     const result = await performUserDeletion(id, adminId, reason);
@@ -744,7 +744,11 @@ export const deleteProductAdmin = async (req, res) => {
     // Using DeletedProduct model
     const productData = product.toObject();
     delete productData._id;
-    await DeletedProduct.create({ ...productData, deletedBy: "ADMIN" });
+    await DeletedProduct.create({
+      ...productData,
+      deletedBy: "ADMIN",
+      originalCreatedAt: product.createdAt,
+    });
 
     await Product.findByIdAndDelete(id);
 
@@ -775,7 +779,11 @@ export const deleteInventoryAdmin = async (req, res) => {
     // Backup
     const itemData = item.toObject();
     delete itemData._id;
-    await DeletedInventory.create({ ...itemData, deletedBy: "ADMIN" });
+    await DeletedInventory.create({
+      ...itemData,
+      deletedBy: "ADMIN",
+      originalCreatedAt: item.createdAt,
+    });
 
     await Inventory.findByIdAndDelete(id);
 
