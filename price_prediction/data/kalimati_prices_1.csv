@@ -1,0 +1,631 @@
+date,vegetable,unit,max_price,min_price,avg_price
+1/31/2026,Potato Red,KG,28,25,26.25
+1/31/2026,Onion Dry (Indian),KG,42,40,41
+1/31/2026,Carrot(Local),KG,50,40,45
+1/31/2026,Cabbage(Local),KG,65,55,60
+1/31/2026,Cauli Local,KG,50,40,45
+1/31/2026,Raddish White(Local),KG,15,10,12.5
+1/31/2026,French Bean(Local),KG,120,100,110
+1/31/2026,Pumpkin,KG,50,40,45
+1/31/2026,Spinach Leaf,KG,60,50,55
+1/31/2026,Mushroom(Kanya),KG,100,70,90
+1/31/2026,Mushroom(Button),KG,350,300,330
+1/31/2026,Apple(Fuji),KG,350,300,325
+1/31/2026,Banana,Per Dozen,160,140,150
+1/31/2026,Orange(Nepali),KG,180,150,165
+1/31/2026,Water Melon(Green),KG,90,80,85
+1/31/2026,Cucumber(Local),KG,65,50,57.5
+1/31/2026,Papaya(Nepali),KG,70,60,65
+1/31/2026,Strawberry,KG,550,450,500
+1/30/2026,Potato Red,KG,28,25,26.67
+1/30/2026,Onion Dry (Indian),KG,42,40,41
+1/30/2026,Carrot(Local),KG,50,40,45
+1/30/2026,Cabbage(Local),KG,70,55,61.25
+1/30/2026,Cauli Local,KG,55,45,50
+1/30/2026,Raddish White(Local),KG,15,10,12.5
+1/30/2026,French Bean(Local),KG,120,100,110
+1/30/2026,Pumpkin,KG,50,40,45
+1/30/2026,Spinach Leaf,KG,60,50,55
+1/30/2026,Mushroom(Kanya),KG,100,70,85
+1/30/2026,Mushroom(Button),KG,350,300,325
+1/30/2026,Apple(Fuji),KG,330,280,303.33
+1/30/2026,Banana,Per Dozen,160,140,150
+1/30/2026,Orange(Nepali),KG,180,150,165
+1/30/2026,Water Melon(Green),KG,90,80,85
+1/30/2026,Cucumber(Local),KG,65,50,57.5
+1/30/2026,Papaya(Nepali),KG,70,60,65
+1/30/2026,Strawberry,KG,550,450,500
+1/29/2026,Potato Red,KG,30,25,27.5
+1/29/2026,Onion Dry (Indian),KG,44,42,43
+1/29/2026,Carrot(Local),KG,50,40,45
+1/29/2026,Cabbage(Local),KG,70,55,62.5
+1/29/2026,Cauli Local,KG,60,40,49.29
+1/29/2026,Raddish White(Local),KG,15,10,12.5
+1/29/2026,French Bean(Local),KG,120,100,110
+1/29/2026,Pumpkin,KG,50,40,45
+1/29/2026,Spinach Leaf,KG,60,50,55
+1/29/2026,Mushroom(Kanya),KG,100,70,85
+1/29/2026,Mushroom(Button),KG,350,300,325
+1/29/2026,Apple(Jholey),KG,280,220,250
+1/29/2026,Apple(Fuji),KG,350,280,315
+1/29/2026,Banana,Per Dozen,160,140,150
+1/29/2026,Orange(Nepali),KG,180,140,168
+1/29/2026,Water Melon(Green),KG,90,80,85
+1/29/2026,Cucumber(Local),KG,70,50,57.5
+1/29/2026,Papaya(Nepali),KG,70,60,65
+1/29/2026,Strawberry,KG,550,450,500
+1/28/2026,Potato Red,KG,30,25,28.25
+1/28/2026,Onion Dry (Indian),KG,44,42,43
+1/28/2026,Carrot(Local),KG,50,40,45
+1/28/2026,Cabbage(Local),KG,70,55,61.67
+1/28/2026,Cauli Local,KG,70,60,63.75
+1/28/2026,Raddish White(Local),KG,15,10,12.5
+1/28/2026,French Bean(Local),KG,120,90,105
+1/28/2026,Pumpkin,KG,50,40,45
+1/28/2026,Spinach Leaf,KG,70,50,60
+1/28/2026,Mushroom(Kanya),KG,100,70,80
+1/28/2026,Mushroom(Button),KG,400,350,375
+1/28/2026,Apple(Jholey),KG,280,220,250
+1/28/2026,Apple(Fuji),KG,330,280,305
+1/28/2026,Banana,Per Dozen,160,140,150
+1/28/2026,Orange(Nepali),KG,180,140,165
+1/28/2026,Water Melon(Green),KG,90,80,85
+1/28/2026,Cucumber(Local),KG,70,60,63.33
+1/28/2026,Papaya(Nepali),KG,70,60,65
+1/28/2026,Strawberry,KG,550,450,500
+1/27/2026,Potato Red,KG,30,25,27
+1/27/2026,Onion Dry (Indian),KG,45,43,44
+1/27/2026,Carrot(Local),KG,60,45,52.5
+1/27/2026,Cabbage(Local),KG,70,60,65
+1/27/2026,Cauli Local,KG,65,55,61.25
+1/27/2026,Raddish White(Local),KG,18,12,15
+1/27/2026,French Bean(Local),KG,100,90,95
+1/27/2026,Pumpkin,KG,50,40,45
+1/27/2026,Spinach Leaf,KG,80,70,75
+1/27/2026,Mushroom(Kanya),KG,100,70,85
+1/27/2026,Mushroom(Button),KG,400,350,375
+1/27/2026,Apple(Jholey),KG,280,220,250
+1/27/2026,Apple(Fuji),KG,330,280,305
+1/27/2026,Banana,Per Dozen,160,140,150
+1/27/2026,Orange(Nepali),KG,180,140,163.33
+1/27/2026,Water Melon(Green),KG,90,80,85
+1/27/2026,Cucumber(Local),KG,75,60,66.25
+1/27/2026,Papaya(Nepali),KG,70,60,65
+1/27/2026,Strawberry,KG,550,450,500
+1/26/2026,Potato Red,KG,30,24,27.14
+1/26/2026,Onion Dry (Indian),KG,45,43,44.2
+1/26/2026,Carrot(Local),KG,60,50,55
+1/26/2026,Cabbage(Local),KG,70,60,65
+1/26/2026,Cauli Local,KG,70,60,65
+1/26/2026,Raddish White(Local),KG,16,12,14
+1/26/2026,French Bean(Local),KG,120,100,110
+1/26/2026,Pumpkin,KG,50,40,45
+1/26/2026,Spinach Leaf,KG,80,70,75
+1/26/2026,Mushroom(Kanya),KG,100,70,85
+1/26/2026,Mushroom(Button),KG,450,400,425
+1/26/2026,Apple(Jholey),KG,280,220,250
+1/26/2026,Apple(Fuji),KG,330,280,305
+1/26/2026,Banana,Per Dozen,160,140,150
+1/26/2026,Orange(Nepali),KG,180,140,160
+1/26/2026,Water Melon(Green),KG,90,80,85
+1/26/2026,Cucumber(Local),KG,80,60,70
+1/26/2026,Papaya(Nepali),KG,70,60,65
+1/26/2026,Strawberry,KG,550,450,500
+1/25/2026,Potato Red,KG,30,24,26.3
+1/25/2026,Onion Dry (Indian),KG,44,42,43
+1/25/2026,Carrot(Local),KG,60,50,55
+1/25/2026,Cabbage(Local),KG,65,50,57.5
+1/25/2026,Cauli Local,KG,65,55,60
+1/25/2026,Raddish White(Local),KG,16,12,14
+1/25/2026,French Bean(Local),KG,120,100,108
+1/25/2026,Pumpkin,KG,50,40,45
+1/25/2026,Spinach Leaf,KG,70,60,65
+1/25/2026,Mustard Leaf,KG,40,30,35
+1/25/2026,Mushroom(Kanya),KG,100,70,87.5
+1/25/2026,Mushroom(Button),KG,420,370,395
+1/25/2026,Apple(Jholey),KG,280,220,250
+1/25/2026,Apple(Fuji),KG,330,280,305
+1/25/2026,Banana,Per Dozen,160,140,150
+1/25/2026,Orange(Nepali),KG,180,140,165
+1/25/2026,Water Melon(Green),KG,100,90,95
+1/25/2026,Cucumber(Local),KG,80,65,75
+1/25/2026,Papaya(Nepali),KG,70,60,65
+1/25/2026,Strawberry,KG,550,450,500
+1/24/2026,Potato Red,KG,30,26,28
+1/24/2026,Onion Dry (Indian),KG,43,42,42.5
+1/24/2026,Carrot(Local),KG,60,50,55
+1/24/2026,Cabbage(Local),KG,60,50,55
+1/24/2026,Cauli Local,KG,65,55,60
+1/24/2026,Raddish White(Local),KG,15,12,13.5
+1/24/2026,French Bean(Local),KG,110,100,105
+1/24/2026,Pumpkin,KG,55,45,50
+1/24/2026,Spinach Leaf,KG,80,60,70
+1/24/2026,Mustard Leaf,KG,40,30,35
+1/24/2026,Mushroom(Kanya),KG,120,90,105
+1/24/2026,Mushroom(Button),KG,400,370,385
+1/24/2026,Apple(Jholey),KG,280,220,250
+1/24/2026,Apple(Fuji),KG,350,280,315
+1/24/2026,Banana,Per Dozen,160,140,150
+1/24/2026,Orange(Nepali),KG,170,140,155
+1/24/2026,Water Melon(Green),KG,100,90,95
+1/24/2026,Cucumber(Local),KG,90,75,83.75
+1/24/2026,Papaya(Nepali),KG,70,60,65
+1/24/2026,Strawberry,KG,550,450,500
+1/23/2026,Potato Red,KG,30,26,28
+1/23/2026,Onion Dry (Indian),KG,45,42,43.6
+1/23/2026,Carrot(Local),KG,60,50,56.25
+1/23/2026,Cabbage(Local),KG,60,50,55
+1/23/2026,Cauli Local,KG,65,55,60
+1/23/2026,Raddish White(Local),KG,16,12,14.25
+1/23/2026,French Bean(Local),KG,120,100,110
+1/23/2026,Pumpkin,KG,55,45,50
+1/23/2026,Spinach Leaf,KG,80,60,72.5
+1/23/2026,Mustard Leaf,KG,40,30,36.25
+1/23/2026,Mushroom(Kanya),KG,110,90,100
+1/23/2026,Mushroom(Button),KG,450,400,425
+1/23/2026,Apple(Jholey),KG,280,220,250
+1/23/2026,Apple(Fuji),KG,350,280,312.5
+1/23/2026,Banana,Per Dozen,180,140,157.5
+1/23/2026,Orange(Nepali),KG,170,140,155
+1/23/2026,Water Melon(Green),KG,100,90,95
+1/23/2026,Cucumber(Local),KG,100,80,86
+1/23/2026,Papaya(Nepali),KG,70,60,65
+1/23/2026,Strawberry,KG,550,450,500
+1/22/2026,Tomato Big(Nepali),KG,80,70,75
+1/22/2026,Potato Red,KG,30,26,29
+1/22/2026,Onion Dry (Indian),KG,45,42,43.8
+1/22/2026,Carrot(Local),KG,60,50,55
+1/22/2026,Cabbage(Local),KG,60,50,55
+1/22/2026,Cauli Local,KG,70,50,60
+1/22/2026,Raddish White(Local),KG,15,10,12.75
+1/22/2026,French Bean(Local),KG,120,100,108.75
+1/22/2026,Pumpkin,KG,55,45,51.25
+1/22/2026,Spinach Leaf,KG,80,60,70
+1/22/2026,Mustard Leaf,KG,45,35,40
+1/22/2026,Mushroom(Kanya),KG,100,80,90
+1/22/2026,Mushroom(Button),KG,500,450,475
+1/22/2026,Apple(Jholey),KG,280,220,250
+1/22/2026,Apple(Fuji),KG,350,280,315
+1/22/2026,Banana,Per Dozen,180,140,157.5
+1/22/2026,Orange(Nepali),KG,165,130,147.5
+1/22/2026,Water Melon(Green),KG,100,90,95
+1/22/2026,Cucumber(Local),KG,100,80,93.33
+1/22/2026,Papaya(Nepali),KG,70,50,60
+1/22/2026,Strawberry,KG,500,450,475
+1/21/2026,Potato Red,KG,31,26,27.86
+1/21/2026,Onion Dry (Indian),KG,44,42,43
+1/21/2026,Carrot(Local),KG,60,50,55
+1/21/2026,Cabbage(Local),KG,60,50,53.75
+1/21/2026,Cauli Local,KG,70,50,60
+1/21/2026,Raddish White(Local),KG,18,12,15
+1/21/2026,French Bean(Local),KG,130,115,122.5
+1/21/2026,Pumpkin,KG,55,45,51.25
+1/21/2026,Spinach Leaf,KG,80,60,70
+1/21/2026,Mustard Leaf,KG,50,40,45
+1/21/2026,Mushroom(Kanya),KG,100,70,87.5
+1/21/2026,Mushroom(Button),KG,500,450,475
+1/21/2026,Apple(Jholey),KG,280,220,250
+1/21/2026,Apple(Fuji),KG,350,280,315
+1/21/2026,Banana,Per Dozen,180,140,160
+1/21/2026,Orange(Nepali),KG,140,110,125
+1/21/2026,Water Melon(Green),KG,100,90,95
+1/21/2026,Cucumber(Local),KG,120,100,110
+1/21/2026,Papaya(Nepali),KG,70,50,60
+1/21/2026,Strawberry,KG,500,450,475
+1/20/2026,Potato Red,KG,32,26,28.86
+1/20/2026,Onion Dry (Indian),KG,44,42,42.83
+1/20/2026,Carrot(Local),KG,70,60,65
+1/20/2026,Cabbage(Local),KG,70,55,61.67
+1/20/2026,Cauli Local,KG,75,60,69
+1/20/2026,Raddish White(Local),KG,18,12,15
+1/20/2026,French Bean(Local),KG,130,110,122
+1/20/2026,Pumpkin,KG,55,45,50
+1/20/2026,Spinach Leaf,KG,80,60,70
+1/20/2026,Mustard Leaf,KG,50,40,45
+1/20/2026,Mushroom(Kanya),KG,100,80,86.67
+1/20/2026,Mushroom(Button),KG,500,450,475
+1/20/2026,Apple(Jholey),KG,280,220,250
+1/20/2026,Apple(Fuji),KG,350,280,315
+1/20/2026,Banana,Per Dozen,180,140,160
+1/20/2026,Orange(Nepali),KG,140,110,125
+1/20/2026,Water Melon(Green),KG,100,90,95
+1/20/2026,Cucumber(Local),KG,120,100,114
+1/20/2026,Papaya(Nepali),KG,70,50,60
+1/20/2026,Strawberry,KG,500,450,475
+1/19/2026,Potato Red,KG,32,28,30.75
+1/19/2026,Onion Dry (Indian),KG,45,43,43.67
+1/19/2026,Carrot(Local),KG,70,60,65
+1/19/2026,Cabbage(Local),KG,70,55,62.5
+1/19/2026,Cauli Local,KG,110,90,95
+1/19/2026,Raddish White(Local),KG,20,15,17.5
+1/19/2026,French Bean(Local),KG,130,110,120
+1/19/2026,Pumpkin,KG,55,45,50
+1/19/2026,Spinach Leaf,KG,80,60,70
+1/19/2026,Mustard Leaf,KG,50,40,45
+1/19/2026,Mushroom(Kanya),KG,120,80,100
+1/19/2026,Mushroom(Button),KG,500,450,475
+1/19/2026,Apple(Jholey),KG,280,220,250
+1/19/2026,Apple(Fuji),KG,350,280,315
+1/19/2026,Banana,Per Dozen,180,140,160
+1/19/2026,Orange(Nepali),KG,140,110,125
+1/19/2026,Water Melon(Green),KG,100,90,95
+1/19/2026,Cucumber(Local),KG,130,110,119
+1/19/2026,Papaya(Nepali),KG,70,50,60
+1/19/2026,Strawberry,KG,500,450,475
+1/18/2026,Potato Red,KG,31,26,28
+1/18/2026,Onion Dry (Indian),KG,45,43,43.75
+1/18/2026,Carrot(Local),KG,70,60,66.67
+1/18/2026,Cabbage(Local),KG,70,60,65
+1/18/2026,Cauli Local,KG,100,80,90
+1/18/2026,Raddish White(Local),KG,22,15,18.5
+1/18/2026,French Bean(Local),KG,140,120,130
+1/18/2026,Pumpkin,KG,55,45,50
+1/18/2026,Spinach Leaf,KG,80,60,70
+1/18/2026,Mustard Leaf,KG,50,40,45
+1/18/2026,Mushroom(Kanya),KG,130,100,110
+1/18/2026,Mushroom(Button),KG,450,400,430
+1/18/2026,Apple(Jholey),KG,280,220,250
+1/18/2026,Apple(Fuji),KG,350,280,315
+1/18/2026,Banana,Per Dozen,180,140,160
+1/18/2026,Orange(Nepali),KG,140,110,125
+1/18/2026,Water Melon(Green),KG,100,90,95
+1/18/2026,Cucumber(Local),KG,140,120,132.5
+1/18/2026,Papaya(Nepali),KG,70,50,60
+1/18/2026,Strawberry,KG,500,450,475
+1/17/2026,Potato Red,KG,32,28,30.33
+1/17/2026,Onion Dry (Indian),KG,45,42,43.8
+1/17/2026,Carrot(Local),KG,80,70,73.33
+1/17/2026,Cabbage(Local),KG,80,60,70
+1/17/2026,Cauli Local,KG,120,90,102.5
+1/17/2026,Raddish White(Local),KG,20,15,17.33
+1/17/2026,French Bean(Local),KG,140,120,130
+1/17/2026,Pumpkin,KG,50,40,45
+1/17/2026,Spinach Leaf,KG,80,60,70
+1/17/2026,Mustard Leaf,KG,50,40,45
+1/17/2026,Mushroom(Kanya),KG,130,100,110
+1/17/2026,Mushroom(Button),KG,450,400,425
+1/17/2026,Apple(Jholey),KG,280,220,250
+1/17/2026,Apple(Fuji),KG,350,280,315
+1/17/2026,Banana,Per Dozen,180,140,160
+1/17/2026,Orange(Nepali),KG,140,110,125
+1/17/2026,Water Melon(Green),KG,100,90,95
+1/17/2026,Cucumber(Local),KG,140,120,130
+1/17/2026,Papaya(Nepali),KG,70,50,60
+1/17/2026,Strawberry,KG,500,450,475
+1/16/2026,Potato Red,KG,32,28,30
+1/16/2026,Onion Dry (Indian),KG,46,44,44.8
+1/16/2026,Carrot(Local),KG,70,60,65
+1/16/2026,Cabbage(Local),KG,80,60,70
+1/16/2026,Cauli Local,KG,120,100,107.5
+1/16/2026,Raddish White(Local),KG,22,17,19.25
+1/16/2026,French Bean(Local),KG,140,120,128
+1/16/2026,Pumpkin,KG,50,40,44
+1/16/2026,Spinach Leaf,KG,80,60,70
+1/16/2026,Mustard Leaf,KG,50,40,45
+1/16/2026,Mushroom(Kanya),KG,140,110,126
+1/16/2026,Mushroom(Button),KG,400,350,366
+1/16/2026,Apple(Jholey),KG,280,220,247.5
+1/16/2026,Apple(Fuji),KG,350,280,315
+1/16/2026,Banana,Per Dozen,180,140,160
+1/16/2026,Orange(Nepali),KG,140,110,125
+1/16/2026,Water Melon(Green),KG,100,90,95
+1/16/2026,Cucumber(Local),KG,150,125,139
+1/16/2026,Papaya(Nepali),KG,70,50,62
+1/16/2026,Strawberry,KG,500,450,475
+1/15/2026,Tomato Big(Nepali),KG,90,80,85
+1/15/2026,Potato Red,KG,32,28,30
+1/15/2026,Onion Dry (Indian),KG,46,44,45
+1/15/2026,Carrot(Local),KG,75,65,70
+1/15/2026,Cabbage(Local),KG,65,55,59
+1/15/2026,Cauli Local,KG,100,90,96.25
+1/15/2026,Raddish White(Local),KG,20,15,17.67
+1/15/2026,French Bean(Local),KG,150,130,142
+1/15/2026,Pumpkin,KG,40,30,35
+1/15/2026,Spinach Leaf,KG,80,60,72.5
+1/15/2026,Mustard Leaf,KG,50,40,45
+1/15/2026,Mushroom(Kanya),KG,150,130,140
+1/15/2026,Mushroom(Button),KG,480,430,460
+1/15/2026,Apple(Jholey),KG,280,220,250
+1/15/2026,Apple(Fuji),KG,350,280,315
+1/15/2026,Banana,Per Dozen,200,150,176.67
+1/15/2026,Orange(Nepali),KG,140,100,122.5
+1/15/2026,Water Melon(Green),KG,100,90,95
+1/15/2026,Cucumber(Local),KG,150,125,137
+1/15/2026,Papaya(Nepali),KG,70,50,60
+1/15/2026,Strawberry,KG,500,450,475
+1/14/2026,Potato Red,KG,32,28,30
+1/14/2026,Onion Dry (Indian),KG,45,43,44.25
+1/14/2026,Carrot(Local),KG,80,70,75
+1/14/2026,Cabbage(Local),KG,60,48,55.33
+1/14/2026,Cauli Local,KG,110,90,97.5
+1/14/2026,Raddish White(Local),KG,20,15,17.5
+1/14/2026,French Bean(Local),KG,140,140,140
+1/14/2026,Pumpkin,KG,40,30,35
+1/14/2026,Spinach Leaf,KG,80,60,70
+1/14/2026,Mustard Leaf,KG,50,40,45
+1/14/2026,Mushroom(Kanya),KG,160,140,150
+1/14/2026,Mushroom(Button),KG,420,380,400
+1/14/2026,Apple(Jholey),KG,280,220,250
+1/14/2026,Apple(Fuji),KG,350,280,315
+1/14/2026,Banana,Per Dozen,200,150,175
+1/14/2026,Orange(Nepali),KG,145,110,127.5
+1/14/2026,Water Melon(Green),KG,100,90,95
+1/14/2026,Cucumber(Local),KG,160,140,147.5
+1/14/2026,Papaya(Nepali),KG,70,50,60
+1/14/2026,Strawberry,KG,500,450,475
+1/13/2026,Potato Red,KG,30,25,27.67
+1/13/2026,Onion Dry (Indian),KG,47,45,45.8
+1/13/2026,Carrot(Local),KG,80,70,75
+1/13/2026,Cabbage(Local),KG,65,55,58.33
+1/13/2026,Cauli Local,KG,110,95,101.67
+1/13/2026,Raddish White(Local),KG,20,15,17.5
+1/13/2026,French Bean(Local),KG,150,130,140
+1/13/2026,Pumpkin,KG,40,30,35
+1/13/2026,Spinach Leaf,KG,80,60,70
+1/13/2026,Mustard Leaf,KG,50,40,45
+1/13/2026,Mushroom(Kanya),KG,180,150,165
+1/13/2026,Mushroom(Button),KG,400,350,375
+1/13/2026,Apple(Jholey),KG,280,220,250
+1/13/2026,Apple(Fuji),KG,350,280,315
+1/13/2026,Banana,Per Dozen,200,150,175
+1/13/2026,Orange(Nepali),KG,145,110,127.5
+1/13/2026,Water Melon(Green),KG,100,90,95
+1/13/2026,Cucumber(Local),KG,140,120,126.67
+1/13/2026,Papaya(Nepali),KG,70,50,60
+1/13/2026,Strawberry,KG,500,450,475
+1/11/2026,Tomato Big(Nepali),KG,110,100,105
+1/11/2026,Potato Red,KG,32,28,30.5
+1/11/2026,Onion Dry (Indian),KG,48,45,46.83
+1/11/2026,Carrot(Local),KG,80,65,72.5
+1/11/2026,Cabbage(Local),KG,55,45,50
+1/11/2026,Cauli Local,KG,100,85,92.5
+1/11/2026,Raddish White(Local),KG,20,15,17.5
+1/11/2026,French Bean(Local),KG,150,140,143.33
+1/11/2026,Pumpkin,KG,40,35,37.5
+1/11/2026,Spinach Leaf,KG,80,60,70
+1/11/2026,Mustard Leaf,KG,50,40,45
+1/11/2026,Mushroom(Kanya),KG,180,140,156.67
+1/11/2026,Mushroom(Button),KG,420,370,395
+1/11/2026,Apple(Jholey),KG,280,220,250
+1/11/2026,Apple(Fuji),KG,350,280,315
+1/11/2026,Banana,Per Dozen,200,150,175
+1/11/2026,Orange(Nepali),KG,140,100,120
+1/11/2026,Water Melon(Green),KG,100,90,95
+1/11/2026,Cucumber(Local),KG,120,100,107.5
+1/11/2026,Papaya(Nepali),KG,70,60,65
+1/10/2026,Tomato Big(Nepali),KG,110,100,105
+1/10/2026,Potato Red,KG,32,28,30.6
+1/10/2026,Onion Dry (Indian),KG,48,46,47.2
+1/10/2026,Carrot(Local),KG,80,70,73.33
+1/10/2026,Cabbage(Local),KG,55,45,50
+1/10/2026,Cauli Local,KG,90,80,85
+1/10/2026,Raddish White(Local),KG,20,15,17.5
+1/10/2026,French Bean(Local),KG,130,120,123.33
+1/10/2026,Pumpkin,KG,40,30,35
+1/10/2026,Spinach Leaf,KG,80,60,70
+1/10/2026,Mustard Leaf,KG,50,40,45
+1/10/2026,Mushroom(Kanya),KG,160,130,145
+1/10/2026,Mushroom(Button),KG,450,400,425
+1/10/2026,Apple(Jholey),KG,280,220,250
+1/10/2026,Apple(Fuji),KG,350,280,315
+1/10/2026,Banana,Per Dozen,200,150,175
+1/10/2026,Orange(Nepali),KG,140,100,120
+1/10/2026,Water Melon(Green),KG,100,90,95
+1/10/2026,Cucumber(Local),KG,110,100,105
+1/10/2026,Papaya(Nepali),KG,70,60,65
+1/10/2026,Strawberry,KG,500,450,475
+1/9/2026,Tomato Big(Nepali),KG,110,100,105
+1/9/2026,Potato Red,KG,32,26,29.83
+1/9/2026,Onion Dry (Indian),KG,48,45,46.75
+1/9/2026,Carrot(Local),KG,70,60,65
+1/9/2026,Cabbage(Local),KG,55,45,50
+1/9/2026,Cauli Local,KG,90,75,83.75
+1/9/2026,Raddish White(Local),KG,20,15,17.5
+1/9/2026,French Bean(Local),KG,120,110,113.33
+1/9/2026,Pumpkin,KG,40,30,35
+1/9/2026,Spinach Leaf,KG,80,60,70
+1/9/2026,Mustard Leaf,KG,50,40,45
+1/9/2026,Mushroom(Kanya),KG,160,130,145
+1/9/2026,Mushroom(Button),KG,450,400,425
+1/9/2026,Apple(Jholey),KG,280,220,250
+1/9/2026,Apple(Fuji),KG,350,280,315
+1/9/2026,Banana,Per Dozen,200,150,175
+1/9/2026,Orange(Nepali),KG,140,100,116.67
+1/9/2026,Water Melon(Green),KG,100,90,95
+1/9/2026,Cucumber(Local),KG,110,90,102.5
+1/9/2026,Papaya(Nepali),KG,70,60,65
+1/9/2026,Strawberry,KG,500,450,475
+1/8/2026,Tomato Big(Nepali),KG,110,100,105
+1/8/2026,Potato Red,KG,32,28,30.17
+1/8/2026,Onion Dry (Indian),KG,49,46,47
+1/8/2026,Carrot(Local),KG,75,60,67.5
+1/8/2026,Cabbage(Local),KG,55,45,50
+1/8/2026,Cauli Local,KG,75,60,67
+1/8/2026,Raddish White(Local),KG,20,15,17.5
+1/8/2026,French Bean(Local),KG,140,120,130
+1/8/2026,Pumpkin,KG,40,30,35
+1/8/2026,Spinach Leaf,KG,80,60,70
+1/8/2026,Mustard Leaf,KG,50,40,45
+1/8/2026,Mushroom(Kanya),KG,150,120,135
+1/8/2026,Mushroom(Button),KG,400,350,375
+1/8/2026,Apple(Jholey),KG,280,220,250
+1/8/2026,Apple(Fuji),KG,350,280,315
+1/8/2026,Banana,Per Dozen,200,150,175
+1/8/2026,Orange(Nepali),KG,150,110,130
+1/8/2026,Water Melon(Green),KG,100,90,95
+1/8/2026,Cucumber(Local),KG,120,100,110
+1/8/2026,Papaya(Nepali),KG,70,60,65
+1/8/2026,Strawberry,KG,500,450,475
+1/7/2026,Tomato Big(Nepali),KG,120,100,110
+1/7/2026,Potato Red,KG,32,27,29.83
+1/7/2026,Onion Dry (Indian),KG,50,47,48.6
+1/7/2026,Carrot(Local),KG,80,60,70
+1/7/2026,Cabbage(Local),KG,55,45,50
+1/7/2026,Cauli Local,KG,70,60,65
+1/7/2026,Raddish White(Local),KG,20,15,17.5
+1/7/2026,French Bean(Local),KG,140,110,125
+1/7/2026,Pumpkin,KG,40,30,35
+1/7/2026,Spinach Leaf,KG,80,60,70
+1/7/2026,Mustard Leaf,KG,50,40,45
+1/7/2026,Mushroom(Kanya),KG,150,120,132.5
+1/7/2026,Mushroom(Button),KG,370,330,350
+1/7/2026,Apple(Jholey),KG,280,220,250
+1/7/2026,Apple(Fuji),KG,350,280,315
+1/7/2026,Banana,Per Dozen,200,150,175
+1/7/2026,Grapes(Green),KG,220,200,210
+1/7/2026,Orange(Nepali),KG,150,110,130
+1/7/2026,Water Melon(Green),KG,100,90,95
+1/7/2026,Cucumber(Local),KG,125,100,111.67
+1/7/2026,Papaya(Nepali),KG,90,80,85
+1/7/2026,Strawberry,KG,500,450,475
+1/6/2026,Tomato Big(Nepali),KG,120,100,110
+1/6/2026,Potato Red,KG,32,27,29.75
+1/6/2026,Onion Dry (Indian),KG,50,48,49
+1/6/2026,Carrot(Local),KG,70,60,65
+1/6/2026,Cabbage(Local),KG,55,45,50
+1/6/2026,Cauli Local,KG,70,60,65
+1/6/2026,Raddish White(Local),KG,20,15,17.5
+1/6/2026,French Bean(Local),KG,140,120,130
+1/6/2026,Pumpkin,KG,40,30,35
+1/6/2026,Spinach Leaf,KG,80,60,70
+1/6/2026,Mustard Leaf,KG,50,40,45
+1/6/2026,Mushroom(Kanya),KG,140,120,132
+1/6/2026,Mushroom(Button),KG,400,350,375
+1/6/2026,Apple(Jholey),KG,280,220,250
+1/6/2026,Apple(Fuji),KG,350,280,315
+1/6/2026,Banana,Per Dozen,200,150,175
+1/6/2026,Grapes(Green),KG,220,200,210
+1/6/2026,Orange(Nepali),KG,150,110,134
+1/6/2026,Water Melon(Green),KG,100,90,95
+1/6/2026,Cucumber(Local),KG,120,100,107.5
+1/6/2026,Papaya(Nepali),KG,90,80,85
+1/6/2026,Strawberry,KG,500,450,475
+1/5/2026,Tomato Big(Nepali),KG,120,100,110
+1/5/2026,Potato Red,KG,31,27,29.3
+1/5/2026,Onion Dry (Indian),KG,52,50,51
+1/5/2026,Carrot(Local),KG,70,60,65
+1/5/2026,Cabbage(Local),KG,50,37,43.5
+1/5/2026,Cauli Local,KG,70,60,64.17
+1/5/2026,Raddish White(Local),KG,20,15,17.5
+1/5/2026,French Bean(Local),KG,140,120,126.67
+1/5/2026,Pumpkin,KG,40,30,35
+1/5/2026,Spinach Leaf,KG,80,60,70
+1/5/2026,Mustard Leaf,KG,50,40,45
+1/5/2026,Mushroom(Kanya),KG,140,100,124
+1/5/2026,Mushroom(Button),KG,430,390,406.67
+1/5/2026,Apple(Jholey),KG,280,220,250
+1/5/2026,Apple(Fuji),KG,350,280,315
+1/5/2026,Banana,Per Dozen,200,150,175
+1/5/2026,Grapes(Green),KG,220,200,210
+1/5/2026,Orange(Nepali),KG,140,90,115
+1/5/2026,Water Melon(Green),KG,100,90,95
+1/5/2026,Cucumber(Local),KG,120,100,107.5
+1/5/2026,Papaya(Nepali),KG,90,80,85
+1/5/2026,Strawberry,KG,500,450,475
+1/4/2026,Tomato Big(Nepali),KG,110,100,105
+1/4/2026,Potato Red,KG,32,27,30
+1/4/2026,Onion Dry (Indian),KG,52,50,51
+1/4/2026,Carrot(Local),KG,75,60,67.5
+1/4/2026,Cabbage(Local),KG,45,35,40
+1/4/2026,Cauli Local,KG,70,60,63.75
+1/4/2026,Raddish White(Local),KG,25,15,21.25
+1/4/2026,French Bean(Local),KG,120,100,107.5
+1/4/2026,Pumpkin,KG,40,30,36.25
+1/4/2026,Spinach Leaf,KG,80,60,70
+1/4/2026,Mustard Leaf,KG,50,40,45
+1/4/2026,Mushroom(Kanya),KG,120,90,105
+1/4/2026,Mushroom(Button),KG,400,350,375
+1/4/2026,Apple(Jholey),KG,280,220,250
+1/4/2026,Apple(Fuji),KG,350,280,315
+1/4/2026,Banana,Per Dozen,200,150,175
+1/4/2026,Grapes(Green),KG,220,200,210
+1/4/2026,Orange(Nepali),KG,140,90,115
+1/4/2026,Water Melon(Green),KG,100,90,95
+1/4/2026,Cucumber(Local),KG,120,100,113.33
+1/4/2026,Papaya(Nepali),KG,90,80,85
+1/4/2026,Strawberry,KG,500,450,475
+1/3/2026,Tomato Big(Nepali),KG,120,100,110
+1/3/2026,Potato Red,KG,32,25,29.43
+1/3/2026,Onion Dry (Indian),KG,55,50,52.5
+1/3/2026,Carrot(Local),KG,70,60,66
+1/3/2026,Cabbage(Local),KG,45,35,40
+1/3/2026,Cauli Local,KG,70,50,58.33
+1/3/2026,Raddish White(Local),KG,20,15,17.6
+1/3/2026,French Bean(Local),KG,100,90,96
+1/3/2026,Pumpkin,KG,40,30,35
+1/3/2026,Spinach Leaf,KG,80,60,70
+1/3/2026,Mustard Leaf,KG,50,40,45
+1/3/2026,Mushroom(Kanya),KG,120,90,102.5
+1/3/2026,Mushroom(Button),KG,400,350,375
+1/3/2026,Apple(Jholey),KG,250,200,225
+1/3/2026,Apple(Fuji),KG,350,300,325
+1/3/2026,Banana,Per Dozen,200,180,190
+1/3/2026,Orange(Nepali),KG,110,80,95
+1/3/2026,Water Melon(Green),KG,100,90,95
+1/3/2026,Cucumber(Local),KG,110,90,102.5
+1/3/2026,Papaya(Nepali),KG,70,60,65
+1/3/2026,Strawberry,KG,500,450,475
+1/2/2026,Tomato Big(Nepali),KG,120,100,110
+1/2/2026,Potato Red,KG,32,25,30.14
+1/2/2026,Onion Dry (Indian),KG,55,50,52.5
+1/2/2026,Carrot(Local),KG,80,70,75
+1/2/2026,Cabbage(Local),KG,45,35,40
+1/2/2026,Cauli Local,KG,70,55,61
+1/2/2026,Raddish White(Local),KG,25,16,19.75
+1/2/2026,French Bean(Local),KG,100,80,90
+1/2/2026,Pumpkin,KG,40,30,35
+1/2/2026,Spinach Leaf,KG,70,60,65
+1/2/2026,Mustard Leaf,KG,50,40,45
+1/2/2026,Mushroom(Kanya),KG,120,90,105
+1/2/2026,Mushroom(Button),KG,350,300,325
+1/2/2026,Apple(Jholey),KG,250,200,225
+1/2/2026,Apple(Fuji),KG,350,300,323.33
+1/2/2026,Banana,Per Dozen,200,180,190
+1/2/2026,Orange(Nepali),KG,110,80,95
+1/2/2026,Water Melon(Green),KG,100,90,95
+1/2/2026,Cucumber(Local),KG,110,90,100
+1/2/2026,Papaya(Nepali),KG,70,60,65
+1/2/2026,Strawberry,KG,500,450,475
+1/1/2026,Tomato Big(Nepali),KG,110,100,105
+1/1/2026,Potato Red,KG,35,23,30.14
+1/1/2026,Onion Dry (Indian),KG,55,52,53.5
+1/1/2026,Carrot(Local),KG,80,70,73.33
+1/1/2026,Cabbage(Local),KG,40,30,36.25
+1/1/2026,Cauli Local,KG,60,45,55.33
+1/1/2026,Raddish White(Local),KG,20,15,16.75
+1/1/2026,French Bean(Local),KG,100,80,87.5
+1/1/2026,Pumpkin,KG,40,30,35
+1/1/2026,Spinach Leaf,KG,70,60,65
+1/1/2026,Mustard Leaf,KG,50,40,45
+1/1/2026,Mushroom(Kanya),KG,120,80,101.67
+1/1/2026,Mushroom(Button),KG,380,320,346.67
+1/1/2026,Apple(Jholey),KG,250,200,225
+1/1/2026,Apple(Fuji),KG,320,280,300
+1/1/2026,Banana,Per Dozen,200,180,190
+1/1/2026,Orange(Nepali),KG,110,80,95
+1/1/2026,Water Melon(Green),KG,100,90,95
+1/1/2026,Cucumber(Local),KG,100,90,95
+1/1/2026,Papaya(Nepali),KG,70,60,65
+1/1/2026,Strawberry,KG,500,450,475
+2/12/2026,Potato Red,KG,30,26,28
+2/12/2026,Onion Dry (Indian),KG,38,36,37
+2/12/2026,Carrot(Local),KG,60,50,55
+2/12/2026,Cabbage(Local),KG,52,42,47
+2/12/2026,Cauli Local,KG,28,20,24
+2/12/2026,Raddish White(Local),KG,16,12,14
+2/12/2026,French Bean(Local),KG,130,110,120
+2/12/2026,Pumpkin,KG,50,40,45
+2/12/2026,Spinach Leaf,KG,40,20,30
+2/12/2026,Mustard Leaf,KG,25,15,21.25
+2/12/2026,Mushroom(Kanya),KG,110,80,92.5
+2/12/2026,Mushroom(Button),KG,400,350,367.5
+2/12/2026,Apple(Jholey),KG,250,200,225
+2/12/2026,Apple(Fuji),KG,320,280,300
+2/12/2026,Banana,Per Dozen,190,170,180
+2/12/2026,Grapes(Green),KG,240,200,220
+2/12/2026,Grapes(Black),KG,400,350,375
+2/12/2026,Orange(Nepali),KG,180,140,160
+2/12/2026,Water Melon(Green),KG,90,80,85
+2/12/2026,Cucumber(Local),KG,170,120,145.56
+2/12/2026,Papaya(Nepali),KG,70,60,65
+2/12/2026,Strawberry,KG,550,450,500

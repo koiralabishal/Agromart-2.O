@@ -1,0 +1,141 @@
+date,vegetable,predicted_price
+2026-02-13,Apple(Fuji),305.39
+2026-02-14,Apple(Fuji),305.37
+2026-02-15,Apple(Fuji),305.22
+2026-02-16,Apple(Fuji),304.57
+2026-02-17,Apple(Fuji),303.43
+2026-02-18,Apple(Fuji),300.49
+2026-02-19,Apple(Fuji),300.47
+2026-02-13,Apple(Jholey),244.77
+2026-02-14,Apple(Jholey),243.2
+2026-02-15,Apple(Jholey),234.89
+2026-02-16,Apple(Jholey),229.29
+2026-02-17,Apple(Jholey),225.35
+2026-02-18,Apple(Jholey),225.33
+2026-02-19,Apple(Jholey),225.32
+2026-02-13,Banana,149.57
+2026-02-14,Banana,149.94
+2026-02-15,Banana,159.7
+2026-02-16,Banana,160.07
+2026-02-17,Banana,169.65
+2026-02-18,Banana,169.52
+2026-02-19,Banana,179.92
+2026-02-13,Cabbage(Local),60.27
+2026-02-14,Cabbage(Local),57.79
+2026-02-15,Cabbage(Local),54.01
+2026-02-16,Cabbage(Local),53.01
+2026-02-17,Cabbage(Local),51.63
+2026-02-18,Cabbage(Local),48.08
+2026-02-19,Cabbage(Local),46.9
+2026-02-13,Carrot(Local),47.98
+2026-02-14,Carrot(Local),48.1
+2026-02-15,Carrot(Local),48.08
+2026-02-16,Carrot(Local),50.28
+2026-02-17,Carrot(Local),52.83
+2026-02-18,Carrot(Local),53.79
+2026-02-19,Carrot(Local),55.1
+2026-02-13,Cauli Local,51.47
+2026-02-14,Cauli Local,45.28
+2026-02-15,Cauli Local,39.81
+2026-02-16,Cauli Local,33.48
+2026-02-17,Cauli Local,29.89
+2026-02-18,Cauli Local,26.25
+2026-02-19,Cauli Local,24.15
+2026-02-13,Cucumber(Local),71.55
+2026-02-14,Cucumber(Local),80.63
+2026-02-15,Cucumber(Local),91.33
+2026-02-16,Cucumber(Local),102.28
+2026-02-17,Cucumber(Local),120.37
+2026-02-18,Cucumber(Local),128.66
+2026-02-19,Cucumber(Local),147.0
+2026-02-13,French Bean(Local),102.1
+2026-02-14,French Bean(Local),109.99
+2026-02-15,French Bean(Local),109.81
+2026-02-16,French Bean(Local),110.96
+2026-02-17,French Bean(Local),111.06
+2026-02-18,French Bean(Local),111.06
+2026-02-19,French Bean(Local),119.83
+2026-02-13,Mushroom(Button),354.52
+2026-02-14,Mushroom(Button),350.04
+2026-02-15,Mushroom(Button),350.04
+2026-02-16,Mushroom(Button),349.94
+2026-02-17,Mushroom(Button),354.51
+2026-02-18,Mushroom(Button),357.93
+2026-02-19,Mushroom(Button),375.6
+2026-02-13,Mushroom(Kanya),82.11
+2026-02-14,Mushroom(Kanya),82.21
+2026-02-15,Mushroom(Kanya),82.61
+2026-02-16,Mushroom(Kanya),84.51
+2026-02-17,Mushroom(Kanya),84.51
+2026-02-18,Mushroom(Kanya),85.93
+2026-02-19,Mushroom(Kanya),91.73
+2026-02-13,Mustard Leaf,36.17
+2026-02-14,Mustard Leaf,31.72
+2026-02-15,Mustard Leaf,28.09
+2026-02-16,Mustard Leaf,26.73
+2026-02-17,Mustard Leaf,23.14
+2026-02-18,Mustard Leaf,20.59
+2026-02-19,Mustard Leaf,19.64
+2026-02-13,Onion Dry (Indian),41.43
+2026-02-14,Onion Dry (Indian),39.82
+2026-02-15,Onion Dry (Indian),38.82
+2026-02-16,Onion Dry (Indian),38.89
+2026-02-17,Onion Dry (Indian),37.85
+2026-02-18,Onion Dry (Indian),36.94
+2026-02-19,Onion Dry (Indian),36.94
+2026-02-13,Orange(Nepali),158.59
+2026-02-14,Orange(Nepali),158.54
+2026-02-15,Orange(Nepali),158.75
+2026-02-16,Orange(Nepali),158.72
+2026-02-17,Orange(Nepali),158.65
+2026-02-18,Orange(Nepali),158.73
+2026-02-19,Orange(Nepali),158.55
+2026-02-13,Papaya(Nepali),65.24
+2026-02-14,Papaya(Nepali),65.21
+2026-02-15,Papaya(Nepali),65.08
+2026-02-16,Papaya(Nepali),65.25
+2026-02-17,Papaya(Nepali),65.25
+2026-02-18,Papaya(Nepali),65.25
+2026-02-19,Papaya(Nepali),65.25
+2026-02-13,Potato Red,27.63
+2026-02-14,Potato Red,27.59
+2026-02-15,Potato Red,27.56
+2026-02-16,Potato Red,27.6
+2026-02-17,Potato Red,27.59
+2026-02-18,Potato Red,27.6
+2026-02-19,Potato Red,27.62
+2026-02-13,Pumpkin,45.1
+2026-02-14,Pumpkin,45.08
+2026-02-15,Pumpkin,45.01
+2026-02-16,Pumpkin,45.1
+2026-02-17,Pumpkin,45.1
+2026-02-18,Pumpkin,45.1
+2026-02-19,Pumpkin,45.1
+2026-02-13,Raddish White(Local),12.5
+2026-02-14,Raddish White(Local),12.5
+2026-02-15,Raddish White(Local),12.43
+2026-02-16,Raddish White(Local),12.47
+2026-02-17,Raddish White(Local),12.47
+2026-02-18,Raddish White(Local),12.47
+2026-02-19,Raddish White(Local),14.03
+2026-02-13,Spinach Leaf,57.46
+2026-02-14,Spinach Leaf,49.72
+2026-02-15,Spinach Leaf,45.06
+2026-02-16,Spinach Leaf,41.14
+2026-02-17,Spinach Leaf,34.93
+2026-02-18,Spinach Leaf,29.98
+2026-02-19,Spinach Leaf,29.95
+2026-02-13,Strawberry,500.76
+2026-02-14,Strawberry,500.76
+2026-02-15,Strawberry,500.57
+2026-02-16,Strawberry,500.63
+2026-02-17,Strawberry,500.59
+2026-02-18,Strawberry,500.59
+2026-02-19,Strawberry,500.65
+2026-02-13,Water Melon(Green),85.24
+2026-02-14,Water Melon(Green),85.24
+2026-02-15,Water Melon(Green),84.98
+2026-02-16,Water Melon(Green),85.24
+2026-02-17,Water Melon(Green),85.25
+2026-02-18,Water Melon(Green),85.24
+2026-02-19,Water Melon(Green),85.27
