@@ -9,6 +9,7 @@ import {
   FaClipboardList,
   FaArchive,
   FaTimesCircle,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import "./Styles/OrderDetailView.css";
 
@@ -21,6 +22,9 @@ import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
 import StockOrderModal from "../../Common/StockOrderModal";
 import StockSuccessModal from "../../Common/StockSuccessModal";
+import DisputeModal from "../../Common/DisputeModal";
+import { toast } from "react-toastify";
+import { generateInvoice } from "../../../utils/invoiceGenerator";
 
 const OrderDetailView = ({
   order,
@@ -30,7 +34,7 @@ const OrderDetailView = ({
   onInventoryRedirect,
 }) => {
   const [currentStatus, setCurrentStatus] = useState(
-    order?.status || "Pending"
+    order?.status || "Pending",
   );
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [confModal, setConfModal] = useState({
@@ -46,6 +50,8 @@ const OrderDetailView = ({
   const [isStockingLoading, setIsStockingLoading] = useState(false);
   const [showStockSuccess, setShowStockSuccess] = useState(false);
   const [stockedProductsList, setStockedProductsList] = useState([]);
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isDisputeLoading, setIsDisputeLoading] = useState(false);
 
   // Sync internal state with prop changes (for real-time socket updates)
   React.useEffect(() => {
@@ -145,7 +151,7 @@ const OrderDetailView = ({
         if (cachedOrders) {
           const orders = JSON.parse(cachedOrders);
           const updatedOrders = orders.map((o) =>
-            o._id === order._id ? { ...o, paymentStatus: "Paid" } : o
+            o._id === order._id ? { ...o, paymentStatus: "Paid" } : o,
           );
           sessionStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
         }
@@ -180,7 +186,7 @@ const OrderDetailView = ({
       if (cachedOrders) {
         const orders = JSON.parse(cachedOrders);
         const updatedOrders = orders.map((o) =>
-          o._id === order._id ? { ...o, status: status } : o
+          o._id === order._id ? { ...o, status: status } : o,
         );
         sessionStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
       }
@@ -207,34 +213,80 @@ const OrderDetailView = ({
       await api.post("/inventory/stock-order", {
         orderId: order._id,
         items: stockedItems,
-        userID
+        userID,
       });
 
       setIsStockModalOpen(false);
       if (onOrderUpdate) {
         onOrderUpdate({ ...order, isStocked: true });
       }
-      
+
       // Update Cache
-      const cacheKey = orderType === "received" ? "collectorOrdersReceived" : "collectorOrdersPlaced";
+      const cacheKey =
+        orderType === "received"
+          ? "collectorOrdersReceived"
+          : "collectorOrdersPlaced";
       const cachedOrders = sessionStorage.getItem(cacheKey);
       if (cachedOrders) {
         const orders = JSON.parse(cachedOrders);
-        const updatedOrders = orders.map(o => o._id === order._id ? { ...o, isStocked: true } : o);
+        const updatedOrders = orders.map((o) =>
+          o._id === order._id ? { ...o, isStocked: true } : o,
+        );
         sessionStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
       }
 
-      setStockedProductsList(stockedItems.map(item => ({
-        name: item.productName,
-        quantity: item.quantity,
-        unit: item.unit
-      })));
+      setStockedProductsList(
+        stockedItems.map((item) => ({
+          name: item.productName,
+          quantity: item.quantity,
+          unit: item.unit,
+        })),
+      );
       setShowStockSuccess(true);
     } catch (error) {
       console.error("Error stocking items:", error);
-      alert(error.response?.data?.message || "Failed to add items to inventory");
+      alert(
+        error.response?.data?.message || "Failed to add items to inventory",
+      );
     } finally {
       setIsStockingLoading(false);
+    }
+  };
+
+  const handleDisputeConfirm = async (disputeData) => {
+    try {
+      setIsDisputeLoading(true);
+      const formData = new FormData();
+
+      Object.keys(disputeData).forEach((key) => {
+        if (key === "evidenceDocuments") {
+          disputeData[key].forEach((file) => {
+            formData.append("evidenceDocuments", file);
+          });
+        } else {
+          formData.append(key, disputeData[key] || "");
+        }
+      });
+
+      formData.append("orderID", order.orderID);
+      if (!formData.has("sellerID")) {
+        formData.append(
+          "sellerID",
+          orderType === "received" ? buyer?._id || "" : seller?._id || "",
+        );
+      }
+
+      await api.post("/disputes", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Dispute raised successfully! Admin will review it.");
+      setIsDisputeModalOpen(false);
+    } catch (error) {
+      console.error("Error raising dispute:", error);
+      toast.error(error.response?.data?.message || "Failed to raise dispute");
+    } finally {
+      setIsDisputeLoading(false);
     }
   };
 
@@ -258,7 +310,7 @@ const OrderDetailView = ({
   // Price calculations
   const subtotal = order.products.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
   const deliveryFee = 5.0;
   const discount = 0;
@@ -274,6 +326,14 @@ const OrderDetailView = ({
             title="Back to Orders"
           />
           <h2>Order {order.orderID}</h2>
+
+          <button
+            className="odv-dispute-btn"
+            onClick={() => setIsDisputeModalOpen(true)}
+            title="Report a problem"
+          >
+            <FaExclamationCircle /> Raise Dispute
+          </button>
 
           <div className="odv-status-dropdown-container">
             <div
@@ -383,7 +443,24 @@ const OrderDetailView = ({
                 <FaBox /> Add to Inventory
               </button>
             )}
-          <button className="download-invoice-btn">
+          <button
+            className="download-invoice-btn"
+            onClick={async () =>
+              await generateInvoice(
+                order,
+                {
+                  ...seller,
+                  businessName: sellerBusiness,
+                  address: sellerAddress,
+                },
+                {
+                  ...buyer,
+                  businessName: buyerBusiness,
+                  address: buyerAddress,
+                },
+              )
+            }
+          >
             <FaDownload /> Download Invoice
           </button>
         </div>
@@ -602,8 +679,8 @@ const OrderDetailView = ({
                         ].includes(currentStatus)
                           ? "completed"
                           : currentStatus === "Pending"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -613,12 +690,12 @@ const OrderDetailView = ({
                         <div
                           className={`track-line ${
                             ["Processing", "Shipping", "Delivered"].includes(
-                              currentStatus
+                              currentStatus,
                             )
                               ? "line-completed"
                               : currentStatus === "Accepted"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -631,12 +708,12 @@ const OrderDetailView = ({
                     <div
                       className={`track-step ${
                         ["Processing", "Shipping", "Delivered"].includes(
-                          currentStatus
+                          currentStatus,
                         )
                           ? "completed"
                           : currentStatus === "Accepted"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -648,8 +725,8 @@ const OrderDetailView = ({
                             ["Shipping", "Delivered"].includes(currentStatus)
                               ? "line-completed"
                               : currentStatus === "Processing"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -664,8 +741,8 @@ const OrderDetailView = ({
                         ["Shipping", "Delivered"].includes(currentStatus)
                           ? "completed"
                           : currentStatus === "Processing"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -677,8 +754,8 @@ const OrderDetailView = ({
                             currentStatus === "Delivered"
                               ? "line-completed"
                               : currentStatus === "Shipping"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -693,8 +770,8 @@ const OrderDetailView = ({
                         currentStatus === "Delivered"
                           ? "completed"
                           : currentStatus === "Shipping"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -749,6 +826,13 @@ const OrderDetailView = ({
           if (onInventoryRedirect) onInventoryRedirect();
         }}
         products={stockedProductsList}
+      />
+      <DisputeModal
+        isOpen={isDisputeModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        onConfirm={handleDisputeConfirm}
+        orderID={order.orderID}
+        isLoading={isDisputeLoading}
       />
     </div>
   );

@@ -742,3 +742,28 @@
     font-size: 0.8rem;
   }
 }
+
+.odv-dispute-btn {
+  background: white;
+  color: #f43f5e;
+  border: 1.5px solid #fecdd3;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.odv-dispute-btn:hover {
+  background: #fff1f2;
+  border-color: #f43f5e;
+  transform: translateY(-1px);
+}
+
+.odv-dispute-btn svg {
+  font-size: 1rem;
+}

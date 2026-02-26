@@ -1,141 +1,141 @@
 date,vegetable,predicted_price
-2026-02-25,Apple(Fuji),304.82
-2026-02-26,Apple(Fuji),305.0
-2026-02-27,Apple(Fuji),305.09
-2026-02-28,Apple(Fuji),304.04
-2026-03-01,Apple(Fuji),300.3
-2026-03-02,Apple(Fuji),300.38
+2026-02-26,Apple(Fuji),304.99
+2026-02-27,Apple(Fuji),305.39
+2026-02-28,Apple(Fuji),305.06
+2026-03-01,Apple(Fuji),303.89
+2026-03-02,Apple(Fuji),300.28
 2026-03-03,Apple(Fuji),300.37
-2026-02-25,Apple(Jholey),243.37
-2026-02-26,Apple(Jholey),235.12
-2026-02-27,Apple(Jholey),229.41
-2026-02-28,Apple(Jholey),225.28
-2026-03-01,Apple(Jholey),225.12
+2026-03-04,Apple(Fuji),300.47
+2026-02-26,Apple(Jholey),243.39
+2026-02-27,Apple(Jholey),235.1
+2026-02-28,Apple(Jholey),229.36
+2026-03-01,Apple(Jholey),225.14
 2026-03-02,Apple(Jholey),225.19
 2026-03-03,Apple(Jholey),225.22
-2026-02-25,Banana,149.58
-2026-02-26,Banana,159.97
+2026-03-04,Apple(Jholey),225.24
+2026-02-26,Banana,149.57
 2026-02-27,Banana,159.97
-2026-02-28,Banana,169.59
+2026-02-28,Banana,159.95
 2026-03-01,Banana,169.43
-2026-03-02,Banana,179.94
-2026-03-03,Banana,179.98
-2026-02-25,Cabbage(Local),57.69
-2026-02-26,Cabbage(Local),54.12
-2026-02-27,Cabbage(Local),52.98
-2026-02-28,Cabbage(Local),51.61
-2026-03-01,Cabbage(Local),47.97
-2026-03-02,Cabbage(Local),46.86
-2026-03-03,Cabbage(Local),46.93
-2026-02-25,Carrot(Local),47.98
-2026-02-26,Carrot(Local),48.16
-2026-02-27,Carrot(Local),50.28
-2026-02-28,Carrot(Local),52.82
-2026-03-01,Carrot(Local),53.65
-2026-03-02,Carrot(Local),55.06
+2026-03-02,Banana,169.34
+2026-03-03,Banana,179.95
+2026-03-04,Banana,180.0
+2026-02-26,Cabbage(Local),57.69
+2026-02-27,Cabbage(Local),54.11
+2026-02-28,Cabbage(Local),52.96
+2026-03-01,Cabbage(Local),51.48
+2026-03-02,Cabbage(Local),48.04
+2026-03-03,Cabbage(Local),46.86
+2026-03-04,Cabbage(Local),46.93
+2026-02-26,Carrot(Local),47.98
+2026-02-27,Carrot(Local),48.16
+2026-02-28,Carrot(Local),50.27
+2026-03-01,Carrot(Local),52.7
+2026-03-02,Carrot(Local),53.74
 2026-03-03,Carrot(Local),55.06
-2026-02-25,Cauli Local,45.01
-2026-02-26,Cauli Local,39.82
-2026-02-27,Cauli Local,33.48
-2026-02-28,Cauli Local,29.87
-2026-03-01,Cauli Local,26.17
-2026-03-02,Cauli Local,24.13
+2026-03-04,Carrot(Local),55.06
+2026-02-26,Cauli Local,45.01
+2026-02-27,Cauli Local,39.82
+2026-02-28,Cauli Local,33.48
+2026-03-01,Cauli Local,29.82
+2026-03-02,Cauli Local,26.2
 2026-03-03,Cauli Local,24.13
-2026-02-25,Cucumber(Local),80.78
-2026-02-26,Cucumber(Local),91.56
-2026-02-27,Cucumber(Local),102.18
-2026-02-28,Cucumber(Local),120.31
-2026-03-01,Cucumber(Local),128.19
-2026-03-02,Cucumber(Local),147.17
-2026-03-03,Cucumber(Local),147.43
-2026-02-25,French Bean(Local),110.11
-2026-02-26,French Bean(Local),110.11
-2026-02-27,French Bean(Local),111.07
-2026-02-28,French Bean(Local),111.09
+2026-03-04,Cauli Local,24.14
+2026-02-26,Cucumber(Local),80.78
+2026-02-27,Cucumber(Local),91.49
+2026-02-28,Cucumber(Local),102.18
+2026-03-01,Cucumber(Local),120.21
+2026-03-02,Cucumber(Local),128.57
+2026-03-03,Cucumber(Local),147.09
+2026-03-04,Cucumber(Local),147.39
+2026-02-26,French Bean(Local),110.1
+2026-02-27,French Bean(Local),110.1
+2026-02-28,French Bean(Local),111.06
 2026-03-01,French Bean(Local),110.96
-2026-03-02,French Bean(Local),119.82
-2026-03-03,French Bean(Local),119.84
-2026-02-25,Mushroom(Button),350.11
-2026-02-26,Mushroom(Button),350.14
-2026-02-27,Mushroom(Button),350.21
-2026-02-28,Mushroom(Button),354.74
-2026-03-01,Mushroom(Button),358.51
-2026-03-02,Mushroom(Button),375.38
-2026-03-03,Mushroom(Button),375.31
-2026-02-25,Mushroom(Kanya),82.28
-2026-02-26,Mushroom(Kanya),82.86
-2026-02-27,Mushroom(Kanya),84.52
-2026-02-28,Mushroom(Kanya),84.5
-2026-03-01,Mushroom(Kanya),85.76
-2026-03-02,Mushroom(Kanya),91.69
-2026-03-03,Mushroom(Kanya),91.73
-2026-02-25,Mustard Leaf,31.63
-2026-02-26,Mustard Leaf,28.15
-2026-02-27,Mustard Leaf,26.72
-2026-02-28,Mustard Leaf,23.13
-2026-03-01,Mustard Leaf,20.5
-2026-03-02,Mustard Leaf,19.63
+2026-03-02,French Bean(Local),111.04
+2026-03-03,French Bean(Local),119.82
+2026-03-04,French Bean(Local),119.86
+2026-02-26,Mushroom(Button),350.24
+2026-02-27,Mushroom(Button),350.11
+2026-02-28,Mushroom(Button),350.2
+2026-03-01,Mushroom(Button),355.18
+2026-03-02,Mushroom(Button),358.18
+2026-03-03,Mushroom(Button),375.39
+2026-03-04,Mushroom(Button),375.27
+2026-02-26,Mushroom(Kanya),82.28
+2026-02-27,Mushroom(Kanya),82.77
+2026-02-28,Mushroom(Kanya),84.53
+2026-03-01,Mushroom(Kanya),84.35
+2026-03-02,Mushroom(Kanya),85.91
+2026-03-03,Mushroom(Kanya),91.69
+2026-03-04,Mushroom(Kanya),91.73
+2026-02-26,Mustard Leaf,31.63
+2026-02-27,Mustard Leaf,28.14
+2026-02-28,Mustard Leaf,26.72
+2026-03-01,Mustard Leaf,23.08
+2026-03-02,Mustard Leaf,20.57
 2026-03-03,Mustard Leaf,19.63
-2026-02-25,Onion Dry (Indian),39.83
-2026-02-26,Onion Dry (Indian),38.89
+2026-03-04,Mustard Leaf,19.63
+2026-02-26,Onion Dry (Indian),39.83
 2026-02-27,Onion Dry (Indian),38.89
-2026-02-28,Onion Dry (Indian),37.85
-2026-03-01,Onion Dry (Indian),36.85
+2026-02-28,Onion Dry (Indian),38.88
+2026-03-01,Onion Dry (Indian),37.77
 2026-03-02,Onion Dry (Indian),36.91
 2026-03-03,Onion Dry (Indian),36.91
-2026-02-25,Orange(Nepali),158.58
-2026-02-26,Orange(Nepali),158.76
-2026-02-27,Orange(Nepali),158.84
-2026-02-28,Orange(Nepali),158.7
-2026-03-01,Orange(Nepali),158.67
-2026-03-02,Orange(Nepali),158.41
-2026-03-03,Orange(Nepali),158.39
-2026-02-25,Papaya(Nepali),65.25
+2026-03-04,Onion Dry (Indian),36.91
+2026-02-26,Orange(Nepali),158.57
+2026-02-27,Orange(Nepali),158.76
+2026-02-28,Orange(Nepali),158.83
+2026-03-01,Orange(Nepali),158.66
+2026-03-02,Orange(Nepali),158.55
+2026-03-03,Orange(Nepali),158.48
+2026-03-04,Orange(Nepali),158.42
 2026-02-26,Papaya(Nepali),65.25
 2026-02-27,Papaya(Nepali),65.24
 2026-02-28,Papaya(Nepali),65.21
 2026-03-01,Papaya(Nepali),65.08
 2026-03-02,Papaya(Nepali),65.25
 2026-03-03,Papaya(Nepali),65.25
-2026-02-25,Potato Red,27.63
-2026-02-26,Potato Red,27.61
+2026-03-04,Papaya(Nepali),65.25
+2026-02-26,Potato Red,27.63
 2026-02-27,Potato Red,27.6
-2026-02-28,Potato Red,27.59
+2026-02-28,Potato Red,27.6
 2026-03-01,Potato Red,27.54
-2026-03-02,Potato Red,27.61
+2026-03-02,Potato Red,27.58
 2026-03-03,Potato Red,27.61
-2026-02-25,Pumpkin,45.1
+2026-03-04,Potato Red,27.61
 2026-02-26,Pumpkin,45.1
 2026-02-27,Pumpkin,45.1
 2026-02-28,Pumpkin,45.08
 2026-03-01,Pumpkin,44.98
 2026-03-02,Pumpkin,45.07
 2026-03-03,Pumpkin,45.07
-2026-02-25,Raddish White(Local),12.5
+2026-03-04,Pumpkin,45.06
 2026-02-26,Raddish White(Local),12.5
 2026-02-27,Raddish White(Local),12.5
 2026-02-28,Raddish White(Local),12.5
 2026-03-01,Raddish White(Local),12.42
-2026-03-02,Raddish White(Local),14.02
-2026-03-03,Raddish White(Local),14.03
-2026-02-25,Spinach Leaf,49.3
-2026-02-26,Spinach Leaf,45.18
-2026-02-27,Spinach Leaf,41.11
-2026-02-28,Spinach Leaf,34.93
-2026-03-01,Spinach Leaf,29.75
+2026-03-02,Raddish White(Local),12.46
+2026-03-03,Raddish White(Local),14.02
+2026-03-04,Raddish White(Local),14.03
+2026-02-26,Spinach Leaf,49.3
+2026-02-27,Spinach Leaf,45.18
+2026-02-28,Spinach Leaf,41.1
+2026-03-01,Spinach Leaf,34.71
 2026-03-02,Spinach Leaf,29.89
 2026-03-03,Spinach Leaf,29.89
-2026-02-25,Strawberry,500.65
+2026-03-04,Spinach Leaf,29.89
 2026-02-26,Strawberry,500.71
 2026-02-27,Strawberry,500.76
-2026-02-28,Strawberry,500.73
+2026-02-28,Strawberry,500.76
 2026-03-01,Strawberry,500.41
 2026-03-02,Strawberry,500.42
 2026-03-03,Strawberry,500.44
-2026-02-25,Water Melon(Green),85.27
+2026-03-04,Strawberry,500.42
 2026-02-26,Water Melon(Green),85.27
 2026-02-27,Water Melon(Green),85.24
 2026-02-28,Water Melon(Green),85.24
 2026-03-01,Water Melon(Green),84.97
 2026-03-02,Water Melon(Green),85.23
-2026-03-03,Water Melon(Green),85.29
+2026-03-03,Water Melon(Green),85.24
+2026-03-04,Water Melon(Green),85.26

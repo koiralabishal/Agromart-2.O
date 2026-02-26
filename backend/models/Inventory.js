@@ -50,6 +50,18 @@ const inventorySchema = new mongoose.Schema(
       default: "Available",
       enum: ["Available", "Out of Stock"],
     },
+    lowStockThreshold: {
+      type: Number,
+      default: 20,
+    },
+    lowStockNotified: {
+      type: Boolean,
+      default: false,
+    },
+    outOfStockNotified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -58,12 +70,20 @@ const inventorySchema = new mongoose.Schema(
   }
 );
 
-// Business Rule: Automatically update availableStatus based on quantity
+// Business Rule: Automatically update availableStatus and reset notification flags
 inventorySchema.pre("save", function () {
   if (this.quantity === 0) {
     this.availableStatus = "Out of Stock";
   } else {
     this.availableStatus = "Available";
+  }
+
+  // If quantity is above threshold, reset notification flags for future alerts
+  if (this.quantity > this.lowStockThreshold) {
+    this.lowStockNotified = false;
+  }
+  if (this.quantity > 0) {
+    this.outOfStockNotified = false;
   }
 });
 

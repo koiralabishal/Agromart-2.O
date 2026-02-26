@@ -12,7 +12,7 @@ import {
   TbReportMoney,
   TbChartBar,
 } from "react-icons/tb";
-import api from "../../../api/axiosConfig";
+import api from "../../api/axiosConfig";
 import "./Styles/RecommendedPricePopup.css";
 
 const RecommendedPricePopup = ({ isOpen, onClose, onConfirm, productName }) => {

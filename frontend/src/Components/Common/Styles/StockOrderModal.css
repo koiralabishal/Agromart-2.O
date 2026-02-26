@@ -18,14 +18,22 @@
   width: 100%;
   max-width: 700px;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   animation: som-slide-up 0.3s ease-out;
 }
 
 @keyframes som-slide-up {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .som-header {
@@ -130,7 +138,9 @@
   border: 1.5px solid #e5e7eb;
   border-radius: 8px;
   transition: all 0.2s;
-  width: 140px;
+  width: 170px; /* Increased to accommodate recommendation button */
+  position: relative;
+  overflow: hidden;
 }
 
 .som-input-group:focus-within {
@@ -153,11 +163,88 @@
 .som-input-group input {
   border: none;
   background: none;
-  width: 100%;
-  padding: 8px 0;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
   outline: none;
   font-weight: 600;
   color: #111827;
+}
+
+/* Chrome, Safari, Edge, Opera */
+.som-input-group input::-webkit-outer-spin-button,
+.som-input-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.som-input-group input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.som-recommend-btn {
+  background: linear-gradient(135deg, #1dc956 0%, #16a34a 100%);
+  border: none;
+  color: white;
+  font-size: 0.85rem;
+  padding: 0 12px;
+  margin: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(29, 201, 86, 0.2);
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.som-recommend-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.som-recommend-btn:hover::before {
+  left: 100%;
+}
+
+.som-btn-text {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.som-recommend-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(29, 201, 86, 0.3);
+  filter: brightness(1.1);
+}
+
+.som-recommend-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.som-recommend-btn:disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
 }
 
 .som-footer {

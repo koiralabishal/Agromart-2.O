@@ -4,7 +4,10 @@ const disputeSchema = new mongoose.Schema(
   {
     orderID: {
       type: String, // AGRM-XXXX
-      required: true,
+      required: false, // Optional if it's a withdrawal dispute
+    },
+    withdrawalID: {
+      type: String, // Link to withdrawal request ID
     },
     transactionUUID: {
       type: String, // Link to payment
@@ -26,6 +29,8 @@ const disputeSchema = new mongoose.Schema(
         "Damaged Product",
         "Wrong Item",
         "Payment Issue",
+        "Withdrawal Failure",
+        "Incorrect Amount",
         "Other",
       ],
     },

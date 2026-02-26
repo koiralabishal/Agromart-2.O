@@ -9,6 +9,7 @@ import {
   FaClipboardList,
   FaArchive,
   FaTimesCircle,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import "./Styles/OrderDetailView.css";
 
@@ -20,10 +21,13 @@ import carrotImg from "../../../assets/products/cabbage.jpeg"; // placeholder
 
 import api from "../../../api/axiosConfig";
 import ConfirmationModal from "../../Common/ConfirmationModal";
+import DisputeModal from "../../Common/DisputeModal";
+import { toast } from "react-toastify";
+import { generateInvoice } from "../../../utils/invoiceGenerator";
 
 const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
   const [currentStatus, setCurrentStatus] = useState(
-    order?.status || "Pending"
+    order?.status || "Pending",
   );
   const [isStatusOpen, setIsStatusOpen] = useState(false);
 
@@ -40,6 +44,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
     title: "",
     message: "",
   });
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isDisputeLoading, setIsDisputeLoading] = useState(false);
 
   if (!order) return null;
 
@@ -53,7 +59,11 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
   ];
 
   const getDisabledStatus = (status) => {
-    if (currentStatus === "Canceled" || currentStatus === "Delivered" || currentStatus === "Rejected")
+    if (
+      currentStatus === "Canceled" ||
+      currentStatus === "Delivered" ||
+      currentStatus === "Rejected"
+    )
       return true; // Terminal states
 
     const hierarchy = {
@@ -118,11 +128,11 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
       if (cachedOrders) {
         const orders = JSON.parse(cachedOrders);
         const updatedOrders = orders.map((o) =>
-          o._id === order._id ? { ...o, status: status } : o
+          o._id === order._id ? { ...o, status: status } : o,
         );
         sessionStorage.setItem(
           "farmerOrdersReceived",
-          JSON.stringify(updatedOrders)
+          JSON.stringify(updatedOrders),
         );
       }
       const savedOrderDetail = sessionStorage.getItem("selectedOrder");
@@ -136,6 +146,40 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
     } catch (error) {
       console.error("Error updating status:", error);
       alert("Failed to update status");
+    }
+  };
+
+  const handleDisputeConfirm = async (disputeData) => {
+    try {
+      setIsDisputeLoading(true);
+      const formData = new FormData();
+
+      Object.keys(disputeData).forEach((key) => {
+        if (key === "evidenceDocuments") {
+          disputeData[key].forEach((file) => {
+            formData.append("evidenceDocuments", file);
+          });
+        } else {
+          formData.append(key, disputeData[key] || "");
+        }
+      });
+
+      formData.append("orderID", order.orderID);
+      if (!formData.has("sellerID")) {
+        formData.append("sellerID", buyer?._id || "");
+      }
+
+      await api.post("/disputes", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Dispute raised successfully! Admin will review it.");
+      setIsDisputeModalOpen(false);
+    } catch (error) {
+      console.error("Error raising dispute:", error);
+      toast.error(error.response?.data?.message || "Failed to raise dispute");
+    } finally {
+      setIsDisputeLoading(false);
     }
   };
 
@@ -159,7 +203,7 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
   // Price calculations
   const subtotal = order.products.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
   const deliveryFee = 5.0;
   const discount = 0;
@@ -176,6 +220,14 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
           />
           <h2>Order {order.orderID}</h2>
 
+          <button
+            className="odv-dispute-btn"
+            onClick={() => setIsDisputeModalOpen(true)}
+            title="Report a problem"
+          >
+            <FaExclamationCircle /> Raise Dispute
+          </button>
+
           <div className="odv-status-dropdown-container">
             <div
               className={`odv-status-badge interactable status-${currentStatus.toLowerCase()} ${
@@ -186,7 +238,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
               }
             >
               {currentStatus}{" "}
-              {currentStatus !== "Delivered" && currentStatus !== "Canceled" && <FaChevronDown size={10} />}
+              {currentStatus !== "Delivered" &&
+                currentStatus !== "Canceled" && <FaChevronDown size={10} />}
             </div>
             {isStatusOpen && (
               <div className="odv-status-options">
@@ -207,7 +260,20 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
             )}
           </div>
         </div>
-        <button className="download-invoice-btn">
+        <button
+          className="download-invoice-btn"
+          onClick={async () =>
+            await generateInvoice(
+              order,
+              {
+                ...seller,
+                businessName: sellerBusiness,
+                address: sellerAddress,
+              },
+              { ...buyer, businessName: buyerBusiness, address: buyerAddress },
+            )
+          }
+        >
           <FaDownload /> Download Invoice
         </button>
       </div>
@@ -422,7 +488,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                   </div>
                 </div>
 
-                {currentStatus === "Canceled" || currentStatus === "Rejected" ? (
+                {currentStatus === "Canceled" ||
+                currentStatus === "Rejected" ? (
                   <div className="track-step rejected">
                     <div className="track-checkpoint">
                       <div className="checkpoint-icon">
@@ -430,9 +497,7 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                       </div>
                     </div>
                     <div className="track-info">
-                      <span className="track-title">
-                        Order {currentStatus}
-                      </span>
+                      <span className="track-title">Order {currentStatus}</span>
                     </div>
                   </div>
                 ) : (
@@ -440,11 +505,16 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                     {/* Step 2: Accepted */}
                     <div
                       className={`track-step ${
-                        ["Accepted", "Processing", "Shipping", "Delivered"].includes(currentStatus)
+                        [
+                          "Accepted",
+                          "Processing",
+                          "Shipping",
+                          "Delivered",
+                        ].includes(currentStatus)
                           ? "completed"
                           : currentStatus === "Pending"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -453,11 +523,13 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                         </div>
                         <div
                           className={`track-line ${
-                            ["Processing", "Shipping", "Delivered"].includes(currentStatus)
+                            ["Processing", "Shipping", "Delivered"].includes(
+                              currentStatus,
+                            )
                               ? "line-completed"
                               : currentStatus === "Accepted"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -469,11 +541,13 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                     {/* Step 3: Processing */}
                     <div
                       className={`track-step ${
-                        ["Processing", "Shipping", "Delivered"].includes(currentStatus)
+                        ["Processing", "Shipping", "Delivered"].includes(
+                          currentStatus,
+                        )
                           ? "completed"
                           : currentStatus === "Accepted"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -485,8 +559,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                             ["Shipping", "Delivered"].includes(currentStatus)
                               ? "line-completed"
                               : currentStatus === "Processing"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -501,8 +575,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                         ["Shipping", "Delivered"].includes(currentStatus)
                           ? "completed"
                           : currentStatus === "Processing"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -514,8 +588,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                             currentStatus === "Delivered"
                               ? "line-completed"
                               : currentStatus === "Shipping"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -530,8 +604,8 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
                         currentStatus === "Delivered"
                           ? "completed"
                           : currentStatus === "Shipping"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -564,6 +638,13 @@ const OrderDetailView = ({ order, onBack, onOrderUpdate }) => {
         type={confModal.type}
         confirmText={`Yes, ${confModal.newStatus}`}
         cancelText="No, Keep"
+      />
+      <DisputeModal
+        isOpen={isDisputeModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        onConfirm={handleDisputeConfirm}
+        orderID={order.orderID}
+        isLoading={isDisputeLoading}
       />
     </div>
   );

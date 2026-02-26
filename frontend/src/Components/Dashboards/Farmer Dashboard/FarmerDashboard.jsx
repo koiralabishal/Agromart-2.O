@@ -54,13 +54,17 @@ import "./Styles/FarmerDashboard.css";
 import api from "../../../api/axiosConfig";
 import { useSocket } from "../../../context/SocketContext";
 
+import VerificationWarningModal from "../../Common/VerificationWarningModal";
+
 const FarmerDashboard = () => {
   const socket = useSocket();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState(
     sessionStorage.getItem("farmerActiveView") || "dashboard",
   );
+  const [showVerificationWarning, setShowVerificationWarning] = useState(false);
   const [isChatPopupOpen, setIsChatPopupOpen] = useState(false);
+
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem("user");
@@ -286,6 +290,23 @@ const FarmerDashboard = () => {
     }
   }, [activeView, selectedOrder]);
 
+  // View Navigation Handlers
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    sessionStorage.setItem("selectedOrder", JSON.stringify(order));
+    setActiveView("orderDetail");
+    sessionStorage.setItem("farmerActiveView", "orderDetail");
+  };
+
+  const handleOpenAddProduct = () => {
+    if (user?.docStatus !== "Approved") {
+      setShowVerificationWarning(true);
+    } else {
+      setActiveView("addProduct");
+      sessionStorage.setItem("farmerActiveView", "addProduct");
+    }
+  };
+
   const navigate = useNavigate();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -303,11 +324,6 @@ const FarmerDashboard = () => {
       sessionStorage.removeItem("farmerActiveView");
       navigate("/");
     }
-  };
-
-  const handleViewOrder = (order) => {
-    setSelectedOrder(order);
-    setActiveView("orderDetail");
   };
 
   const handleOrderUpdate = (updatedOrder) => {
@@ -562,18 +578,7 @@ const FarmerDashboard = () => {
             {isSidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
 
-          <div
-            className="fd-icon-btn"
-            onClick={() => setActiveView("notifications")}
-            style={{
-              cursor: "pointer",
-              color: activeView === "notifications" ? "#1dc956" : "inherit",
-              position: "relative",
-            }}
-            title="Notifications"
-          >
-            <FaBell />
-          </div>
+
           <div className="fd-profile-container">
             <img
               src={
@@ -1110,7 +1115,7 @@ const FarmerDashboard = () => {
         )}{" "}
         {activeView === "products" && (
           <ProductManagement
-            onAddProduct={() => setActiveView("addProduct")}
+            onAddProduct={handleOpenAddProduct}
             preFetchedProducts={preFetchedProducts}
           />
         )}
@@ -1161,12 +1166,29 @@ const FarmerDashboard = () => {
       </footer>
 
       {isChatPopupOpen && (
-        <div className="chat-popup-overlay">
+        <div className="chat-popup">
+          <div className="chat-popup-header">
+            <h3>Support</h3>
+            <button
+              className="close-chat-btn"
+              onClick={() => setIsChatPopupOpen(false)}
+            >
+              <FaTimes />
+            </button>
+          </div>
           <div className="chat-popup-content">
-            <ChatView onClose={() => setIsChatPopupOpen(false)} />
+            <ChatView
+              embedded={true}
+              onClose={() => setIsChatPopupOpen(false)}
+            />
           </div>
         </div>
       )}
+
+      <VerificationWarningModal
+        isOpen={showVerificationWarning}
+        onClose={() => setShowVerificationWarning(false)}
+      />
 
       <div
         className="chat-fab-fixed"

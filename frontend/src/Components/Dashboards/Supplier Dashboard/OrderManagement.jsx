@@ -663,6 +663,7 @@ const OrderManagement = ({
           onConfirm={handleStockConfirm}
           order={selectedOrderForStock}
           isLoading={isStockingLoading}
+          enableRecommendation={true}
         />
       )}
       <StockSuccessModal

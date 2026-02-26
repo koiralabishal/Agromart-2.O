@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -24,9 +24,12 @@ import {
   FaShoppingCart,
   FaChartPie,
   FaInbox,
+  FaSpinner,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import "./Styles/DetailedAnalytics.css";
+
+import { generateDualMonthAnalyticsPDF } from "../../../utils/analyticsExport.jsx";
 
 const DetailedAnalytics = ({
   orders = { placed: [] },
@@ -34,6 +37,20 @@ const DetailedAnalytics = ({
   walletData = null,
 }) => {
   const [timeFilter, setTimeFilter] = useState("current"); // "current" or "last"
+  const [isExporting, setIsExporting] = useState(false);
+  const printRef = useRef(null);
+
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      await generateDualMonthAnalyticsPDF(printRef, setTimeFilter, timeFilter);
+    } catch (err) {
+      console.error("Error exporting PDF:", err);
+      alert("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const filteredOrders = useMemo(() => {
     const now = new Date();
@@ -215,8 +232,8 @@ const DetailedAnalytics = ({
   }, [orderList, timeFilter]);
 
   return (
-    <div className="detailed-analytics">
-      <div className="da-header">
+    <div className="detailed-analytics" ref={printRef}>
+      <div className="da-header" data-html2canvas-ignore>
         <h1>Analytics Overview</h1>
         <div className="da-actions">
           <button
@@ -231,8 +248,13 @@ const DetailedAnalytics = ({
           >
             <FaRegCalendarAlt /> Last Month
           </button>
-          <button className="da-btn da-white">
-            <FaDownload /> Export
+          <button 
+            className="da-btn da-white" 
+            onClick={handleExportPDF}
+            disabled={isExporting}
+          >
+            {isExporting ? <FaSpinner className="spin" /> : <FaDownload />} 
+            {isExporting ? "Exporting..." : "Export"}
           </button>
         </div>
       </div>

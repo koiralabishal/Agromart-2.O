@@ -408,3 +408,26 @@
 .modal-close-btn:hover {
   background: #1a252f;
 }
+
+.pv-dispute-btn {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.pv-dispute-btn:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  transform: scale(1.1);
+}
+
+.pv-dispute-btn svg {
+  font-size: 1.1rem;
+}

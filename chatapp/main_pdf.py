@@ -51,7 +51,7 @@ client = genai.Client(api_key=API_KEY)
 
 # Model configuration
 EMBEDDING_MODEL = "text-embedding-004"
-GENERATION_MODEL = "gemini-2.0-flash"
+GENERATION_MODEL = "gemini-3-flash-preview"
 
 class ChatRequest(BaseModel):
     message: str
@@ -197,4 +197,4 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     # Using port 8001 to avoid conflict with the MongoDB backend
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

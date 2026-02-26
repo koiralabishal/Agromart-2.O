@@ -57,9 +57,12 @@ import "./Styles/CollectorDashboard.css";
 import api from "../../../api/axiosConfig";
 import { useSocket } from "../../../context/SocketContext";
 
+import VerificationWarningModal from "../../Common/VerificationWarningModal";
+
 const CollectorDashboard = () => {
   const socket = useSocket();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showVerificationWarning, setShowVerificationWarning] = useState(false);
   const [activeView, setActiveView] = useState(
     sessionStorage.getItem("collectorActiveView") || "dashboard",
   );
@@ -477,6 +480,14 @@ const CollectorDashboard = () => {
     setActiveView("farmerProduct");
   };
 
+  const handleOpenAddInventory = () => {
+    if (user?.docStatus !== "Approved") {
+      setShowVerificationWarning(true);
+    } else {
+      setInventorySubView("add");
+    }
+  };
+
   // --- Unified Dashboard Logic ---
 
   // 1. Transactions Logic (Merging Ledger + Orders for real-time clarity)
@@ -824,19 +835,7 @@ const CollectorDashboard = () => {
             )}
           </div>
 
-          <div
-            className="cd-icon-btn"
-            onClick={() => setActiveView("notifications")}
-            style={{
-              cursor: "pointer",
-              color: activeView === "notifications" ? "#1dc956" : "inherit",
-              position: "relative",
-            }}
-            title="Notifications"
-          >
-            <FaBell />
-            <span className="notif-counter">2</span>
-          </div>
+
           <div className="cd-profile-container">
             <img
               src={
@@ -1491,7 +1490,7 @@ const CollectorDashboard = () => {
         {activeView === "inventory" &&
           (inventorySubView === "list" ? (
             <InventoryManagement
-              onAddInventory={() => setInventorySubView("add")}
+              onAddInventory={handleOpenAddInventory}
               initialData={ownInventory}
               onRefresh={() => {
                 // Background refresh
@@ -1561,6 +1560,11 @@ const CollectorDashboard = () => {
           <FaFacebookF /> <FaTwitter /> <FaLinkedinIn />
         </div>
       </footer>
+
+      <VerificationWarningModal
+        isOpen={showVerificationWarning}
+        onClose={() => setShowVerificationWarning(false)}
+      />
     </div>
   );
 };

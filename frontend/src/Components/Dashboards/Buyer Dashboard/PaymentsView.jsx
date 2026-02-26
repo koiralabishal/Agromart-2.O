@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaHistory,
-  FaInfoCircle,
-  FaMoneyBillWave,
-  FaClock,
-} from "react-icons/fa";
+import { FaMoneyBillWave, FaClock, FaExclamationCircle } from "react-icons/fa";
 import "./Styles/PaymentsView.css";
 import api from "../../../api/axiosConfig";
 import Pagination from "../../Common/Pagination";
+import DisputeModal from "../../Common/DisputeModal";
+import { toast } from "react-toastify";
 
 const PaymentsView = ({ walletDataProp }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -28,6 +25,9 @@ const PaymentsView = ({ walletDataProp }) => {
   const [loading, setLoading] = useState(!walletData);
   const [currentOnlinePage, setCurrentOnlinePage] = useState(1);
   const [currentCodPage, setCurrentCodPage] = useState(1);
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isDisputeLoading, setIsDisputeLoading] = useState(false);
+  const [disputeTarget, setDisputeTarget] = useState(null);
   const itemsPerPage = 8;
 
   const fetchWalletData = async (isSilent = false) => {
@@ -59,6 +59,47 @@ const PaymentsView = ({ walletDataProp }) => {
       fetchWalletData(!!walletData); // Silent if we have cache or prop
     }
   }, [userID]);
+
+  const handleDisputeConfirm = async (disputeData) => {
+    try {
+      setIsDisputeLoading(true);
+      const formData = new FormData();
+
+      Object.keys(disputeData).forEach((key) => {
+        if (key === "evidenceDocuments") {
+          disputeData[key].forEach((file) => {
+            formData.append("evidenceDocuments", file);
+          });
+        } else {
+          formData.append(key, disputeData[key] || "");
+        }
+      });
+
+      if (disputeTarget) {
+        Object.keys(disputeTarget).forEach((key) => {
+          if (disputeTarget[key] && !formData.has(key)) {
+            formData.append(key, disputeTarget[key]);
+          }
+        });
+      }
+
+      await api.post("/disputes", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Dispute raised successfully! Admin will review it.");
+      setIsDisputeModalOpen(false);
+    } catch (error) {
+      console.error("Error raising dispute:", error);
+      toast.error(error.response?.data?.message || "Failed to raise dispute");
+    } finally {
+      setIsDisputeLoading(false);
+    }
+  };
+
+  const openDisputeModal = (target) => {
+    setDisputeTarget(target);
+    setIsDisputeModalOpen(true);
+  };
 
   if (loading && !walletData) {
     return (
@@ -303,6 +344,13 @@ const PaymentsView = ({ walletDataProp }) => {
           )}
         </div>
       </section>
+      <DisputeModal
+        isOpen={isDisputeModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        onConfirm={handleDisputeConfirm}
+        isLoading={isDisputeLoading}
+        orderID={disputeTarget?.orderID}
+      />
     </div>
   );
 };

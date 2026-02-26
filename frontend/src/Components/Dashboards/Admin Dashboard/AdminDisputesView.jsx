@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import api from "../../../api/axiosConfig";
 import Pagination from "../../Common/Pagination";
 
-
 const AdminDisputesView = ({ cache, onCacheUpdate }) => {
   const [disputes, setDisputes] = useState(cache || []);
   const [loading, setLoading] = useState(!cache);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
 
   useEffect(() => {
     fetchDisputes();
@@ -28,14 +26,18 @@ const AdminDisputesView = ({ cache, onCacheUpdate }) => {
   };
 
   const handleResolve = async (id, action) => {
-    const amount = action === 'Refund' ? prompt("Enter Refund Amount:") : 0;
-    const comments = prompt("Admin Comments:");
-    
+    const isSimple = action === "None";
+    const amount =
+      !isSimple && action === "Refund" ? prompt("Enter Refund Amount:") : 0;
+    const comments = isSimple
+      ? "Dispute resolved by admin"
+      : prompt("Admin Comments:");
+
     try {
       await api.put(`/admin/disputes/${id}/resolve`, {
-          action,
-          refundAmount: amount,
-          adminComments: comments
+        action: isSimple ? "None" : action,
+        refundAmount: amount,
+        adminComments: comments,
       });
       fetchDisputes();
     } catch (err) {
@@ -49,7 +51,6 @@ const AdminDisputesView = ({ cache, onCacheUpdate }) => {
   );
 
   return (
-
     <div className="admin-view-container">
       <h2 className="um-title">Dispute Resolution</h2>
       {loading && !cache ? (
@@ -61,35 +62,78 @@ const AdminDisputesView = ({ cache, onCacheUpdate }) => {
               <tr>
                 <th>ID</th>
                 <th>Raised By</th>
-                <th>Against</th>
                 <th>Reason</th>
+                <th>Evidence</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedDisputes.map(d => (
+              {paginatedDisputes.map((d) => (
                 <tr key={d._id}>
                   <td>{d.orderID}</td>
                   <td>{d.raisedBy?.name}</td>
-                  <td>{d.sellerID?.name}</td>
                   <td>{d.reason}</td>
+                  <td>
+                    {d.evidenceImages && d.evidenceImages.length > 0 ? (
+                      <div className="dm-evidence-thumbs">
+                        {d.evidenceImages.map((img, idx) => (
+                          <a
+                            key={idx}
+                            href={img}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={img}
+                              alt="Evidence"
+                              className="dm-thumb"
+                              title="Click to view full image"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>
+                        No evidence
+                      </span>
+                    )}
+                  </td>
                   <td>{d.status}</td>
                   <td>
-                    {d.status === 'Open' ? (
-                       <>
-                          <button className="um-action-btn" onClick={() => handleResolve(d._id, 'Refund')}>Refund</button>
-                          <button className="um-action-btn btn-delete" onClick={() => handleResolve(d._id, 'Dismissed')}>Dismiss</button>
-                       </>
+                    {d.status === "Open" ? (
+                      <>
+                        <button
+                          className="um-action-btn"
+                          style={{
+                            backgroundColor: "var(--primary-green)",
+                            color: "white",
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            fontWeight: "600",
+                          }}
+                          onClick={() => handleResolve(d._id, "None")}
+                        >
+                          Resolve
+                        </button>
+                      </>
                     ) : (
-                        <span>{d.resolution?.action}</span>
+                      <span style={{ color: "#1dc956", fontWeight: "600" }}>
+                        Resolved
+                      </span>
                     )}
                   </td>
                 </tr>
               ))}
               {disputes.length === 0 && (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center", padding: "2rem" }}>No disputes found.</td>
+                  <td
+                    colSpan="6"
+                    style={{ textAlign: "center", padding: "2rem" }}
+                  >
+                    No disputes found.
+                  </td>
                 </tr>
               )}
             </tbody>

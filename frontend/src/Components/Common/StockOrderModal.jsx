@@ -1,8 +1,16 @@
 import React, { useState } from "react";
-import { FaTimes, FaBox, FaCheckCircle, FaTag } from "react-icons/fa";
+import { FaTimes, FaBox, FaCheckCircle, FaTag, FaRobot } from "react-icons/fa";
+import RecommendedPricePopup from "./RecommendedPricePopup";
 import "./Styles/StockOrderModal.css";
 
-const StockOrderModal = ({ isOpen, onClose, onConfirm, order, isLoading }) => {
+const StockOrderModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  order, 
+  isLoading,
+  enableRecommendation = false 
+}) => {
   const [items, setItems] = useState(
     order?.products.map((p) => ({
       productID: p.productID,
@@ -17,6 +25,7 @@ const StockOrderModal = ({ isOpen, onClose, onConfirm, order, isLoading }) => {
   );
 
   const [errors, setErrors] = useState({});
+  const [recommendationTarget, setRecommendationTarget] = useState(null);
 
   if (!isOpen) return null;
 
@@ -29,6 +38,13 @@ const StockOrderModal = ({ isOpen, onClose, onConfirm, order, isLoading }) => {
       const newErrors = { ...errors };
       delete newErrors[index];
       setErrors(newErrors);
+    }
+  };
+
+  const handleRecommendationConfirm = (price) => {
+    if (recommendationTarget !== null) {
+      handlePriceChange(recommendationTarget, price);
+      setRecommendationTarget(null);
     }
   };
 
@@ -99,6 +115,18 @@ const StockOrderModal = ({ isOpen, onClose, onConfirm, order, isLoading }) => {
                             onChange={(e) => handlePriceChange(index, e.target.value)}
                             disabled={isLoading}
                           />
+                          {enableRecommendation && (
+                            <button
+                              type="button"
+                              className="som-recommend-btn"
+                              title="Get AI Pricing Recommendation"
+                              onClick={() => setRecommendationTarget(index)}
+                              disabled={isLoading}
+                            >
+                              <FaRobot />
+                              <span className="som-btn-text">AI</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -123,6 +151,15 @@ const StockOrderModal = ({ isOpen, onClose, onConfirm, order, isLoading }) => {
           </div>
         </form>
       </div>
+
+      {enableRecommendation && (
+        <RecommendedPricePopup
+          isOpen={recommendationTarget !== null}
+          onClose={() => setRecommendationTarget(null)}
+          onConfirm={handleRecommendationConfirm}
+          productName={recommendationTarget !== null ? items[recommendationTarget].productName : ""}
+        />
+      )}
     </div>
   );
 };

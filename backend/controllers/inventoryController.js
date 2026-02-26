@@ -6,6 +6,35 @@ import DeletedInventory from "../models/DeletedInventory.js";
 import { emitToUser, emitToRole } from "../socket.js";
 import { logActivity } from "../utils/activityLogger.js";
 import { findDuplicateProduct } from "../utils/productInventoryDuplicate.js";
+import { sendStockAlertEmail } from "../utils/emailService.js";
+
+/**
+ * Helper to check stock levels and trigger email alerts
+ * @param {Object} item - The inventory item document
+ */
+const checkAndNotifyStockAlert = async (item) => {
+  try {
+    const user = await User.findById(item.userID);
+    if (!user) return;
+
+    // 1. Check for Out of Stock
+    if (item.quantity === 0 && !item.outOfStockNotified) {
+      await sendStockAlertEmail(item, user, "out_of_stock");
+      item.outOfStockNotified = true;
+      await item.save(); // Persist the notification flag
+      console.log(`>>> Out of Stock notification triggered for ${item.productName}`);
+    } 
+    // 2. Check for Low Stock
+    else if (item.quantity <= item.lowStockThreshold && item.quantity > 0 && !item.lowStockNotified) {
+      await sendStockAlertEmail(item, user, "low_stock");
+      item.lowStockNotified = true;
+      await item.save(); // Persist the notification flag
+      console.log(`>>> Low Stock notification triggered for ${item.productName}`);
+    }
+  } catch (error) {
+    console.error(">>> Error in checkAndNotifyStockAlert:", error.message);
+  }
+};
 
 // @desc    Create a new inventory item
 // @route   POST /api/inventory
@@ -121,6 +150,9 @@ export const createInventory = async (req, res) => {
       type: "INVENTORY_CREATED",
       inventory: createdInventory,
     });
+
+    // Check for stock alerts asynchronously
+    checkAndNotifyStockAlert(createdInventory);
 
     res.status(201).json(createdInventory);
   } catch (error) {
@@ -271,6 +303,9 @@ export const updateInventoryQuantity = async (req, res) => {
       });
     }
 
+    // Check for stock alerts asynchronously
+    checkAndNotifyStockAlert(item);
+
     res.json(item);
   } catch (error) {
     console.error("Error updating inventory quantity:", error);
@@ -345,6 +380,9 @@ export const updateInventory = async (req, res) => {
       },
     });
 
+    // Check for stock alerts asynchronously
+    checkAndNotifyStockAlert(updatedInventory);
+
     res.json(updatedInventory);
   } catch (error) {
     console.error("Error updating inventory:", error);
@@ -417,6 +455,8 @@ export const stockOrderItems = async (req, res) => {
         inventoryItem.price = Number(item.sellingPrice);
         // Note: We deliberately DON'T overwrite description/image with order data to preserve user's catalog
         await inventoryItem.save();
+        // Check for stock alerts
+        checkAndNotifyStockAlert(inventoryItem);
       } else {
         // Create new
         // Fetch the original product/inventory to get the actual description
@@ -454,6 +494,8 @@ export const stockOrderItems = async (req, res) => {
           availableStatus: "Available",
         });
         await newInventoryItem.save();
+        // Check for stock alerts
+        checkAndNotifyStockAlert(newInventoryItem);
         // Add to local array to catch duplicates within the SAME order (e.g. 2x "Tomato" lines)
         existingInventory.push(newInventoryItem);
       }

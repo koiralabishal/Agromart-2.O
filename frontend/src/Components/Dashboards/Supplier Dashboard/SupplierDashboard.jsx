@@ -23,7 +23,6 @@ import {
   FaChartLine,
   FaChartPie,
   FaShoppingBag,
-  FaLightbulb,
 } from "react-icons/fa";
 import { TbCurrencyRupeeNepalese } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +37,6 @@ import SettingsView from "./SettingsView";
 import NotificationsView from "./NotificationsView";
 import PaymentsView from "./PaymentsView";
 import CartView from "./CartView";
-import RecommendationView from "./RecommendationView";
 import {
   LineChart,
   Line,
@@ -59,9 +57,12 @@ import "./Styles/SupplierDashboard.css";
 import api from "../../../api/axiosConfig";
 import { useSocket } from "../../../context/SocketContext";
 
+import VerificationWarningModal from "../../Common/VerificationWarningModal";
+
 const SupplierDashboard = () => {
   const socket = useSocket();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showVerificationWarning, setShowVerificationWarning] = useState(false);
   const [activeView, setActiveView] = useState(
     sessionStorage.getItem("supplierActiveView") || "dashboard",
   );
@@ -464,6 +465,14 @@ const SupplierDashboard = () => {
     setActiveView("collectorProduct");
   };
 
+  const handleOpenAddInventory = () => {
+    if (user?.docStatus !== "Approved") {
+      setShowVerificationWarning(true);
+    } else {
+      setInventorySubView("add");
+    }
+  };
+
   // --- Unified Dashboard Logic ---
 
   // 1. Transactions Logic (Merging Ledger + Orders for real-time clarity)
@@ -762,18 +771,6 @@ const SupplierDashboard = () => {
           </div>
           <div
             className={`sd-nav-item ${
-              activeView === "recommendation" ? "active" : ""
-            }`}
-            onClick={() => {
-              setActiveView("recommendation");
-              setSelectedCollector(null);
-              setIsSidebarOpen(false);
-            }}
-          >
-            <FaLightbulb /> Recommendation
-          </div>
-          <div
-            className={`sd-nav-item ${
               activeView === "inventory" ? "active" : ""
             }`}
             onClick={() => {
@@ -823,19 +820,7 @@ const SupplierDashboard = () => {
             )}
           </div>
 
-          <div
-            className="sd-icon-btn"
-            onClick={() => setActiveView("notifications")}
-            style={{
-              cursor: "pointer",
-              color: activeView === "notifications" ? "#1dc956" : "inherit",
-              position: "relative",
-            }}
-            title="Notifications"
-          >
-            <FaBell />
-            <span className="notif-counter">2</span>
-          </div>
+
           <div className="sd-profile-container">
             <img
               src={
@@ -1491,7 +1476,7 @@ const SupplierDashboard = () => {
         {activeView === "inventory" &&
           (inventorySubView === "list" ? (
             <InventoryManagement
-              onAddInventory={() => setInventorySubView("add")}
+              onAddInventory={handleOpenAddInventory}
               initialData={ownInventory}
               onRefresh={() => {
                 // Background refresh
@@ -1538,7 +1523,6 @@ const SupplierDashboard = () => {
           />
         )}
         {activeView === "settings" && <SettingsView />}
-        {activeView === "recommendation" && <RecommendationView />}
         {activeView === "notifications" && <NotificationsView />}
         {activeView === "cart" && (
           <CartView
@@ -1564,6 +1548,11 @@ const SupplierDashboard = () => {
           <FaFacebookF /> <FaTwitter /> <FaLinkedinIn />
         </div>
       </footer>
+
+      <VerificationWarningModal
+        isOpen={showVerificationWarning}
+        onClose={() => setShowVerificationWarning(false)}
+      />
     </div>
   );
 };

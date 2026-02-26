@@ -627,3 +627,122 @@ export const sendOrderEmail = async (order, seller, buyer) => {
     return false;
   }
 };
+
+/**
+ * Send Stock Alert Email (Low Stock / Out of Stock)
+ * @param {Object} item - The inventory item object
+ * @param {Object} user - The user object
+ * @param {String} type - 'low_stock' or 'out_of_stock'
+ */
+export const sendStockAlertEmail = async (item, user, type) => {
+  try {
+    const logoUrl = getLogoUrl();
+    const isOutOfStock = type === "out_of_stock";
+    const alertTitle = isOutOfStock ? "Out of Stock Alert" : "Low Stock Alert";
+    const alertColor = isOutOfStock ? "#ef4444" : "#f59e0b";
+    const alertBg = isOutOfStock ? "#fef2f2" : "#fffbeb";
+    const alertBorder = isOutOfStock ? "#fee2e2" : "#fef3c7";
+
+    // Determine Dashboard URL
+    let dashboardUrl = "http://localhost:5173";
+    if (user.role === "farmer") dashboardUrl += "/farmer-dashboard";
+    else if (user.role === "collector") dashboardUrl += "/collector-dashboard";
+    else if (user.role === "supplier") dashboardUrl += "/supplier-dashboard";
+
+    const mailOptions = {
+      to: user.email,
+      subject: `AgroMart Alert: ${alertTitle} - ${item.productName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${alertTitle}</title>
+          <style>
+            body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 0; color: #1a1a1a; }
+            .wrapper { width: 100%; background-color: #f4f6f8; padding: 40px 10px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+            .header { background: ${alertBg}; padding: 40px; text-align: center; border-bottom: 3px solid ${alertColor}; }
+            .alert-icon { font-size: 48px; margin-bottom: 20px; display: inline-block; }
+            .title { font-size: 28px; font-weight: 800; color: ${alertColor}; margin: 0 0 10px; letter-spacing: -0.5px; }
+            .subtitle { font-size: 16px; color: #4b5563; margin: 0; line-height: 1.5; }
+            .content { padding: 40px; }
+            .item-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 30px; display: flex; align-items: center; gap: 20px; }
+            .item-image { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+            .item-info { flex: 1; }
+            .item-name { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 5px; }
+            .item-qty { font-size: 16px; font-weight: 600; color: ${alertColor}; }
+            .detail-section { margin-bottom: 30px; border-top: 1px solid #f1f5f9; }
+            .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; font-size: 15px; }
+            .detail-label { color: #6b7280; font-weight: 600; padding-right: 20px; text-align: left; }
+            .detail-value { color: #111827; font-weight: 700; text-align: right; }
+            .action-area { text-align: center; margin-top: 10px; }
+            .btn { background: #1dc956; color: #ffffff !important; padding: 16px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 10px 20px rgba(29, 201, 86, 0.2); }
+            .footer { background: #f9fafb; padding: 30px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #edf2f7; }
+            @media (max-width: 600px) {
+              .content { padding: 30px 20px; }
+              .item-card { flex-direction: column; text-align: center; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="wrapper">
+            <div class="container">
+              <div class="header">
+                <div class="alert-icon">${isOutOfStock ? "❌" : "⚠️"}</div>
+                <h1 class="title">${alertTitle}</h1>
+                <p class="subtitle">Action required for your inventory on AgroMart.</p>
+              </div>
+              <div class="content">
+                <div class="item-card">
+                  <img src="${item.productImage || "https://via.placeholder.com/150?text=Product"}" class="item-image" alt="${item.productName}">
+                  <div class="item-info">
+                    <h2 class="item-name">${item.productName}</h2>
+                    <p class="item-qty">Current Stock: ${item.quantity} ${item.unit}</p>
+                  </div>
+                </div>
+                <div class="detail-section">
+                  <div class="detail-row">
+                    <span class="detail-label">Product Name</span>
+                    <span class="detail-value">${item.productName}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value" style="color: ${alertColor}">${isOutOfStock ? "Sold Out" : "Critically Low"}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">${item.category}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Threshold Set</span>
+                    <span class="detail-value">${item.lowStockThreshold} ${item.unit}</span>
+                  </div>
+                </div>
+                <p style="color: #4b5563; line-height: 1.6; font-size: 15px; margin-bottom: 30px;">
+                  Hello ${user.name}, your inventory for <strong>${item.productName}</strong> has reached a ${isOutOfStock ? "zero" : "critically low"} balance. Please restock soon to ensure continued availability for your buyers.
+                </p>
+                <div class="action-area">
+                  <a href="${dashboardUrl}" class="btn">Update Inventory</a>
+                </div>
+              </div>
+              <div class="footer">
+                <p><strong>AgroMart - Cultivating Trust, Connecting Growth</strong></p>
+                <p>&copy; ${new Date().getFullYear()} AgroMart. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await sendMail(mailOptions);
+    console.log(`>>> ${alertTitle} Email sent successfully to ${user.email}`);
+    return true;
+  } catch (error) {
+    console.error(">>> Stock Alert Email send failed:", error);
+    return false;
+  }
+};

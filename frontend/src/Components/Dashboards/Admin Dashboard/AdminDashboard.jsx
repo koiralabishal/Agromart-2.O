@@ -353,15 +353,12 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Disputes - Always visible with badge */}
+          {/* Disputes - Always visible */}
           <div
             className={`ad-nav-item ${activeView === "disputes" ? "active" : ""}`}
             onClick={() => setActiveView("disputes")}
           >
             <FaGavel className="ad-nav-icon" /> Disputes
-            {stats?.pendingDisputes > 0 && (
-              <span className="nav-badge">{stats?.pendingDisputes}</span>
-            )}
           </div>
         </nav>
 

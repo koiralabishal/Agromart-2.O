@@ -5,7 +5,7 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
 } from "react-icons/fa";
-import RecommendedPricePopup from "./RecommendedPricePopup";
+import RecommendedPricePopup from "../../Common/RecommendedPricePopup";
 import api from "../../../api/axiosConfig";
 import "./Styles/SupplierAddInventoryView.css";
 

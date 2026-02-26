@@ -683,19 +683,7 @@ const BuyerDashboard = () => {
             )}
           </div>
 
-          <div
-            className="bd-icon-btn"
-            onClick={() => setActiveView("notifications")}
-            style={{
-              cursor: "pointer",
-              color: activeView === "notifications" ? "#1dc956" : "inherit",
-              position: "relative",
-            }}
-            title="Notifications"
-          >
-            <FaBell />
-            <span className="notif-counter">3</span>
-          </div>
+
           <div className="bd-profile-container">
             <img
               src={

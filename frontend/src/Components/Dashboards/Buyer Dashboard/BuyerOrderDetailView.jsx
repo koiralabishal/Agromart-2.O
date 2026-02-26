@@ -13,8 +13,12 @@ import {
 import "./Styles/BuyerOrderDetailView.css";
 import ConfirmationModal from "../../Common/ConfirmationModal";
 import OrderSuccessModal from "../../Common/OrderSuccessModal";
+import DisputeModal from "../../Common/DisputeModal";
+import { FaExclamationCircle } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 import api from "../../../api/axiosConfig";
+import { generateInvoice } from "../../../utils/invoiceGenerator";
 
 const BuyerOrderDetailView = ({
   onBack,
@@ -23,7 +27,7 @@ const BuyerOrderDetailView = ({
   onOrderUpdate,
 }) => {
   const [currentStatus, setCurrentStatus] = useState(
-    order?.status || "Pending"
+    order?.status || "Pending",
   );
   const [isStatusOpen, setIsStatusOpen] = useState(false);
 
@@ -41,6 +45,8 @@ const BuyerOrderDetailView = ({
     type: "warning",
   });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isDisputeLoading, setIsDisputeLoading] = useState(false);
 
   if (!order) return <div className="order-detail-view">Loading...</div>;
 
@@ -68,14 +74,14 @@ const BuyerOrderDetailView = ({
 
         // Update session storage for persistence
         const savedOrders = JSON.parse(
-          sessionStorage.getItem("buyerOrdersPlaced") || "[]"
+          sessionStorage.getItem("buyerOrdersPlaced") || "[]",
         );
         const updatedOrders = savedOrders.map((o) =>
-          o._id === order._id ? { ...o, paymentStatus: "Paid" } : o
+          o._id === order._id ? { ...o, paymentStatus: "Paid" } : o,
         );
         sessionStorage.setItem(
           "buyerOrdersPlaced",
-          JSON.stringify(updatedOrders)
+          JSON.stringify(updatedOrders),
         );
 
         const savedOrderDetail = sessionStorage.getItem("selectedOrder");
@@ -98,14 +104,14 @@ const BuyerOrderDetailView = ({
 
       // Update session storage for persistence
       const savedOrders = JSON.parse(
-        sessionStorage.getItem("buyerOrdersPlaced") || "[]"
+        sessionStorage.getItem("buyerOrdersPlaced") || "[]",
       );
       const updatedOrders = savedOrders.map((o) =>
-        o._id === order._id ? { ...o, status: newStatus } : o
+        o._id === order._id ? { ...o, status: newStatus } : o,
       );
       sessionStorage.setItem(
         "buyerOrdersPlaced",
-        JSON.stringify(updatedOrders)
+        JSON.stringify(updatedOrders),
       );
 
       const savedOrderDetail = sessionStorage.getItem("selectedOrder");
@@ -119,6 +125,40 @@ const BuyerOrderDetailView = ({
     } catch (error) {
       console.error("Error updating status:", error);
       alert(error.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  const handleDisputeConfirm = async (disputeData) => {
+    try {
+      setIsDisputeLoading(true);
+      const formData = new FormData();
+
+      Object.keys(disputeData).forEach((key) => {
+        if (key === "evidenceDocuments") {
+          disputeData[key].forEach((file) => {
+            formData.append("evidenceDocuments", file);
+          });
+        } else {
+          formData.append(key, disputeData[key] || "");
+        }
+      });
+
+      formData.append("orderID", order.orderID);
+      if (!formData.has("sellerID")) {
+        formData.append("sellerID", seller?._id);
+      }
+
+      await api.post("/disputes", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Dispute raised successfully! Admin will review it.");
+      setIsDisputeModalOpen(false);
+    } catch (error) {
+      console.error("Error raising dispute:", error);
+      toast.error(error.response?.data?.message || "Failed to raise dispute");
+    } finally {
+      setIsDisputeLoading(false);
     }
   };
 
@@ -142,7 +182,7 @@ const BuyerOrderDetailView = ({
   // Price calculations
   const subtotal = order.products.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
   const deliveryFee = 5.0;
   const discount = 0;
@@ -158,6 +198,14 @@ const BuyerOrderDetailView = ({
             title="Back to Orders"
           />
           <h2>Order {order.orderID}</h2>
+
+          <button
+            className="odv-dispute-btn"
+            onClick={() => setIsDisputeModalOpen(true)}
+            title="Report a problem"
+          >
+            <FaExclamationCircle /> Raise Dispute
+          </button>
 
           <div className="odv-status-dropdown-container">
             <div
@@ -215,7 +263,24 @@ const BuyerOrderDetailView = ({
                 <FaCheckCircle /> Confirm Cash Paid
               </button>
             )}
-          <button className="download-invoice-btn">
+          <button
+            className="download-invoice-btn"
+            onClick={async () =>
+              await generateInvoice(
+                order,
+                {
+                  ...seller,
+                  businessName: sellerBusiness,
+                  address: sellerAddress,
+                },
+                {
+                  ...buyer,
+                  businessName: buyerBusiness,
+                  address: buyerAddress,
+                },
+              )
+            }
+          >
             <FaDownload /> Download Invoice
           </button>
         </div>
@@ -447,8 +512,8 @@ const BuyerOrderDetailView = ({
                         ].includes(currentStatus)
                           ? "completed"
                           : currentStatus === "Pending"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -458,12 +523,12 @@ const BuyerOrderDetailView = ({
                         <div
                           className={`track-line ${
                             ["Processing", "Shipping", "Delivered"].includes(
-                              currentStatus
+                              currentStatus,
                             )
                               ? "line-completed"
                               : currentStatus === "Accepted"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -476,12 +541,12 @@ const BuyerOrderDetailView = ({
                     <div
                       className={`track-step ${
                         ["Processing", "Shipping", "Delivered"].includes(
-                          currentStatus
+                          currentStatus,
                         )
                           ? "completed"
                           : currentStatus === "Accepted"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -493,8 +558,8 @@ const BuyerOrderDetailView = ({
                             ["Shipping", "Delivered"].includes(currentStatus)
                               ? "line-completed"
                               : currentStatus === "Processing"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -509,8 +574,8 @@ const BuyerOrderDetailView = ({
                         ["Shipping", "Delivered"].includes(currentStatus)
                           ? "completed"
                           : currentStatus === "Processing"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -522,8 +587,8 @@ const BuyerOrderDetailView = ({
                             currentStatus === "Delivered"
                               ? "line-completed"
                               : currentStatus === "Shipping"
-                              ? "line-active"
-                              : ""
+                                ? "line-active"
+                                : ""
                           }`}
                         ></div>
                       </div>
@@ -538,8 +603,8 @@ const BuyerOrderDetailView = ({
                         currentStatus === "Delivered"
                           ? "completed"
                           : currentStatus === "Shipping"
-                          ? "active"
-                          : ""
+                            ? "active"
+                            : ""
                       }`}
                     >
                       <div className="track-checkpoint">
@@ -564,6 +629,13 @@ const BuyerOrderDetailView = ({
         title="Payment Confirmed!"
         message="You have successfully confirmed the cash payment for this order."
         showPaymentNote={false}
+      />
+      <DisputeModal
+        isOpen={isDisputeModalOpen}
+        onClose={() => setIsDisputeModalOpen(false)}
+        onConfirm={handleDisputeConfirm}
+        orderID={order.orderID}
+        isLoading={isDisputeLoading}
       />
     </div>
   );
